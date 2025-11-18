@@ -102,6 +102,7 @@ export default async function RootLayout({
             `,
           }}
         />
+          <title></title>
       </head>
       <Providers>
         <Column
