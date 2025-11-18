@@ -5,11 +5,11 @@ const person: Person = {
   firstName: "Manas",
   lastName: "Khairnar",
   name: `Derpx06`,
-  role: "Design Engineer",
+  role: "App Developer",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
-  location: "Asia/Jakarta", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
-  languages: ["English", "Bahasa"], // optional: Leave the array empty if you don't want to display languages
+  location: "Asia/Calcutta", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
+  languages: ["English", "Hindi"], // optional: Leave the array empty if you don't want to display languages
 };
 
 const newsletter: Newsletter = {
@@ -158,26 +158,26 @@ const about: About = {
           {
             src: "/images/projects/description-images/ChatBlaze.jpg",
             alt: "Project image",
-            width: 9,
-            height: 20,
+            width: 5,
+            height: 12,
           },
           {
             src: "/images/projects/description-images/NewsPulse.png",
             alt: "Project image",
-            width: 9,
-            height: 20,
+            width: 5,
+            height: 12,
           },
             {
                 src: "/images/projects/description-images/Techrush.png",
                 alt: "Project image",
-                width: 9,
-                height: 20,
+                width: 5,
+                height: 12,
             },
             {
                 src: "/images/projects/description-images/NoteSphere.png",
                 alt: "Project image",
-                width: 9,
-                height: 20,
+                width: 5,
+                height: 12,
             }
 
         ],
