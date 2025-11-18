@@ -3,7 +3,7 @@ import { Line, Logo, Row, Text } from "@once-ui-system/core";
 
 const person: Person = {
   firstName: "Manas",
-  lastName: "Yu",
+  lastName: "Khairnar",
   name: `Derpx06`,
   role: "Design Engineer",
   avatar: "/images/derpx06-avatar.png",
@@ -49,7 +49,7 @@ const home: Home = {
   label: "Home",
   title: `${person.name}'s Portfolio`,
   description: `Portfolio website showcasing my work as a ${person.role}`,
-  headline: <>Building bridges between design and code</>,
+  headline: <>Crafting solutions for simple problems</>,
   featured: {
     display: true,
     title: (
@@ -65,14 +65,8 @@ const home: Home = {
   },
   subline: (
     <>
-      I'm Selene, a design engineer at{" "}
-      <Logo
-        dark
-        icon="/trademarks/wordmark-dark.svg"
-        style={{ display: "inline-flex", top: "0.25em", marginLeft: "-0.25em" }}
-      />
-      , where I craft intuitive
-      <br /> user experiences. After hours, I build my own projects.
+      I'm Manas.
+      <br /> Btw i use Arch Linux
     </>
   ),
 };
@@ -105,17 +99,17 @@ const about: About = {
     ),
   },
   work: {
-    display: true, // set to false to hide this section
+    display: true,
     title: "Work Experience",
     experiences: [
       {
-        company: "FLY",
-        timeframe: "2022 - Present",
-        role: "Senior Design Engineer",
+        company: "Scizers",
+        timeframe: "2025 - Present",
+        role: "" +
+            "App development Intern",
         achievements: [
           <>
-            Redesigned the UI/UX for the FLY platform, resulting in a 20% increase in user
-            engagement and 30% faster load times.
+            Build react native apps along with functionlity and api integration
           </>,
           <>
             Spearheaded the integration of AI tools into design workflows, enabling designers to
@@ -132,22 +126,6 @@ const about: About = {
           },
         ],
       },
-      {
-        company: "Creativ3",
-        timeframe: "2018 - 2022",
-        role: "Lead Designer",
-        achievements: [
-          <>
-            Developed a design system that unified the brand across multiple platforms, improving
-            design consistency by 40%.
-          </>,
-          <>
-            Led a cross-functional team to launch a new product line, contributing to a 15% increase
-            in overall company revenue.
-          </>,
-        ],
-        images: [],
-      },
     ],
   },
   studies: {
@@ -155,12 +133,8 @@ const about: About = {
     title: "Studies",
     institutions: [
       {
-        name: "University of Jakarta",
+        name: "Pune Institute of Computer Technology",
         description: <>Studied software engineering.</>,
-      },
-      {
-        name: "Build the Future",
-        description: <>Studied online marketing and personal branding.</>,
       },
     ],
   },
@@ -169,30 +143,43 @@ const about: About = {
     title: "Technical skills",
     skills: [
       {
-        title: "Figma",
+        title: "App Development",
         description: (
-          <>Able to prototype in Figma with Once UI with unnatural speed.</>
+          <>I can build full fledged apps</>
         ),
         tags: [
           {
-            name: "Figma",
+            name: "React Native",
             icon: "figma",
           },
         ],
         // optional: leave the array empty if you don't want to display images
         images: [
           {
-            src: "/images/projects/project-01/cover-02.jpg",
+            src: "/images/projects/description-images/ChatBlaze.jpg",
             alt: "Project image",
-            width: 16,
-            height: 9,
+            width: 9,
+            height: 20,
           },
           {
-            src: "/images/projects/project-01/cover-03.jpg",
+            src: "/images/projects/description-images/NewsPulse.png",
             alt: "Project image",
-            width: 16,
-            height: 9,
+            width: 9,
+            height: 20,
           },
+            {
+                src: "/images/projects/description-images/Techrush.png",
+                alt: "Project image",
+                width: 9,
+                height: 20,
+            },
+            {
+                src: "/images/projects/description-images/NoteSphere.png",
+                alt: "Project image",
+                width: 9,
+                height: 20,
+            }
+
         ],
       },
       {
@@ -231,7 +218,7 @@ const about: About = {
 const blog: Blog = {
   path: "/blog",
   label: "Blog",
-  title: "Writing about design and tech...",
+  title: "Writing about AI and agents..",
   description: `Read what ${person.name} has been up to recently`,
   // Create new blog posts by adding a new .mdx file to app/blog/posts
   // All posts will be listed on the /blog route
@@ -248,9 +235,9 @@ const work: Work = {
 
 const gallery: Gallery = {
   path: "/gallery",
-  label: "Gallery",
+  label: "Explainers",
   title: `Photo gallery – ${person.name}`,
-  description: `A photo collection by ${person.name}`,
+  description: `Explainers by ${person.name}`,
   // Images by https://lorant.one
   // These are placeholder images, replace with your own
   images: [
