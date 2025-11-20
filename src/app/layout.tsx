@@ -15,7 +15,9 @@ import {
 } from "@once-ui-system/core";
 import { Footer, Header, RouteGuard, Providers } from "@/components";
 import { baseURL, effects, fonts, style, dataStyle, home } from "@/resources";
+import React from "react";
 
+// @ts-ignore
 export async function generateMetadata() {
   return Meta.generate({
     title: home.title,

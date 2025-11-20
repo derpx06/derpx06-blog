@@ -223,6 +223,11 @@ const blog: Blog = {
   // Create new blog posts by adding a new .mdx file to app/blog/posts
   // All posts will be listed on the /blog route
 };
+const Explainers={
+    path:"\explainers",
+    label:'Explainers',
+    description:"Simple Explanations to various research papers",
+}
 
 const work: Work = {
   path: "/work",
