@@ -132,8 +132,8 @@ export default function About() {
                   backdropFilter: "blur(var(--static-space-1))",
                 }}
               >
-                <Icon paddingLeft="12" name="calendar" onBackground="brand-weak" />
-                <Row paddingX="8">Schedule a call</Row>
+                <Icon paddingLeft="12" name="document" onBackground="brand-weak" />
+                <Row paddingX="8">My Resume</Row>
                 <IconButton
                   href={about.calendar.link}
                   data-border="rounded"

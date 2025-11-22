@@ -150,8 +150,12 @@ const about: About = {
         tags: [
           {
             name: "React Native",
-            icon: "figma",
+            icon: "javascript",
           },
+            {
+                name: "kotlin",
+                icon:"supabase"
+            }
         ],
         // optional: leave the array empty if you don't want to display images
         images: [
@@ -201,7 +205,6 @@ const about: About = {
             icon: "supabase",
           },
         ],
-        // optional: leave the array empty if you don't want to display images
         images: [
           {
             src: "/images/projects/project-01/cover-04.jpg",
