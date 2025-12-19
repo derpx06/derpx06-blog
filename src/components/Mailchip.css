@@ -1,0 +1,64 @@
+/* full container for animated background */
+.mc-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* 🔥 flowing gradient */
+.mc-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            -45deg,
+            #ff6b6b,
+            #f06595,
+            #845ef7,
+            #5c7cfa,
+            #339af0,
+            #22b8cf,
+            #20c997,
+            #38d9a9
+    );
+    background-size: 400% 400%;
+    animation: mcGradientMove 12s ease infinite;
+    opacity: 0.55;
+    filter: blur(40px);
+}
+
+/* 🔥 animated dotted mask */
+.mc-dots {
+    position: absolute;
+    inset: 0;
+
+    mask:
+            radial-gradient(circle, #000 60%, transparent 61%) 0% 0% / 10% 10% repeat,
+            radial-gradient(circle, #000 60%, transparent 61%) 50% 50% / 12% 12% repeat;
+
+    animation: mcDotsMove 6s ease-in-out infinite alternate;
+    opacity: 0.4;
+}
+
+/* gradient animation */
+@keyframes mcGradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* dots animation */
+@keyframes mcDotsMove {
+    0% {
+        mask-position: 0% 0%, 50% 50%;
+    }
+    100% {
+        mask-position: 0% 30%, 50% 70%;
+    }
+}

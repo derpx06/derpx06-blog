@@ -78,7 +78,7 @@ const style: StyleConfig = {
   neutral: "gray", // sand | gray | slate | custom
   brand: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
   accent: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
-  solid: "contrast", // color | contrast
+  solid: "color", // color | contrast
   solidStyle: "flat", // flat | plastic
   border: "playful", // rounded | playful | conservative
   surface: "translucent", // filled | translucent
@@ -108,7 +108,7 @@ const effects: EffectsConfig = {
     radius: 100,
   },
   gradient: {
-    display: false,
+    display: true,
     opacity: 100,
     x: 50,
     y: 60,
@@ -151,7 +151,7 @@ const mailchimp: MailchimpConfig = {
       radius: 100,
     },
     gradient: {
-      display: true,
+      display: false,
       opacity: 90,
       x: 50,
       y: 0,
@@ -163,20 +163,20 @@ const mailchimp: MailchimpConfig = {
     },
     dots: {
       display: true,
-      opacity: 20,
-      size: "2",
+      opacity: 10,
+      size: "1",
       color: "brand-on-background-weak",
     },
     grid: {
       display: false,
-      opacity: 100,
+      opacity: 50,
       color: "neutral-alpha-medium",
       width: "0.25rem",
       height: "0.25rem",
     },
     lines: {
-      display: false,
-      opacity: 100,
+      display: true,
+      opacity: 20,
       color: "neutral-alpha-medium",
       size: "16",
       thickness: 1,

@@ -4,7 +4,7 @@ import { Line, Logo, Row, Text } from "@once-ui-system/core";
 const person: Person = {
   firstName: "Manas",
   lastName: "Khairnar",
-  name: `Derpx06`,
+  name: 'Derpx06',
   role: "App Developer",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
@@ -30,11 +30,6 @@ const social: Social = [
     name: "LinkedIn",
     icon: "linkedin",
     link: "https://www.linkedin.com/in/manas-khairnar-98329132b/",
-  },
-  {
-    name: "Threads",
-    icon: "threads",
-    link: "https://www.threads.com/@once_ui",
   },
   {
     name: "Email",
@@ -234,7 +229,7 @@ const Explainers={
 
 const work: Work = {
   path: "/work",
-  label: "Work",
+  label: "Tuts",
   title: `Projects – ${person.name}`,
   description: `Design and dev projects by ${person.name}`,
   // Create new project pages by adding a new .mdx file to app/blog/posts

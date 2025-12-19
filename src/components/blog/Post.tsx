@@ -18,7 +18,7 @@ export default function Post({ post, thumbnail, direction }: PostProps) {
       href={`/blog/${post.slug}`}
       transition="micro-medium"
       direction={direction}
-      border="transparent"
+      border="neutral-medium"
       background="transparent"
       padding="4"
       radius="l-4"
