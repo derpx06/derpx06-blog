@@ -20,6 +20,7 @@ export type DisplayConfig = {
   location: boolean;
   time: boolean;
   themeSwitcher: boolean;
+  chatbot: boolean;
 };
 
 /**

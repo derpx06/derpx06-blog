@@ -1,0 +1,42 @@
+---
+title: Retrievers
+publishedAt: '2024-02-05'
+summary: Interfaces for fetching relevant documents using Vector Stores, Multi-Query, and other retrieval strategies.
+image: /images/projects/project-01/cover-04.jpg
+---
+
+# Retrievers
+
+A **Retriever** is an interface that returns documents given an unstructured query. It is more general than a Vector Store.
+
+## Vector Store Retriever
+The most common type. It wraps a Vector Store and uses it to perform similarity searches.
+
+## Advanced Retrievers
+1.  **MultiQueryRetriever**: Uses an LLM to generate multiple versions of your query to find documents that match different phrasings.
+2.  **ContextualCompressionRetriever**: Uses an LLM to extract only the relevant parts of the retrieved documents, reducing noise.
+3.  **ParentDocumentRetriever**: Retrieves small chunks for better search quality but returns the larger parent document for better context.
+
+## Code Example
+
+<CodeBlock
+    marginBottom="24"
+    codes={[
+        {
+            code: `from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+
+# Setup Vector Store
+db = FAISS.from_texts(["harrison worked at kensho"], OpenAIEmbeddings())
+
+# Create a Retriever interface
+retriever = db.as_retriever(search_type="mmr", search_kwargs={"k": 1})
+
+# Invoke
+docs = retriever.invoke("where did harrison work?")
+print(docs[0].page_content)`,
+            language: "python",
+            label: "retrievers.py"
+        }
+    ]}
+/>

@@ -1,0 +1,40 @@
+---
+title: Memory Basics
+publishedAt: '2024-02-10'
+summary: How to give your chains "state" so they remember previous interactions in a conversation.
+image: /images/projects/project-01/cover-04.jpg
+---
+
+# Memory Basics
+
+By default, LLMs are stateless. They don't remember what you said in the previous request. "Memory" is the concept of storing and retrieving past interactions.
+
+## ConversationBufferMemory
+The simplest form of memory. It keeps a list of all chat messages in a buffer and passes them to the prompt every time.
+
+<CodeBlock
+    marginBottom="24"
+    codes={[
+        {
+            code: `from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+from langchain.chat_models import ChatOpenAI
+
+llm = ChatOpenAI()
+memory = ConversationBufferMemory()
+
+chain = ConversationChain(
+    llm=llm, 
+    memory=memory,
+    verbose=True
+)
+
+chain.predict(input="Hi, my name is Harrison")
+chain.predict(input="What is 1 + 1?")
+chain.predict(input="What is my name?") 
+# It remembers "Harrison"!`,
+            language: "python",
+            label: "memory.py"
+        }
+    ]}
+/>

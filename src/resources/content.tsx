@@ -9,7 +9,7 @@ const person: Person = {
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
   location: "Asia/Calcutta", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
-  languages: ["English", "Hindi"], // optional: Leave the array empty if you don't want to display languages
+  languages: ["English", "Hindi", "Marathi", "German"], // optional: Leave the array empty if you don't want to display languages
 };
 
 const newsletter: Newsletter = {
@@ -60,8 +60,7 @@ const home: Home = {
   },
   subline: (
     <>
-      I'm Manas.
-      <br /> Btw i use Arch Linux
+      I'm Manas, a passionate App Developer crafting intuitive digital experiences.
     </>
   ),
 };
@@ -87,9 +86,9 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        Selene is a Jakarta-based design engineer with a passion for transforming complex challenges
-        into simple, elegant design solutions. Her work spans digital interfaces, interactive
-        experiences, and the convergence of design and technology.
+        Manas is an App Developer based in India, passionate about building intuitive digital experiences.
+        He specializes in React Native and Next.js, bridging the gap between design and technology
+        to create seamless applications.
       </>
     ),
   },
@@ -101,7 +100,7 @@ const about: About = {
         company: "Scizers",
         timeframe: "2025 - Present",
         role: "" +
-            "App development Intern",
+          "App development Intern",
         achievements: [
           <>
             Build react native apps along with functionlity and api integration
@@ -147,10 +146,10 @@ const about: About = {
             name: "React Native",
             icon: "javascript",
           },
-            {
-                name: "kotlin",
-                icon:"supabase"
-            }
+          {
+            name: "kotlin",
+            icon: "supabase"
+          }
         ],
         // optional: leave the array empty if you don't want to display images
         images: [
@@ -166,18 +165,18 @@ const about: About = {
             width: 5,
             height: 12,
           },
-            {
-                src: "/images/projects/description-images/Techrush.png",
-                alt: "Project image",
-                width: 5,
-                height: 12,
-            },
-            {
-                src: "/images/projects/description-images/NoteSphere.png",
-                alt: "Project image",
-                width: 5,
-                height: 12,
-            }
+          {
+            src: "/images/projects/description-images/Techrush.png",
+            alt: "Project image",
+            width: 5,
+            height: 12,
+          },
+          {
+            src: "/images/projects/description-images/NoteSphere.png",
+            alt: "Project image",
+            width: 5,
+            height: 12,
+          }
 
         ],
       },
@@ -208,7 +207,7 @@ const about: About = {
             height: 9,
           },
         ],
-      },  
+      },
     ],
   },
 };
@@ -221,15 +220,23 @@ const blog: Blog = {
   // Create new blog posts by adding a new .mdx file to app/blog/posts
   // All posts will be listed on the /blog route
 };
-const Explainers={
-    path:"\explainers",
-    label:'Explainers',
-    description:"Simple Explanations to various research papers",
-}
+const explainers: Blog = {
+  path: "/explainers",
+  label: "Explainers",
+  title: "Explainers",
+  description: "Simple Explanations to various research papers",
+};
+
+const learn: Blog = {
+  path: "/learn",
+  label: "Learn",
+  title: "Learn with Derpx06",
+  description: "Courses and tutorials by Manas",
+};
 
 const work: Work = {
   path: "/work",
-  label: "Tuts",
+  label: "Work",
   title: `Projects – ${person.name}`,
   description: `Design and dev projects by ${person.name}`,
   // Create new project pages by adding a new .mdx file to app/blog/posts
@@ -238,9 +245,9 @@ const work: Work = {
 
 const gallery: Gallery = {
   path: "/gallery",
-  label: "Explainers",
+  label: "Gallery",
   title: `Photo gallery – ${person.name}`,
-  description: `Explainers by ${person.name}`,
+  description: `Photos by ${person.name}`,
   // Images by https://lorant.one
   // These are placeholder images, replace with your own
   images: [
@@ -287,4 +294,4 @@ const gallery: Gallery = {
   ],
 };
 
-export { person, social, newsletter, home, about, blog, work, gallery };
+export { person, social, newsletter, home, about, blog, work, gallery, learn, explainers };

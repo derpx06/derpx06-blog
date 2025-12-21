@@ -8,14 +8,15 @@ interface PostProps {
   post: any;
   thumbnail: boolean;
   direction?: "row" | "column";
+  pathPrefix?: string;
 }
 
-export default function Post({ post, thumbnail, direction }: PostProps) {
+export default function Post({ post, thumbnail, direction, pathPrefix = "blog" }: PostProps) {
   return (
     <Card
       fillWidth
       key={post.slug}
-      href={`/blog/${post.slug}`}
+      href={post.metadata.link || `/${pathPrefix}/${post.slug}`}
       transition="micro-medium"
       direction={direction}
       border="neutral-medium"
@@ -38,7 +39,7 @@ export default function Post({ post, thumbnail, direction }: PostProps) {
         />
       )}
       <Row fillWidth>
-        <Column maxWidth={28} paddingY="24" paddingX="l" gap="20" vertical="center">
+        <Column paddingY="24" paddingX="l" gap="20" vertical="center" fillWidth>
           <Row gap="24" vertical="center">
             <Row vertical="center" gap="16">
               <Avatar src={person.avatar} size="s" />
@@ -48,9 +49,27 @@ export default function Post({ post, thumbnail, direction }: PostProps) {
               {formatDate(post.metadata.publishedAt, false)}
             </Text>
           </Row>
-          <Text variant="heading-strong-l" wrap="balance">
-            {post.metadata.title}
-          </Text>
+          <Column gap="8" fillWidth>
+            <Text variant="heading-strong-l" wrap="balance">
+              {post.metadata.title}
+            </Text>
+            {post.metadata.summary && (
+              <Text variant="body-default-m" onBackground="neutral-weak" style={{ overflowWrap: "break-word" }}>
+                {post.metadata.summary}
+              </Text>
+            )}
+            {post.metadata.topics && post.metadata.topics.length > 0 && (
+              <Row gap="8" wrap>
+                {post.metadata.topics.map((topic: string, index: number) => (
+                  <Row key={index} background="neutral-alpha-weak" radius="m" paddingX="8" paddingY="4">
+                    <Text variant="label-default-s">
+                      {topic}
+                    </Text>
+                  </Row>
+                ))}
+              </Row>
+            )}
+          </Column>
           {post.metadata.tag && (
             <Text variant="label-strong-s" onBackground="neutral-weak">
               {post.metadata.tag}

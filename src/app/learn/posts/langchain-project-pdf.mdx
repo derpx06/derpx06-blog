@@ -1,0 +1,49 @@
+---
+title: Project: PDF Chat
+publishedAt: '2024-03-01'
+summary: Build a complete end-to-end RAG application that allows you to upload and chat with a PDF.
+image: /images/projects/project-01/cover-04.jpg
+---
+
+# Project: PDF Chat
+
+In this project, we combine everything we've learned: Loaders, Splitters, Embeddings, Vector Stores, and Chains.
+
+## The Architecture
+1.  **Ingest**: Load PDF -> Split Text -> Embed -> Store in ChromaDB.
+2.  **Retrieve**: User Question -> Embed -> Similarity Search.
+3.  **Generate**: Retrieved Content + Question -> LLM -> Answer.
+
+## Implementation
+
+<CodeBlock
+    marginBottom="24"
+    codes={[
+        {
+            code: `import os
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chains import RetrievalQA
+from langchain.chat_models import ChatOpenAI
+
+# 1. Ingest
+loader = PyPDFLoader("annual_report.pdf")
+docs = loader.load_and_split()
+db = Chroma.from_documents(docs, OpenAIEmbeddings())
+
+# 2. Chain
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(), 
+    chain_type="stuff", 
+    retriever=db.as_retriever()
+)
+
+# 3. Chat
+print(qa.run("What was the total revenue?"))`,
+            language: "python",
+            label: "pdf_chat.py"
+        }
+    ]}
+/>

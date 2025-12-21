@@ -10,15 +10,33 @@ export const ThemeToggle: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
-    setCurrentTheme(document.documentElement.getAttribute("data-theme") || "light");
+    const savedTheme = localStorage.getItem("data-theme");
+    if (savedTheme) {
+      setCurrentTheme(savedTheme);
+    } else {
+      setCurrentTheme(document.documentElement.getAttribute("data-theme") || "light");
+    }
   }, []);
 
   useEffect(() => {
-    setCurrentTheme(document.documentElement.getAttribute("data-theme") || "light");
+    const savedTheme = localStorage.getItem("data-theme");
+    if (savedTheme) {
+      setCurrentTheme(savedTheme);
+    } else {
+      setCurrentTheme(document.documentElement.getAttribute("data-theme") || "light");
+    }
   }, [theme]);
 
-  const icon = currentTheme === "dark" ? "light" : "dark";
-  const nextTheme = currentTheme === "light" ? "dark" : "light";
+  const getNextTheme = () => {
+    return currentTheme === 'light' ? 'dark' : 'light';
+  };
+
+  const getIcon = (theme: string) => {
+    return currentTheme === 'light' ? 'dark' : 'light';
+  };
+
+  const nextTheme = getNextTheme();
+  const icon = getIcon(currentTheme);
 
   return (
     <ToggleButton

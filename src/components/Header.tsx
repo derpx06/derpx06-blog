@@ -3,54 +3,76 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import {Avatar, Fade, Flex, Heading, Line, Row, ToggleButton} from "@once-ui-system/core";
+import {
+  Avatar,
+  Fade,
+  Flex,
+  Line,
+  Row,
+  ToggleButton,
+  Input,
+  IconButton,
+} from "@once-ui-system/core";
 
-import { routes, display, person, about, blog, work, gallery } from "@/resources";
+import {
+  routes,
+  display,
+  person,
+  about,
+  blog,
+  work,
+  gallery,
+  learn,
+  explainers,
+} from "@/resources";
+
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Header.module.scss";
 
 type TimeDisplayProps = {
   timeZone: string;
-  locale?: string; // Optionally allow locale, defaulting to 'en-GB'
+  locale?: string;
 };
 
-const TimeDisplay: React.FC<TimeDisplayProps> = ({ timeZone, locale = "en-GB" }) => {
+const TimeDisplay: React.FC<TimeDisplayProps> = ({
+  timeZone,
+  locale = "en-GB",
+}) => {
   const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const options: Intl.DateTimeFormatOptions = {
+      const timeString = new Intl.DateTimeFormat(locale, {
         timeZone,
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
         hour12: false,
-      };
-      const timeString = new Intl.DateTimeFormat(locale, options).format(now);
+      }).format(now);
       setCurrentTime(timeString);
     };
 
     updateTime();
-    const intervalId = setInterval(updateTime, 1000);
-
-    return () => clearInterval(intervalId);
+    const id = setInterval(updateTime, 1000);
+    return () => clearInterval(id);
   }, [timeZone, locale]);
 
   return <>{currentTime}</>;
 };
 
-export default TimeDisplay;
-
 export const Header = () => {
   const pathname = usePathname() ?? "";
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   return (
     <>
-      <Fade s={{ hide: true }} fillWidth position="fixed" height="80" zIndex={9} />
+      <Fade s={{ hide: true }} m={{ hide: true }} fillWidth position="fixed" height="80" zIndex={9} />
+
       <Fade
         hide
         s={{ hide: false }}
+        m={{ hide: false }}
         fillWidth
         position="fixed"
         bottom="0"
@@ -58,29 +80,36 @@ export const Header = () => {
         height="80"
         zIndex={9}
       />
+
+
+
+
+
       <Row
         fitHeight
         className={styles.position}
-        position="sticky"
         as="header"
         zIndex={9}
         fillWidth
         padding="8"
         horizontal="center"
         data-border="rounded"
-        s={{
-          position: "fixed",
-        }}
+        s={{ position: "fixed" }} m={{ position: "fixed" }}
+        pointerEvents="none"
       >
-        <Row paddingLeft="12" fillWidth vertical="center" textVariant="body-default-s">
-            <Avatar
-                marginRight="8"
-                style={{ marginLeft: "-0.75rem" }}
-                src={person.avatar}
-                size="m"
-            />
-
+        {/* LEFT: AVATAR */}
+        <Row paddingLeft="12" fillWidth vertical="center" style={{ pointerEvents: "auto" }}>
+          <Avatar
+            marginRight="8"
+            style={{ marginLeft: "-0.75rem" }}
+            src={person.avatar}
+            size="m"
+          />
         </Row>
+
+
+
+        {/* CENTER NAVIGATION */}
         <Row fillWidth horizontal="center">
           <Row
             background="page"
@@ -90,15 +119,22 @@ export const Header = () => {
             padding="4"
             horizontal="center"
             zIndex={1}
+            style={{ pointerEvents: "auto" }}
           >
-            <Row gap="4" vertical="center" textVariant="body-default-s" suppressHydrationWarning>
+            <Row gap="4" vertical="center" suppressHydrationWarning>
               {routes["/"] && (
-                <ToggleButton prefixIcon="home" href="/" selected={pathname === "/"} />
+                <ToggleButton
+                  prefixIcon="home"
+                  href="/"
+                  selected={pathname === "/"}
+                />
               )}
+
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
+
               {routes["/about"] && (
                 <>
-                  <Row s={{ hide: true }}>
+                  <Row s={{ hide: true }} m={{ hide: true }}>
                     <ToggleButton
                       prefixIcon="person"
                       href="/about"
@@ -106,7 +142,7 @@ export const Header = () => {
                       selected={pathname === "/about"}
                     />
                   </Row>
-                  <Row hide s={{ hide: false }}>
+                  <Row hide s={{ hide: false }} m={{ hide: false }}>
                     <ToggleButton
                       prefixIcon="person"
                       href="/about"
@@ -115,28 +151,50 @@ export const Header = () => {
                   </Row>
                 </>
               )}
+
               {routes["/work"] && (
                 <>
-                  <Row s={{ hide: true }}>
+                  <Row s={{ hide: true }} m={{ hide: true }}>
                     <ToggleButton
-                      prefixIcon="grid"
+                      prefixIcon="briefcase"
                       href="/work"
                       label={work.label}
                       selected={pathname.startsWith("/work")}
                     />
                   </Row>
-                  <Row hide s={{ hide: false }}>
+                  <Row hide s={{ hide: false }} m={{ hide: false }}>
                     <ToggleButton
-                      prefixIcon="grid"
+                      prefixIcon="briefcase"
                       href="/work"
                       selected={pathname.startsWith("/work")}
                     />
                   </Row>
                 </>
               )}
+
+              {routes["/learn"] && (
+                <>
+                  <Row s={{ hide: true }} m={{ hide: true }}>
+                    <ToggleButton
+                      prefixIcon="rocket"
+                      href="/learn"
+                      label={learn.label}
+                      selected={pathname.startsWith("/learn")}
+                    />
+                  </Row>
+                  <Row hide s={{ hide: false }} m={{ hide: false }}>
+                    <ToggleButton
+                      prefixIcon="rocket"
+                      href="/learn"
+                      selected={pathname.startsWith("/learn")}
+                    />
+                  </Row>
+                </>
+              )}
+
               {routes["/blog"] && (
                 <>
-                  <Row s={{ hide: true }}>
+                  <Row s={{ hide: true }} m={{ hide: true }}>
                     <ToggleButton
                       prefixIcon="book"
                       href="/blog"
@@ -144,7 +202,7 @@ export const Header = () => {
                       selected={pathname.startsWith("/blog")}
                     />
                   </Row>
-                  <Row hide s={{ hide: false }}>
+                  <Row hide s={{ hide: false }} m={{ hide: false }}>
                     <ToggleButton
                       prefixIcon="book"
                       href="/blog"
@@ -153,25 +211,47 @@ export const Header = () => {
                   </Row>
                 </>
               )}
+
+              {routes["/explainers"] && (
+                <>
+                  <Row s={{ hide: true }} m={{ hide: true }}>
+                    <ToggleButton
+                      prefixIcon="sparkle"
+                      href="/explainers"
+                      label={explainers.label}
+                      selected={pathname.startsWith("/explainers")}
+                    />
+                  </Row>
+                  <Row hide s={{ hide: false }} m={{ hide: false }}>
+                    <ToggleButton
+                      prefixIcon="sparkle"
+                      href="/explainers"
+                      selected={pathname.startsWith("/explainers")}
+                    />
+                  </Row>
+                </>
+              )}
+
               {routes["/gallery"] && (
                 <>
-                  <Row s={{ hide: true }}>
+                  <Row s={{ hide: true }} m={{ hide: true }}>
                     <ToggleButton
-                      prefixIcon="gallery"
+                      prefixIcon="image"
                       href="/gallery"
                       label={gallery.label}
                       selected={pathname.startsWith("/gallery")}
                     />
                   </Row>
-                  <Row hide s={{ hide: false }}>
+                  <Row hide s={{ hide: false }} m={{ hide: false }}>
                     <ToggleButton
-                      prefixIcon="gallery"
+                      prefixIcon="image"
                       href="/gallery"
                       selected={pathname.startsWith("/gallery")}
                     />
                   </Row>
                 </>
               )}
+
               {display.themeSwitcher && (
                 <>
                   <Line background="neutral-alpha-medium" vert maxHeight="24" />
@@ -181,19 +261,75 @@ export const Header = () => {
             </Row>
           </Row>
         </Row>
-        <Flex fillWidth horizontal="end" vertical="center">
+
+        {/* RIGHT: DESKTOP SEARCH + TIME */}
+        <Flex fillWidth horizontal="end" vertical="center" style={{ pointerEvents: "auto" }}>
           <Flex
             paddingRight="12"
             horizontal="end"
             vertical="center"
-            textVariant="body-default-s"
             gap="20"
+            textSize="s"
           >
-            <Flex s={{ hide: true }}>
-              {display.time && <TimeDisplay timeZone={person.location} />}
-            </Flex>
+            <Row s={{ hide: true }} m={{ hide: true }}>
+              <Input
+                id="search-desktop"
+                name="search"
+                label="Search"
+                width="24"
+                height="s"
+                cursor="interactive"
+              />
+            </Row>
+
+            {display.time && <TimeDisplay timeZone={person.location} />}
           </Flex>
         </Flex>
+      </Row>
+      <Row
+        hide
+        s={{ hide: false, position: "fixed" }}
+        m={{ hide: false, position: "fixed" }}
+        fillWidth
+        left="0"
+        paddingX="24"
+        paddingY="8"
+        style={{ zIndex: 50, top: "0" }}
+        className={showMobileSearch ? styles.blur : undefined}
+        horizontal={showMobileSearch ? "center" : "end"}
+        pointerEvents={showMobileSearch ? undefined : "none"}
+      >
+        {showMobileSearch ? (
+          <Row fillWidth gap="12" vertical="center">
+            <Input
+              id="search-mobile"
+              name="search"
+              label="Search"
+              width="full"
+              height="s"
+              autoFocus
+              cursor="interactive"
+            />
+            <IconButton
+              icon="close"
+              size="m"
+              tooltip="Close search"
+              onClick={() => setShowMobileSearch(false)}
+            />
+          </Row>
+        ) : (
+          <Row style={{ pointerEvents: "all" }}>
+            <IconButton
+              icon="search"
+              size="l"
+              tooltip="Open search"
+              variant="secondary"
+              className={styles.blur}
+              style={{ backdropFilter: "blur(12px)" }}
+              onClick={() => setShowMobileSearch(true)}
+            />
+          </Row>
+        )}
       </Row>
     </>
   );

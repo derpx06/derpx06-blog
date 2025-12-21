@@ -1,0 +1,47 @@
+---
+title: Introduction to Agents
+publishedAt: '2024-02-15'
+summary: "Understanding Agents: Using an LLM as a reasoning engine to decide actions and execution flow."
+image: /images/projects/project-01/cover-04.jpg
+---
+
+# Introduction to Agents
+
+In **Chains**, the sequence of actions is hardcoded. In **Agents**, a language model is used as a reasoning engine to determine which actions to take and in which order.
+
+## The Agent Loop
+1.  **Observation**: The agent looks at the user input and available tools.
+2.  **Thought**: The LLM decides "I need to use the Search tool".
+3.  **Action**: The tool is executed.
+4.  **Observation**: The output of the tool is fed back to the LLM.
+5.  **Answer**: If the LLM has enough info, it responds to the user.
+
+## Agent Types
+-   **Zero-shot ReAct**: The most general purpose agent. Uses the "Reasoning + Acting" framework.
+-   **OpenAI Functions Agent**: optimized for models that support function calling (like GPT-3.5-turbo and GPT-4).
+
+## Code Example
+
+<CodeBlock
+    marginBottom="24"
+    codes={[
+        {
+            code: `from langchain.agents import initialize_agent, AgentType, load_tools
+from langchain.chat_models import ChatOpenAI
+
+llm = ChatOpenAI(temperature=0)
+tools = load_tools(["serpapi", "llm-math"], llm=llm)
+
+agent = initialize_agent(
+    tools, 
+    llm, 
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, 
+    verbose=True
+)
+
+agent.run("Who is the boyfriend of Olivia Wilde and how old is he?")`,
+            language: "python",
+            label: "agent_intro.py"
+        }
+    ]}
+/>

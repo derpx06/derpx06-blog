@@ -10,11 +10,14 @@ import {
   Schema,
   Meta,
   Line,
+  Grid,
 } from "@once-ui-system/core";
 import { home, about, person, baseURL, routes } from "@/resources";
 import { Mailchimp } from "@/components";
 import { Projects } from "@/components/work/Projects";
 import { Posts } from "@/components/blog/Posts";
+import Post from "@/components/blog/Post";
+import { courses } from "@/resources/courses";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -44,6 +47,12 @@ export default function Home() {
       />
       <Column fillWidth horizontal="center" gap="m">
         <Column maxWidth="s" horizontal="center" align="center">
+          <Heading variant="display-strong-l" wrap="balance" align="center">
+            {home.headline}
+          </Heading>
+          <Text variant="body-default-l" align="center" onBackground="neutral-weak">
+            {home.subline}
+          </Text>
           <RevealFx paddingTop="12" delay={0.4} horizontal="center" paddingLeft="12">
             <Button
               id="about"
@@ -69,9 +78,66 @@ export default function Home() {
           </RevealFx>
         </Column>
       </Column>
-      <RevealFx translateY="16" delay={0.6}>
-        <Projects range={[1, 3]} />
-      </RevealFx>
+
+      {routes["/learn"] && (
+        <Column fillWidth gap="24" marginBottom="l">
+          <Row fillWidth paddingRight="64">
+            <Line maxWidth={48} />
+          </Row>
+          <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
+            <Row flex={1} paddingLeft="l" paddingTop="24">
+              <Heading as="h2" variant="display-strong-xs" wrap="balance">
+                Latest Courses
+              </Heading>
+            </Row>
+            <Row flex={3} paddingX="20">
+              <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
+                {courses.slice(0, 4).map((course) => (
+                  <Post
+                    key={course.id}
+                    post={{
+                      slug: course.slug,
+                      metadata: {
+                        title: course.title,
+                        summary: course.description,
+                        image: course.image,
+                        publishedAt: "2024-01-01",
+                      },
+                      content: "",
+                    }}
+                    thumbnail
+                    pathPrefix="learn"
+                  />
+                ))}
+              </Grid>
+            </Row>
+          </Column>
+        </Column>
+      )}
+      {routes["/explainers"] && (
+        <Column fillWidth gap="24" marginBottom="l">
+          <Row fillWidth paddingRight="64">
+            <Line maxWidth={48} />
+          </Row>
+          <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
+            <Row flex={1} paddingLeft="l" paddingTop="24">
+              <Heading as="h2" variant="display-strong-xs" wrap="balance">
+                Latest Explainers
+              </Heading>
+            </Row>
+            <Row flex={3} paddingX="20">
+              <Posts
+                range={[1, 4]}
+                columns="2"
+                thumbnail
+                direction="column"
+                source={["src", "app", "explainers", "posts"]}
+                pathPrefix="explainers"
+              />
+            </Row>
+          </Column>
+        </Column>
+      )}
       {routes["/blog"] && (
         <Column fillWidth gap="24" marginBottom="l">
           <Row fillWidth paddingRight="64">
@@ -92,7 +158,9 @@ export default function Home() {
           </Row>
         </Column>
       )}
-      <Projects range={[2]} />
+      <RevealFx translateY="16" delay={0.6}>
+        <Projects range={[1, 1]} />
+      </RevealFx>
       <Mailchimp />
     </Column>
   );

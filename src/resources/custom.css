@@ -1,8 +1,39 @@
-/* :root {
-  /*
-  /* Example setup for custom colors */
-/* Generate at: https://once-ui.com/customize */
+:root {
+  --scheme-brand-1000: #eef3ff;
+  --scheme-brand-1100: #f2f6ff;
+  --scheme-brand-1200: #f6f8ff;
+  --scheme-accent-1000: #f1f5f7;
+  --scheme-accent-1100: #f4f7f9;
+  --scheme-accent-1200: #f7fafb;
+  --scheme-neutral-600-10: rgba(137, 152, 159, 0.08);
+  --scheme-neutral-600-30: rgba(137, 152, 159, 0.2);
+  --scheme-neutral-600-50: rgba(137, 152, 159, 0.35);
+  --scheme-neutral-900: #e6eaee;
+
+  /* Dimmer light theme colors */
+  --scheme-brand-1200: #f0f4f8;
+  --scheme-accent-1200: #f0f4f8;
+  --scheme-neutral-1200: #f0f4f8;
+  --scheme-neutral-1100: #e8eef2;
+  --scheme-neutral-1000: #dde4ea;
+}
+
+/* Reduce brightness in light theme */
+[data-theme="light"] {
+  filter: brightness(0.85) saturate(0.85);
+}
+
+/* Alternative: Target specific backgrounds for more subtle effect */
+[data-theme="light"] body {
+  background-color: #f8f9fa !important;
+}
+
 /*
+Example setup for custom colors
+Generate at: https://once-ui.com/customize
+*/
+/* Uncomment and use these if needed:
+:root {
   --scheme-brand-100: #08002f;
   --scheme-brand-200:  #04025c;
   --scheme-brand-300:  #1f398e;
@@ -50,5 +81,23 @@
   --scheme-neutral-600-10: rgba(137,152,159,0.1);
   --scheme-neutral-600-30: rgba(137,152,159,0.3);
   --scheme-neutral-600-50: rgba(137,152,159,0.5);
-  /*
-}*/
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scheme-neutral-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scheme-neutral-500);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scheme-neutral-600);
+}

@@ -1,0 +1,61 @@
+---
+title: Introduction to LangChain
+publishedAt: '2024-01-05'
+summary: A comprehensive technical introduction to LangChain, the framework for building LLM-powered applications.
+image: /images/projects/project-01/cover-04.jpg
+---
+
+# Introduction to LangChain
+
+LangChain is a framework for developing applications powered by language models. It enables applications that are:
+- **Data-aware**: Connect a language model to other sources of data (RAG).
+- **Agentic**: Allow a language model to interact with its environment.
+
+## Why LangChain?
+
+Building with LLMs is complex. You have to manage prompt templates, parse outputs, chain multiple calls together, and manage context/memory. LangChain provides the abstractions to solve these problems elegantly.
+
+### Core Modules
+
+1.  **Model I/O**: Interface with various LLMs (OpenAI, Anthropic, HuggingFace) and manage prompts and output parsers.
+2.  **Retrieval**: Load data, split it, embed it, and store it in vector databases for RAG.
+3.  **Chains**: Link multiple components together (e.g., Prompt -> Model -> Output Parser).
+4.  **Agents**: Let the model choose which tools to use to solve a problem.
+5.  **Memory**: Persist state between calls of a chain/agent.
+
+## Your First Chain
+
+A "Chain" is the fundamental building block. It combines a prompt template, a model, and an optional output parser.
+
+<CodeBlock
+    marginBottom="24"
+    codes={[
+        {
+            code: `from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema.output_parser import StrOutputParser
+
+# 1. Initialize the Model
+model = ChatOpenAI(model="gpt-4")
+
+# 2. Create a detailed Prompt Template
+prompt = ChatPromptTemplate.from_template(
+    "Tell me a short joke about {topic}"
+)
+
+# 3. Define the Output Parser
+output_parser = StrOutputParser()
+
+# 4. Chain them together using LCEL (LangChain Expression Language)
+chain = prompt | model | output_parser
+
+# 5. Invoke the chain
+response = chain.invoke({"topic": "ice cream"})
+print(response)`,
+            language: "python",
+            label: "simple_chain.py"
+        }
+    ]}
+/>
+
+This simple abstraction allows you to swap models, change prompts, or inject new logic without rewriting your entire application flow.

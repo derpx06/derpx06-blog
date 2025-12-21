@@ -11,7 +11,7 @@ import {
   SocialSharingConfig,
   StyleConfig,
 } from "@/types";
-import { home } from "./index";
+import { gallery, home } from "./content";
 
 // IMPORTANT: Replace with your own domain address - it's used for SEO in meta tags and schema
 const baseURL: string = "https://demo.magic-portfolio.com";
@@ -19,16 +19,18 @@ const baseURL: string = "https://demo.magic-portfolio.com";
 const routes: RoutesConfig = {
   "/": true,
   "/about": true,
-  "/work": true,
+  "/work": false,
   "/blog": true,
-  "/gallery": true,
-    "/explainers":true
+  "/gallery": false,
+  "/explainers": true,
+  "/learn": true,
 };
 
 const display: DisplayConfig = {
-  location: true,
+  location: false,
   time: true,
   themeSwitcher: true,
+  chatbot: true,
 };
 
 // Enable password protection on selected routes
@@ -37,7 +39,6 @@ const protectedRoutes: ProtectedRoutesConfig = {
   "/work/automate-design-handovers-with-a-figma-to-code-pipeline": true,
 };
 
-// Import and set font for each variant
 import { Geist } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 
@@ -71,20 +72,32 @@ const fonts: FontsConfig = {
   label: label,
   code: code,
 };
+// // default customization applied to the HTML in the main layout.tsx
+// const style: StyleConfig = {
+//   theme: "system", // dark | light | system
+//   neutral: "gray", // sand | gray | slate | custom
+//   brand: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
+//   accent: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
+//   solid: "color", // color | contrast
+//   solidStyle: "flat", // flat | plastic
+//   border: "playful", // rounded | playful | conservative
+//   surface: "translucent", // filled | translucent
+//   transition: "all", // all | micro | macro
+//   scaling: "100", // 90 | 95 | 100 | 105 | 110
+// };
 
-// default customization applied to the HTML in the main layout.tsx
-const style: StyleConfig = {
-  theme: "system", // dark | light | system
-  neutral: "gray", // sand | gray | slate | custom
-  brand: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
-  accent: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
-  solid: "color", // color | contrast
-  solidStyle: "flat", // flat | plastic
-  border: "playful", // rounded | playful | conservative
-  surface: "translucent", // filled | translucent
-  transition: "all", // all | micro | macro
-  scaling: "100", // 90 | 95 | 100 | 105 | 110
-};
+const style = {
+  theme: "dark",
+  brand: "yellow",
+  accent: "indigo",
+  neutral: "sand",
+  border: "rounded",
+  solid: "contrast",
+  solidStyle: "flat",
+  surface: "translucent",
+  transition: "all",
+  scaling: "100",
+}
 
 const dataStyle: DataStyleConfig = {
   variant: "gradient", // flat | gradient | outline
@@ -102,14 +115,14 @@ const dataStyle: DataStyleConfig = {
 
 const effects: EffectsConfig = {
   mask: {
-    cursor: false,
-    x: 50,
+    cursor: true,
+    x: 0,
     y: 0,
-    radius: 100,
+    radius: 40,
   },
   gradient: {
     display: true,
-    opacity: 100,
+    opacity: 20,
     x: 50,
     y: 60,
     width: 100,

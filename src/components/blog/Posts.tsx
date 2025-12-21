@@ -8,6 +8,8 @@ interface PostsProps {
   thumbnail?: boolean;
   direction?: "row" | "column";
   exclude?: string[];
+  pathPrefix?: string;
+  source?: string[];
 }
 
 export function Posts({
@@ -16,8 +18,10 @@ export function Posts({
   thumbnail = false,
   exclude = [],
   direction,
+  source = ["src", "app", "blog", "posts"],
+  pathPrefix = "blog",
 }: PostsProps) {
-  let allBlogs = getPosts(["src", "app", "blog", "posts"]);
+  let allBlogs = getPosts(source);
 
   // Exclude by slug (exact match)
   if (exclude.length) {
@@ -37,7 +41,13 @@ export function Posts({
       {displayedBlogs.length > 0 && (
         <Grid columns={columns} s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
           {displayedBlogs.map((post) => (
-            <Post key={post.slug} post={post} thumbnail={thumbnail} direction={direction} />
+            <Post
+              key={post.slug}
+              post={post}
+              thumbnail={thumbnail}
+              direction={direction}
+              pathPrefix={pathPrefix}
+            />
           ))}
         </Grid>
       )}

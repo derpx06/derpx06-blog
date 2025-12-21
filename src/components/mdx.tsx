@@ -1,10 +1,11 @@
 import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
 import React, { ReactNode } from "react";
 import { slugify as transliterate } from "transliteration";
+import { HeadingLink } from "@/components/HeadingLink";
+import { SafeCodeBlock } from "@/components/SafeCodeBlock";
 
 import {
   Heading,
-  HeadingLink,
   Text,
   InlineCode,
   CodeBlock,
@@ -77,7 +78,17 @@ function createImage({ alt, src, ...props }: MediaProps & { src: string }) {
   );
 }
 
-function slugify(str: string): string {
+
+function extractText(node: any): string {
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (node?.props?.children) return extractText(node.props.children);
+  return '';
+}
+
+function slugify(input: any): string {
+  const str = extractText(input);
   const strWithAnd = str.replace(/&/g, " and "); // Replace & with 'and'
   return transliterate(strWithAnd, {
     lowercase: true,
@@ -89,10 +100,11 @@ function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   const CustomHeading = ({
     children,
     ...props
-  }: Omit<React.ComponentProps<typeof HeadingLink>, "as" | "id">) => {
+  }: Omit<React.ComponentProps<typeof HeadingLink>, "as" | "id" | "level">) => {
     const slug = slugify(children as string);
+    const level = parseInt(as.replace("h", "")) as 1 | 2 | 3 | 4 | 5 | 6;
     return (
-      <HeadingLink marginTop="24" marginBottom="12" as={as} id={slug} {...props}>
+      <HeadingLink marginTop="24" marginBottom="12" level={level} id={slug} {...props}>
         {children}
       </HeadingLink>
     );
@@ -122,6 +134,8 @@ function createInlineCode({ children }: { children: ReactNode }) {
 }
 
 function createCodeBlock(props: any) {
+  // Debugging Turbopack crash: temporarily disable custom CodeBlock
+  /*
   // For pre tags that contain code blocks
   if (props.children && props.children.props && props.children.props.className) {
     const { className, children } = props.children.props;
@@ -145,6 +159,7 @@ function createCodeBlock(props: any) {
       />
     );
   }
+  */
 
   // Fallback for other pre tags or empty code blocks
   return <pre {...props} />;
@@ -188,7 +203,7 @@ const components = {
   hr: createHR as any,
   Heading,
   Text,
-  CodeBlock,
+  CodeBlock: SafeCodeBlock,
   InlineCode,
   Accordion,
   AccordionGroup,
