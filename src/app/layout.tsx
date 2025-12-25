@@ -192,7 +192,11 @@ export default async function RootLayout({
             </Flex>
           </Flex>
           <Footer />
-          {display.chatbot && <ChatWidget />}
+          {display.chatbot && (
+            <Flex s={{ hide: true }}>
+              <ChatWidget />
+            </Flex>
+          )}
         </Column>
       </Providers>
     </Flex>

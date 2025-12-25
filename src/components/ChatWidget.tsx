@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AiIcon } from "./icons/AiIcon";
 import styles from "./ChatWidget.module.scss";
 
-export const ChatWidget = () => {
+export const ChatWidget = ({ variant = 'bubble' }: { variant?: 'bubble' | 'inline' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', text: string }[]>([
@@ -20,7 +20,7 @@ export const ChatWidget = () => {
 
         // Simulate response
         setTimeout(() => {
-            setMessages(prev => [...prev, { role: 'assistant', text: "I'm just a demo widget for now, but I'm listening!" }]);
+            setMessages(prev => [...prev, { role: 'assistant', text: "I'm just a demo widget for now, but I'm listening!I'm just a demo widget for now, but I'm listening!I'm just a demo widget for now, but I'm listening!I'm just a demo widget for now, but I'm listening!I'm just a demo widget for now, but I'm listening!" }]);
         }, 1000);
     };
 
@@ -37,7 +37,15 @@ export const ChatWidget = () => {
                     position="fixed"
                     bottom="104"
                     right="32"
-                    style={{ zIndex: 50, width: '440px', maxHeight: '750px', height: '600px' }}
+                    s={{ bottom: "112", right: "16" }}
+                    m={{ bottom: "112", right: "16" }}
+                    style={{
+                        zIndex: 50,
+                        width: '440px',
+                        maxWidth: 'calc(100vw - 32px)',
+                        maxHeight: 'calc(100vh - 130px)',
+                        height: '600px'
+                    }}
                     background="surface"
                     border="neutral-medium"
                     radius="l"
@@ -124,9 +132,11 @@ export const ChatWidget = () => {
             )}
 
             <Flex
-                position="fixed"
-                bottom="32"
-                right="32"
+                position={variant === 'bubble' ? "fixed" : "static"}
+                bottom={variant === 'bubble' ? "32" : undefined}
+                right={variant === 'bubble' ? "32" : undefined}
+                s={variant === 'bubble' ? { bottom: "136", right: "24" } : undefined}
+                m={variant === 'bubble' ? { bottom: "136", right: "24" } : undefined}
                 style={{ zIndex: 50 }}
             >
                 {isOpen ? (
@@ -140,21 +150,23 @@ export const ChatWidget = () => {
                     />
                 ) : (
                     <Flex
-                        className={styles.trigger}
+                        className={variant === 'bubble' ? styles.trigger : undefined}
                         onClick={() => setIsOpen(true)}
                         vertical="center"
                         horizontal="center"
                         background="surface"
                         border="neutral-medium"
-                        shadow="l"
+                        shadow={variant === 'bubble' ? "l" : undefined}
+                        radius="l"
+                        padding="4"
                         style={{
+                            cursor: 'pointer',
                             borderRadius: '50%',
-                            width: '48px',
-                            height: '48px',
-                            cursor: 'pointer'
+                            width: variant === 'inline' ? '40px' : '48px',
+                            height: variant === 'inline' ? '40px' : '48px'
                         }}
                     >
-                        <AiIcon size={24} />
+                        <AiIcon size={variant === 'inline' ? 20 : 24} />
                     </Flex>
                 )}
             </Flex>

@@ -101,8 +101,8 @@ export default async function CourseLesson({
 
     return (
         <Column fillWidth horizontal="center">
-            <Row maxWidth="l" s={{ maxWidth: "100%" }} gap="l">
-                <Column maxWidth="m" s={{ maxWidth: "100%" }} gap="l">
+            <Row maxWidth="l" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }} gap="l">
+                <Column maxWidth="m" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }} gap="l">
                     <Schema
                         as="blogPosting"
                         baseURL={baseURL}
@@ -146,7 +146,7 @@ export default async function CourseLesson({
                         />
                     )}
 
-                    <Column as="article" maxWidth="s" s={{ maxWidth: "100%" }}>
+                    <Column as="article" maxWidth="s" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }}>
                         {lessonPosts.map((post: any, idx: number) => (
                             <CustomMDX key={idx} source={post.content} />
                         ))}
@@ -186,6 +186,7 @@ export default async function CourseLesson({
                     top="80"
                     gap="16"
                     m={{ hide: true }}
+                    s={{ hide: true }}
                 >
                     <Row
                         gap="12"

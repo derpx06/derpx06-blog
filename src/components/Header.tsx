@@ -27,6 +27,7 @@ import {
 } from "@/resources";
 
 import { ThemeToggle } from "./ThemeToggle";
+import { ChatWidget } from "./ChatWidget";
 import styles from "./Header.module.scss";
 
 type TimeDisplayProps = {
@@ -258,11 +259,15 @@ export const Header = () => {
                   <ThemeToggle />
                 </>
               )}
+
+              <Row hide s={{ hide: false }}>
+                <Line background="neutral-alpha-medium" vert maxHeight="24" />
+                <ChatWidget variant="inline" />
+              </Row>
             </Row>
           </Row>
         </Row>
 
-        {/* RIGHT: DESKTOP SEARCH + TIME */}
         <Flex fillWidth horizontal="end" vertical="center" style={{ pointerEvents: "auto" }}>
           <Flex
             paddingRight="12"
@@ -271,7 +276,7 @@ export const Header = () => {
             gap="20"
             textSize="s"
           >
-            <Row s={{ hide: true }} m={{ hide: true }}>
+            <Row s={{ hide: true }} m={{ hide: true, }}>
               <Input
                 id="search-desktop"
                 name="search"
@@ -285,16 +290,18 @@ export const Header = () => {
             {display.time && <TimeDisplay timeZone={person.location} />}
           </Flex>
         </Flex>
-      </Row>
+      </Row >
       <Row
         hide
-        s={{ hide: false, position: "fixed" }}
-        m={{ hide: false, position: "fixed" }}
+        position="fixed"
+        s={{ hide: false, top: "0" }}
+        m={{ hide: false, top: "80px" }}
         fillWidth
         left="0"
-        paddingX="24"
+        borderWidth={1}
+        paddingX="12"
         paddingY="8"
-        style={{ zIndex: 50, top: "0" }}
+        style={{ zIndex: 50 }}
         className={showMobileSearch ? styles.blur : undefined}
         horizontal={showMobileSearch ? "center" : "end"}
         pointerEvents={showMobileSearch ? undefined : "none"}

@@ -45,19 +45,20 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 position="fixed"
                 left="0"
                 fillWidth
-                paddingX="24"
+                paddingX="12"
                 paddingY="8"
                 horizontal="between"
+                vertical="center"
                 hide
-                s={{ hide: false }}
-                m={{ hide: false }}
-                style={{ top: "0", zIndex: 30, pointerEvents: "none" }}
+                s={{ hide: false, top: "0" }}
+                m={{ hide: false, top: "0", paddingLeft: "80px", height: "80" }}
+                style={{ zIndex: 30, pointerEvents: "none" }}
             >
                 {activePanel === 'menu' ? (
                     <IconButton
                         icon="close"
                         variant="secondary"
-                        size="l"
+                        size="m"
                         tooltip="Close Menu"
                         className={styles.blur}
                         onClick={toggleMenu}
@@ -66,7 +67,7 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 ) : (
                     <IconButton
                         variant="secondary"
-                        size="l"
+                        size="m"
                         tooltip="Menu"
                         className={styles.blur}
                         onClick={toggleMenu}

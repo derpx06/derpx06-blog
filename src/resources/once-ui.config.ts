@@ -28,7 +28,7 @@ const routes: RoutesConfig = {
 
 const display: DisplayConfig = {
   location: false,
-  time: true,
+  time: false,
   themeSwitcher: true,
   chatbot: true,
 };

@@ -6,7 +6,7 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <Row as="footer" fillWidth padding="8" horizontal="center" s={{ direction: "column" }}>
+    <Row as="footer" fillWidth padding="8" horizontal="center" s={{ direction: "column" }} m={{ direction: "column" }}>
       <Row
         className={styles.mobile}
         maxWidth="m"
@@ -20,11 +20,16 @@ export const Footer = () => {
           horizontal: "center",
           align: "center",
         }}
+        m={{
+          direction: "column",
+          horizontal: "center",
+          align: "center",
+        }}
       >
         <Text variant="body-default-s" onBackground="neutral-strong">
           <Text onBackground="neutral-weak">© {currentYear} /</Text>
           <Text paddingX="4">{person.name}</Text>
-         
+
         </Text>
         <Row gap="16">
           {social.map(
@@ -42,7 +47,7 @@ export const Footer = () => {
           )}
         </Row>
       </Row>
-      <Row height="80" hide s={{ hide: false }} />
+      <Row height="80" hide s={{ hide: false }} m={{ hide: false }} />
     </Row>
   );
 };

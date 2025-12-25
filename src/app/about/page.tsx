@@ -73,11 +73,12 @@ export default function About() {
           paddingLeft="24"
           gap="32"
           s={{ hide: true }}
+          m={{ hide: true }}
         >
           <TableOfContents structure={structure} about={about} />
         </Column>
       )}
-      <Row fillWidth s={{ direction: "column"}} horizontal="center">
+      <Row fillWidth s={{ direction: "column" }} horizontal="center">
         {about.avatar.display && (
           <Column
             className={styles.avatar}
