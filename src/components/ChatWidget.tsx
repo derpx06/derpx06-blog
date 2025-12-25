@@ -68,30 +68,16 @@ export const ChatWidget = ({ variant = "bubble" }: { variant?: "bubble" | "inlin
                             zIndex: 50,
                             width: "440px",
                             maxWidth: "calc(100vw - 32px)",
-                            maxHeight: "min(600px, calc(100vh - 200px))",
+                            maxHeight: "min(650px, calc(100dvh - 40px))",
                             animation: "slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                         }}
                         s={{
-                            bottom: "0",
-                            right: "0",
-                            style: {
-                                width: "100vw",
-                                maxWidth: "100vw",
-                                height: "100vh",
-                                maxHeight: "100vh",
-                                borderRadius: "0",
-                            },
+                            bottom: "20",
+                            right: "16",
                         }}
                         m={{
-                            bottom: "0",
-                            right: "0",
-                            style: {
-                                width: "100vw",
-                                maxWidth: "100vw",
-                                height: "100vh",
-                                maxHeight: "100vh",
-                                borderRadius: "0",
-                            },
+                            bottom: "24",
+                            right: "24",
                         }}
                         background="surface"
                         border="neutral-medium"
@@ -206,17 +192,17 @@ export const ChatWidget = ({ variant = "bubble" }: { variant?: "bubble" | "inlin
                 s={
                     variant === "bubble"
                         ? {
-                              bottom: "24",
-                              right: "16",
-                          }
+                            bottom: "24",
+                            right: "16",
+                        }
                         : undefined
                 }
                 m={
                     variant === "bubble"
                         ? {
-                              bottom: "24",
-                              right: "16",
-                          }
+                            bottom: "24",
+                            right: "16",
+                        }
                         : undefined
                 }
             >

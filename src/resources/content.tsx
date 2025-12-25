@@ -8,7 +8,8 @@ const person: Person = {
   role: "App Developer",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
-  location: "Asia/Calcutta", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
+  location: "Pune, India",
+  timeZone: "Asia/Kolkata",
   languages: ["English", "Hindi", "Marathi", "German"], // optional: Leave the array empty if you don't want to display languages
 };
 

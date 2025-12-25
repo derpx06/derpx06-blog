@@ -38,6 +38,12 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 mobileOpen={activePanel === "menu"}
                 onClose={closePanel}
             />
+            {activePanel === "menu" && (
+                <div
+                    style={{ position: "fixed", inset: 0, zIndex: 19 }}
+                    onClick={closePanel}
+                />
+            )}
 
             <Row
                 position="fixed"
@@ -51,6 +57,7 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 s={{ hide: false, top: "0" }}
                 m={{ hide: false, top: "0", paddingLeft: "80px", height: "80" }}
                 style={{ zIndex: 30, pointerEvents: "none" }}
+                className={styles.compactHeader}
             >
                 {activePanel === "menu" ? (
                     <IconButton
@@ -58,18 +65,16 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                         variant="secondary"
                         size="m"
                         tooltip="Close Menu"
-                        className={styles.blur}
                         onClick={toggleMenu}
-                        style={{ backdropFilter: "blur(12px)", pointerEvents: "auto" }}
+                        style={{ backdropFilter: "blur(4px)", pointerEvents: "auto" }}
                     />
                 ) : (
                     <IconButton
                         variant="secondary"
                         size="m"
                         tooltip="Menu"
-                        className={styles.blur}
                         onClick={toggleMenu}
-                        style={{ backdropFilter: "blur(12px)", pointerEvents: "auto" }}
+                        style={{ backdropFilter: "blur(4px)", pointerEvents: "auto" }}
                     >
                         <Image
                             src={

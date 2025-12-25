@@ -88,7 +88,7 @@ export const Header = () => {
 
       <Row
         fitHeight
-        className={styles.position}
+        className={`${styles.position} ${styles.compactHeader}`}
         as="header"
         zIndex={9}
         fillWidth
@@ -276,7 +276,7 @@ export const Header = () => {
             gap="20"
             textSize="s"
           >
-            <Row s={{ hide: true }} m={{ hide: true, }}>
+            <Row s={{ hide: true }} className={styles.searchDesktop}>
               <Input
                 id="search-desktop"
                 name="search"
@@ -287,10 +287,16 @@ export const Header = () => {
               />
             </Row>
 
-            {display.time && <TimeDisplay timeZone={person.location} />}
+            {display.time && <TimeDisplay timeZone={person.timeZone} />}
           </Flex>
         </Flex>
       </Row >
+      {showMobileSearch && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 49 }}
+          onClick={() => setShowMobileSearch(false)}
+        />
+      )}
       <Row
         hide
         position="fixed"
@@ -301,16 +307,27 @@ export const Header = () => {
         paddingX="12"
         paddingY="8"
         style={{ zIndex: 50 }}
-        className={showMobileSearch ? styles.blur : undefined}
-        horizontal={showMobileSearch ? "center" : "end"}
-        pointerEvents={showMobileSearch ? undefined : "none"}
+        className={styles.mobileSearchRow}
+        horizontal="end"
+        pointerEvents="none"
       >
         {showMobileSearch ? (
-          <Row fillWidth gap="12" vertical="center" style={{ maxWidth: "600px" }}>
+          <Row
+            fillWidth
+            maxWidth="s"
+            gap="12"
+            vertical="center"
+            background="page"
+            border="neutral-medium"
+            radius="l"
+            padding="8"
+            shadow="l"
+            style={{ pointerEvents: "all" }}
+          >
             <Input
               id="search-mobile"
               name="search"
-              label="Search"
+              label="Search..."
               width="full"
               height="s"
               autoFocus
@@ -318,7 +335,8 @@ export const Header = () => {
             />
             <IconButton
               icon="close"
-              size="m"
+              size="s"
+              variant="tertiary"
               tooltip="Close search"
               onClick={() => setShowMobileSearch(false)}
             />

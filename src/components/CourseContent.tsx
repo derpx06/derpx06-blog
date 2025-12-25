@@ -28,6 +28,16 @@ export function CourseContent({ children }: { children: React.ReactNode }) {
                         padding-right: 16px !important;
                     }
                 }
+                @media (min-width: 769px) and (max-width: 1024px) and (max-height: 850px) {
+                    .course-content {
+                        margin-top: -4rem !important;
+                    }
+                }
+                @media (max-height: 500px) and (orientation: landscape) {
+                    .course-content {
+                        margin-top: -32px !important;
+                    }
+                }
             `}</style>
         </>
     );
