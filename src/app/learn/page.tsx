@@ -1,4 +1,4 @@
-import { Column, Heading, Meta, Schema, Grid } from "@once-ui-system/core";
+import { Column, Heading, Meta, Schema, Grid, Text } from "@once-ui-system/core";
 import { Mailchimp } from "@/components";
 import Post from "@/components/blog/Post";
 import { baseURL, person, learn } from "@/resources";
@@ -16,7 +16,7 @@ export async function generateMetadata() {
 
 export default function Learn() {
   return (
-    <Column maxWidth="m" paddingTop="24">
+    <Column maxWidth="m" paddingTop="24" paddingX="16">
       <Schema
         as="blogPosting"
         baseURL={baseURL}
@@ -30,11 +30,27 @@ export default function Learn() {
           image: `${baseURL}${person.avatar}`,
         }}
       />
-      <Heading marginBottom="l" variant="heading-strong-xl" marginLeft="24">
-        {learn.title}
-      </Heading>
+      <Column fillWidth horizontal="center" align="center" marginBottom="l" maxWidth="s">
+        <Heading marginBottom="m" variant="heading-strong-xl" align="center">
+          {learn.title}
+        </Heading>
+        <Text
+          variant="body-default-l"
+          onBackground="neutral-weak"
+          align="center"
+          wrap="balance"
+        >
+          {learn.description}
+        </Text>
+      </Column>
       <Column fillWidth flex={1} gap="40">
-        <Grid columns="1" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
+        <Grid
+          columns="2"
+          s={{ columns: 1 }}
+          m={{ columns: 1 }}
+          fillWidth
+          gap="16"
+        >
           {courses.map((course) => (
             <Post
               key={course.id}

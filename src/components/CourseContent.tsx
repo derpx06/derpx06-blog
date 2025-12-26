@@ -11,10 +11,21 @@ export function CourseContent({ children }: { children: React.ReactNode }) {
             <style jsx global>{`
                 .course-content {
                     padding-left: 0 !important;
+                    padding-right: 16px !important;
+                    transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
+
                 @media (min-width: 1025px) {
                     .course-content {
-                        padding-left: 256px !important;
+                        padding-left: 280px !important;
+                        padding-right: 32px !important;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .course-content {
+                        padding-left: 16px !important;
+                        padding-right: 16px !important;
                     }
                 }
             `}</style>

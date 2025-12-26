@@ -295,10 +295,9 @@ export const Header = () => {
         hide
         position="fixed"
         s={{ hide: false, top: "0" }}
-        m={{ hide: false, top: "80px" }}
+        m={{ hide: false, top: "0" }}
         fillWidth
         left="0"
-        borderWidth={1}
         paddingX="12"
         paddingY="8"
         style={{ zIndex: 50 }}
@@ -307,7 +306,7 @@ export const Header = () => {
         pointerEvents={showMobileSearch ? undefined : "none"}
       >
         {showMobileSearch ? (
-          <Row fillWidth gap="12" vertical="center">
+          <Row fillWidth gap="12" vertical="center" style={{ maxWidth: "600px" }}>
             <Input
               id="search-mobile"
               name="search"

@@ -16,7 +16,7 @@ interface CourseMobileControlsProps {
 
 export default function CourseMobileControls({ course, children }: CourseMobileControlsProps) {
     const { theme } = useTheme();
-    const [activePanel, setActivePanel] = useState<'menu' | 'search' | null>(null);
+    const [activePanel, setActivePanel] = useState<"menu" | "search" | null>(null);
     const [currentTheme, setCurrentTheme] = useState("light");
 
     useEffect(() => {
@@ -24,20 +24,18 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
     }, [theme]);
 
     const toggleMenu = () => {
-        setActivePanel(prev => prev === 'menu' ? null : 'menu');
+        setActivePanel((prev) => (prev === "menu" ? null : "menu"));
     };
-
-
 
     const closePanel = () => {
         setActivePanel(null);
     };
 
     return (
-        <Flex fillWidth className="min-h-screen" direction="column">
+        <Flex fillWidth style={{ minHeight: "100vh" }} direction="column">
             <CourseSidebar
                 course={course}
-                mobileOpen={activePanel === 'menu'}
+                mobileOpen={activePanel === "menu"}
                 onClose={closePanel}
             />
 
@@ -54,7 +52,7 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 m={{ hide: false, top: "0", paddingLeft: "80px", height: "80" }}
                 style={{ zIndex: 30, pointerEvents: "none" }}
             >
-                {activePanel === 'menu' ? (
+                {activePanel === "menu" ? (
                     <IconButton
                         icon="close"
                         variant="secondary"
@@ -74,7 +72,11 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                         style={{ backdropFilter: "blur(12px)", pointerEvents: "auto" }}
                     >
                         <Image
-                            src={currentTheme === 'dark' ? "/svg/menu-alt-1-svgrepo-com-white.svg" : "/svg/menu-alt-1-svgrepo-com.svg"}
+                            src={
+                                currentTheme === "dark"
+                                    ? "/svg/menu-alt-1-svgrepo-com-white.svg"
+                                    : "/svg/menu-alt-1-svgrepo-com.svg"
+                            }
                             alt="Menu"
                             width={24}
                             height={24}
@@ -83,9 +85,7 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 )}
             </Row>
 
-            <CourseContent>
-                {children}
-            </CourseContent>
+            <CourseContent>{children}</CourseContent>
         </Flex>
     );
 }
