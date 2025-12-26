@@ -2,3 +2,4 @@
 /.vscode
 /.next
 /.idea
+.env
