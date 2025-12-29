@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Column, Text, SmartLink, Line } from "@once-ui-system/core";
+import { Column, Text, SmartLink, Line, Row, IconButton } from "@once-ui-system/core";
 import { Course } from "@/resources/courses";
 
 interface CourseSidebarProps {
@@ -24,48 +24,75 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
             background="surface"
             padding="16"
             gap="8"
-            style={{ width: "fit-content", maxHeight: "calc(100vh - 128px)", overflowY: "auto" }}
+            style={{
+                width: "fit-content",
+                maxHeight: "calc(100vh - 128px)",
+                overflowY: "auto",
+                transition: "transform 0.3s ease-in-out, opacity 0.3s ease-in-out"
+            }}
             zIndex={10}
             s={{
-                hide: !mobileOpen,
-                ...(mobileOpen ? {
-                    display: "flex",
-                    position: "fixed",
-                    top: "0",
-                    left: "0",
-                    width: "85%",
-                    maxWidth: "320px",
-                    height: "100%",
-                    zIndex: 20,
-                    background: "page",
-                    border: "neutral-medium",
-                    radius: "none",
-                    padding: "24",
-                    overflowY: "auto"
-                } : {})
+                position: "fixed",
+                top: "0",
+                left: "0",
+                width: "85%",
+                maxWidth: "320px",
+                height: "100%",
+                zIndex: 40, // Higher than header
+                background: "page",
+                border: "neutral-medium",
+                radius: "none",
+                padding: "24",
+                overflowY: "auto",
+                // Slide in/out logic
             }}
             m={{
-                hide: !mobileOpen,
-                ...(mobileOpen ? {
-                    display: "flex",
-                    position: "fixed",
-                    top: "0",
-                    left: "0",
-                    width: "85%",
-                    maxWidth: "320px",
-                    height: "100%",
-                    zIndex: 20,
-                    background: "page",
-                    border: "neutral-medium",
-                    radius: "none",
-                    padding: "24",
-                    overflowY: "auto"
-                } : {})
+                position: "fixed",
+                top: "0",
+                left: "0",
+                width: "85%",
+                maxWidth: "320px",
+                height: "100%",
+                zIndex: 40,
+                background: "page",
+                border: "neutral-medium",
+                radius: "none",
+                padding: "24",
+                overflowY: "auto",
             }}
+            className={mobileOpen ? "mobile-sidebar-open" : "mobile-sidebar-closed"}
         >
-            <Text variant="heading-strong-s" marginBottom="16" paddingX="8">
-                {course.title}
-            </Text>
+            <style jsx global>{`
+                .mobile-sidebar-closed {
+                    @media (max-width: 1024px) {
+                        transform: translateX(-100%);
+                        opacity: 0;
+                        pointer-events: none;
+                    }
+                }
+                .mobile-sidebar-open {
+                    @media (max-width: 1024px) {
+                        transform: translateX(0);
+                        opacity: 1;
+                        pointer-events: auto;
+                    }
+                }
+            `}</style>
+
+            <Row fillWidth horizontal="between" vertical="center" marginBottom="16" paddingX="8">
+                <Text variant="heading-strong-s">
+                    {course.title}
+                </Text>
+                <Row hide s={{ hide: false }} m={{ hide: false }}>
+                    <IconButton
+                        icon="close"
+                        size="m"
+                        variant="ghost"
+                        tooltip="Close Menu"
+                        onClick={onClose}
+                    />
+                </Row>
+            </Row>
 
             <Column fillWidth gap="24">
                 {course.topics.map((topic, topicIndex) => (

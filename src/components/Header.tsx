@@ -281,7 +281,7 @@ export const Header = () => {
                 id="search-desktop"
                 name="search"
                 label="Search"
-                width="24"
+                width="32"
                 height="s"
                 cursor="interactive"
               />
@@ -308,8 +308,8 @@ export const Header = () => {
         paddingY="8"
         style={{ zIndex: 50 }}
         className={styles.mobileSearchRow}
-        horizontal="end"
-        pointerEvents="none"
+        horizontal={showMobileSearch ? "center" : "end"}
+        pointerEvents={showMobileSearch ? undefined : "none"}
       >
         {showMobileSearch ? (
           <Row
@@ -348,8 +348,6 @@ export const Header = () => {
               size="l"
               tooltip="Open search"
               variant="secondary"
-              className={styles.blur}
-              style={{ backdropFilter: "blur(12px)" }}
               onClick={() => setShowMobileSearch(true)}
             />
           </Row>
