@@ -146,7 +146,7 @@ export default async function CourseLesson({
                         />
                     )}
 
-                    <Column as="article" maxWidth="s" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }}>
+                    <Column as="article" maxWidth="m" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }}>
                         {lessonPosts.map((post: any, idx: number) => (
                             <CustomMDX key={idx} source={post.content} />
                         ))}
@@ -171,7 +171,7 @@ export default async function CourseLesson({
                                 href={`/learn/${courseSlug}/${nextLink.slug}`}
                                 variant="secondary"
                                 size="s"
-                                arrowIcon
+                                suffixIcon="chevronRight"
                             >
                                 Next
                             </Button>
