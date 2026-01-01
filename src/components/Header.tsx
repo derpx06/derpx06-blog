@@ -262,7 +262,9 @@ export const Header = () => {
 
               <Row hide s={{ hide: false }}>
                 <Line background="neutral-alpha-medium" vert maxHeight="24" />
-                <ChatWidget variant="inline" />
+                {display.chatbot && (
+                  <ChatWidget variant="inline" />
+                )}
               </Row>
             </Row>
           </Row>
@@ -276,16 +278,18 @@ export const Header = () => {
             gap="20"
             textSize="s"
           >
-            <Row s={{ hide: true }} className={styles.searchDesktop}>
-              <Input
-                id="search-desktop"
-                name="search"
-                label="Search"
-                width="32"
-                height="s"
-                cursor="interactive"
-              />
-            </Row>
+            {display.search && (
+              <Row s={{ hide: true }} className={styles.searchDesktop}>
+                <Input
+                  id="search-desktop"
+                  name="search"
+                  label="Search"
+                  width="32"
+                  height="s"
+                  cursor="interactive"
+                />
+              </Row>
+            )}
 
             {display.time && <TimeDisplay timeZone={person.timeZone} />}
           </Flex>
@@ -297,62 +301,64 @@ export const Header = () => {
           onClick={() => setShowMobileSearch(false)}
         />
       )}
-      <Row
-        hide
-        position="fixed"
-        s={{ hide: false, top: "0" }}
-        m={{ hide: false, top: "0" }}
-        fillWidth
-        left="0"
-        paddingX="12"
-        paddingY="8"
-        style={{ zIndex: 50 }}
-        className={styles.mobileSearchRow}
-        horizontal={showMobileSearch ? "center" : "end"}
-        pointerEvents={showMobileSearch ? undefined : "none"}
-      >
-        {showMobileSearch ? (
-          <Row
-            fillWidth
-            maxWidth="s"
-            gap="12"
-            vertical="center"
-            background="page"
-            border="neutral-medium"
-            radius="l"
-            padding="8"
-            shadow="l"
-            style={{ pointerEvents: "all" }}
-          >
-            <Input
-              id="search-mobile"
-              name="search"
-              label="Search..."
-              width="full"
-              height="s"
-              autoFocus
-              cursor="interactive"
-            />
-            <IconButton
-              icon="close"
-              size="s"
-              variant="tertiary"
-              tooltip="Close search"
-              onClick={() => setShowMobileSearch(false)}
-            />
-          </Row>
-        ) : (
-          <Row style={{ pointerEvents: "all" }}>
-            <IconButton
-              icon="search"
-              size="l"
-              tooltip="Open search"
-              variant="secondary"
-              onClick={() => setShowMobileSearch(true)}
-            />
-          </Row>
-        )}
-      </Row>
+      {display.search && (
+        <Row
+          hide
+          position="fixed"
+          s={{ hide: false, top: "0" }}
+          m={{ hide: false, top: "0" }}
+          fillWidth
+          left="0"
+          paddingX="12"
+          paddingY="8"
+          style={{ zIndex: 50 }}
+          className={styles.mobileSearchRow}
+          horizontal={showMobileSearch ? "center" : "end"}
+          pointerEvents={showMobileSearch ? undefined : "none"}
+        >
+          {showMobileSearch ? (
+            <Row
+              fillWidth
+              maxWidth="s"
+              gap="12"
+              vertical="center"
+              background="page"
+              border="neutral-medium"
+              radius="l"
+              padding="8"
+              shadow="l"
+              style={{ pointerEvents: "all" }}
+            >
+              <Input
+                id="search-mobile"
+                name="search"
+                label="Search..."
+                width="full"
+                height="s"
+                autoFocus
+                cursor="interactive"
+              />
+              <IconButton
+                icon="close"
+                size="s"
+                variant="tertiary"
+                tooltip="Close search"
+                onClick={() => setShowMobileSearch(false)}
+              />
+            </Row>
+          ) : (
+            <Row style={{ pointerEvents: "all" }}>
+              <IconButton
+                icon="search"
+                size="l"
+                tooltip="Open search"
+                variant="secondary"
+                onClick={() => setShowMobileSearch(true)}
+              />
+            </Row>
+          )}
+        </Row>
+      )}
     </>
   );
 };

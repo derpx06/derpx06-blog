@@ -21,6 +21,7 @@ export type DisplayConfig = {
   time: boolean;
   themeSwitcher: boolean;
   chatbot: boolean;
+  search: boolean;
 };
 
 /**

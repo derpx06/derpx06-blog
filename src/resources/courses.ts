@@ -20,63 +20,6 @@ export interface Course {
 
 export const courses: Course[] = [
     {
-        id: "course-demo",
-        title: "Interactive Course Demo",
-        description: "A demonstration of the course platform capabilities.",
-        slug: "course-demo",
-        image: "/images/projects/project-01/cover-04.jpg", // Placeholder
-        topics: [
-            {
-                title: "Getting Started",
-                links: [
-                    {
-                        title: "Introduction",
-                        slug: "interactive-course-demo",
-                        postSlugs: ["interactive-course-demo"] // Maps to src/app/learn/posts/interactive-course-demo.mdx
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: "python-basics",
-        title: "Basic Python Tutorial",
-        description: "Learn Python from scratch with this comprehensive guide.",
-        slug: "python-basics",
-        image: "/images/projects/project-01/cover-04.jpg",
-        topics: [
-            {
-                title: "Introduction",
-                links: [
-                    { title: "Setup", slug: "python-setup", postSlugs: ["python-setup"] },
-                    { title: "Hello World", slug: "python-hello-world", postSlugs: ["python-hello-world"] }
-                ]
-            },
-            {
-                title: "Data Types",
-                links: [
-                    { title: "Variables", slug: "python-variables", postSlugs: ["python-variables"] },
-                    { title: "Strings", slug: "python-strings", postSlugs: ["python-strings"] },
-                    { title: "Numbers", slug: "python-numbers", postSlugs: ["python-numbers"] }
-                ]
-            },
-            {
-                title: "Control Flow",
-                links: [
-                    { title: "If Statements", slug: "python-if-statements", postSlugs: ["python-if-statements"] },
-                    { title: "Loops", slug: "python-loops", postSlugs: ["python-loops"] }
-                ]
-            },
-            {
-                title: "Functions",
-                links: [
-                    { title: "Defining Functions", slug: "python-functions", postSlugs: ["python-functions"] },
-                    { title: "Arguments", slug: "python-arguments", postSlugs: ["python-arguments"] }
-                ]
-            }
-        ]
-    },
-    {
         id: "langchain-mastery",
         title: "LangChain Mastery",
         description: "Master building LLM applications with LangChain, from basics to advanced agents and RAG.",
@@ -150,6 +93,126 @@ export const courses: Course[] = [
                 links: [
                     { title: "PDF Chat", slug: "langchain-project-pdf", postSlugs: ["langchain-project-pdf"] },
                     { title: "Research Assistant", slug: "langchain-project-research", postSlugs: ["langchain-project-research"] }
+                ]
+            }
+        ]
+    },
+    {
+        id: "python-overview",
+        title: "Python Overview",
+        description: "A high-level overview of the Python programming language.",
+        slug: "python-overview",
+        image: "/images/projects/project-01/cover-04.jpg",
+        topics: [
+            {
+                title: "1. Foundations & Environment",
+                links: [
+                    {
+                        title: "The Toolbox",
+                        slug: "python-toolbox",
+                        postSlugs: ["python-toolbox"]
+                    },
+                    {
+                        title: "The Zen of Python",
+                        slug: "python-zen",
+                        postSlugs: ["python-zen"]
+                    },
+                    {
+                        title: "Structural Basics",
+                        slug: "python-structure",
+                        postSlugs: ["python-structure"]
+                    }
+                ]
+            },
+            {
+                title: "2. Control Flow & Functions",
+                links: [
+                    {
+                        title: "Logic & Arithmetic",
+                        slug: "python-control-flow",
+                        postSlugs: ["python-control-flow"]
+                    }
+                ]
+            },
+            {
+                title: "3. Data Structures",
+                links: [
+                    {
+                        title: "Lists",
+                        slug: "python-lists",
+                        postSlugs: ["python-lists"]
+                    },
+                    {
+                        title: "Tuples",
+                        slug: "python-tuples",
+                        postSlugs: ["python-tuples"]
+                    },
+                    {
+                        title: "Dictionaries",
+                        slug: "python-dicts",
+                        postSlugs: ["python-dicts"]
+                    },
+                    {
+                        title: "Sets",
+                        slug: "python-sets",
+                        postSlugs: ["python-sets"]
+                    }
+                ]
+
+            },
+            {
+                title: "4. Advanced Data Tools",
+                links: [
+                    {
+                        title: "Sorting",
+                        slug: "python-sorting",
+                        postSlugs: ["python-sorting"]
+                    },
+                    {
+                        title: "List Comprehensions",
+                        slug: "python-comprehensions",
+                        postSlugs: ["python-comprehensions"]
+                    },
+                    {
+                        title: "Generators & Iterators",
+                        slug: "python-generators",
+                        postSlugs: ["python-generators"]
+                    },
+                    {
+                        title: "Functional Tools",
+                        slug: "python-functional-tools",
+                        postSlugs: ["python-functional-tools"]
+                    }
+                ]
+            },
+            {
+                title: "5. Working with Data",
+                links: [
+                    {
+                        title: "Randomness",
+                        slug: "python-randomness",
+                        postSlugs: ["python-randomness"]
+                    },
+                    {
+                        title: "Regular Expressions",
+                        slug: "python-regex",
+                        postSlugs: ["python-regex"]
+                    },
+                    {
+                        title: "Object-Oriented Programming",
+                        slug: "python-oop",
+                        postSlugs: ["python-oop"]
+                    },
+                    {
+                        title: "Iterators & Zip",
+                        slug: "python-iterators-zip",
+                        postSlugs: ["python-iterators-zip"]
+                    },
+                    {
+                        title: "Args & Kwargs",
+                        slug: "python-args-kwargs",
+                        postSlugs: ["python-args-kwargs"]
+                    }
                 ]
             }
         ]

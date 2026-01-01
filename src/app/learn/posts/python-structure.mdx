@@ -1,0 +1,180 @@
+---
+title: Structural Basics
+publishedAt: '2024-01-01'
+summary: Whitespace formatting and proper module imports.
+---
+
+# Structural Basics
+
+## Whitespace Formatting
+
+Many languages use curly braces to delimit blocks of code. Python uses indentation:
+
+<CodeBlock
+    codes={[
+        {
+            code: `for i in [1, 2, 3, 4, 5]:
+    print i                 # first line in "for i" block
+    for j in [1, 2, 3, 4, 5]:
+        print j             # first line in "for j" block
+        print i + j         # last line in "for j" block
+    print i                 # last line in "for i" block
+print "done looping"`,
+            language: "python",
+            label: "indentation.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+This makes Python code very readable, but it also means that you have to be very careful with your formatting.
+
+### Helpful Whitespace Rules
+
+Whitespace is ignored inside parentheses and brackets, which can be helpful for long-winded computations:
+
+<CodeBlock
+    codes={[
+        {
+            code: `long_winded_computation = (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 +
+                           13 + 14 + 15 + 16 + 17 + 18 + 19 + 20)`,
+            language: "python",
+            label: "long_computation.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+and for making code easier to read:
+
+<CodeBlock
+    codes={[
+        {
+            code: `list_of_lists = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+easier_to_read_list_of_lists = [ [1, 2, 3],
+                                 [4, 5, 6],
+                                 [7, 8, 9] ]`,
+            language: "python",
+            label: "formatting.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+You can also use a backslash to indicate that a statement continues onto the next line, although we’ll rarely do this:
+
+<CodeBlock
+    codes={[
+        {
+            code: `two_plus_three = 2 + \\
+                 3`,
+            language: "python",
+            label: "backslash.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+## Copy and Pasting
+
+One consequence of whitespace formatting is that it can be hard to copy and paste code into the Python shell. For example, if you tried to paste this code:
+
+<CodeBlock
+    codes={[
+        {
+            code: `for i in [1, 2, 3, 4, 5]:
+
+    # notice the blank line
+    print i`,
+            language: "python",
+            label: "error.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+...into the ordinary Python shell, you would get a `IndentationError: expected an indented block` because the interpreter thinks the blank line signals the end of the for loop’s block.
+
+**IPython** has a magic function `%paste`, which correctly pastes whatever is on your clipboard, whitespace and all. This alone is a good reason to use IPython.
+
+## Modules
+
+Certain features of Python are not loaded by default. These include both features included as part of the language as well as third-party features that you download yourself. In order to use these features, you’ll need to `import` the modules that contain them.
+
+One approach is to simply import the module itself:
+
+<CodeBlock
+    codes={[
+        {
+            code: `import re
+my_regex = re.compile("[0-9]+", re.I)`,
+            language: "python",
+            label: "import_basic.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+Here `re` is the module containing functions and constants for working with regular expressions. After this type of import you can only access those functions by prefixing them with `re.`.
+
+If you already had a different `re` in your code you could use an alias:
+
+<CodeBlock
+    codes={[
+        {
+            code: `import re as regex
+my_regex = regex.compile("[0-9]+", regex.I)`,
+            language: "python",
+            label: "import_alias.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+You might also do this if your module has an unwieldy name or if you’re going to be typing it a lot. For example, when visualizing data with matplotlib, a standard convention is:
+
+<CodeBlock
+    codes={[
+        {
+            code: `import matplotlib.pyplot as plt`,
+            language: "python",
+            label: "matplotlib.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+If you need a few specific values from a module, you can import them explicitly and use them without qualification:
+
+<CodeBlock
+    codes={[
+        {
+            code: `from collections import defaultdict, Counter
+lookup = defaultdict(int)
+my_counter = Counter()`,
+            language: "python",
+            label: "from_import.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+If you were a bad person, you could import the entire contents of a module into your namespace, which might inadvertently overwrite variables you’ve already defined:
+
+<CodeBlock
+    codes={[
+        {
+            code: `match = 10
+from re import *
+print match
+# uh oh, re has a match function
+# "<function re.match>"`,
+            language: "python",
+            label: "bad_import.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+However, since you are not a bad person, you won’t ever do this.

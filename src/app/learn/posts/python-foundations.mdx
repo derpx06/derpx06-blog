@@ -1,0 +1,119 @@
+---
+title: Foundations & Environment
+publishedAt: '2024-01-01'
+summary: Setting up the toolbox and understanding the Zen of Python.
+---
+
+# Foundations & Environment
+
+Meet **Py**, your eccentric but brilliant guide to the world of Python. Py has been around for twenty-five years and has seen it all. Py believes that coding should be a joy, not a chore.
+
+"Welcome, traveler!" Py exclaims. "Before we embark on this quest, we must equip you with the proper tools. You wouldn't slay a dragon with a spoon, would you?"
+
+## The Toolbox
+
+"First things first," Py says, opening a large chest.
+
+<AccordionGroup
+    items={[
+        {
+            title: "The Heavy Armor: Anaconda",
+            content: <Text>Anaconda is like a fully-stocked armory. It comes with Python and most of the heavy lifting libraries (math, science, engineering) pre-installed. It saves you from "dependency hell".</Text>
+        },
+        {
+            title: "The Courier: pip",
+            content: <Text><code>pip</code> is your trusty courier. Even with Anaconda, you'll use <code>pip install package_name</code> to fetch specialized tools from the vast Python Package Index.</Text>
+        },
+        {
+            title: "The Magic Mirror: IPython",
+            content: <Text>The standard shell is dull. IPython is a magic mirror—it has syntax highlighting, tab completion, and magic spells like <code>%paste</code>.</Text>
+        }
+    ]}
+/>
+
+<Feedback
+    icon
+    variant="info"
+    title="Py's Pro Tip"
+    description="Never paste indented code into the standard shell—it explodes! Use IPython's `%paste` magic command to paste safely."
+    marginBottom="32"
+/>
+
+## The Zen of Python
+
+Py pulls out a scrolled parchment. "This," he whispers, "is our code."
+
+<CodeBlock
+    codes={[
+        {
+            code: `import this
+# Output:
+# Beautiful is better than ugly.
+# Explicit is better than implicit.
+# Simple is better than complex.
+# ...
+# There should be one-- and preferably only one --obvious way to do it.`,
+            language: "python",
+            label: "zen.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+"We call this **Pythonic**," Py explains. "It is the path of clarity."
+
+## Structural Basics
+
+### Whitespace Formatting
+
+"In other lands," Py continues, "they use curly braces `{}` to cage their code. Here, we use **whitespace** and **indentation**. It is elegant, but it demands respect."
+
+<CodeBlock
+    codes={[
+        {
+            code: `for i in [1, 2, 3, 4, 5]:
+    print(i)                # We are inside the loop
+    for j in [1, 2, 3, 4, 5]:
+        print(j)            # Deeper still!
+        print(i + j)
+    print(i)                # Back to the outer level
+print("done looping")       # We have emerged!`,
+            language: "python",
+            label: "whitespace.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+> [!WARNING]
+> "Beware!" Py warns. "Whitespace is ignored inside parentheses `()`. Use this to your advantage when your spells (calculations) become too long for one line."
+
+### Modules
+
+"We travel light," Py says. "We only carry what we need. When you need a specific tool, you must summon it."
+
+<CodeBlock
+    codes={[
+        {
+            code: `import re
+my_regex = re.compile("[0-9]+", re.I)
+
+# Alias for convenience
+import matplotlib.pyplot as plt
+
+# Explicit summoning
+from collections import defaultdict, Counter`,
+            language: "python",
+            label: "imports.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+<Feedback
+    icon
+    variant="danger"
+    title="The Forbidden Spell"
+    description="Do NOT use `from module import *`. It floods your world with unknown variables and chaos!"
+    marginBottom="24"
+/>

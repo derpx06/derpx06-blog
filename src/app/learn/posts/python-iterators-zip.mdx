@@ -1,0 +1,128 @@
+---
+title: Iterators & Zip
+publishedAt: '2024-01-01'
+summary: enumerate, zip, and argument unpacking.
+---
+
+# Iterators & Zip
+
+## enumerate
+
+Not infrequently, you’ll want to iterate over a list and use both its elements and their indexes:
+
+<CodeBlock
+    codes={[
+        {
+            code: `# not Pythonic
+for i in range(len(documents)):
+    document = documents[i]
+    do_something(i, document)
+
+# also not Pythonic
+i = 0
+for document in documents:
+    do_something(i, document)
+    i += 1`,
+            language: "python",
+            label: "not_pythonic.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+The Pythonic solution is `enumerate`, which produces tuples `(index, element)`:
+
+<CodeBlock
+    codes={[
+        {
+            code: `for i, document in enumerate(documents):
+    do_something(i, document)`,
+            language: "python",
+            label: "enumerate.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+Similarly, if we just want the indexes:
+
+<CodeBlock
+    codes={[
+        {
+            code: `for i in range(len(documents)): do_something(i)   # not Pythonic
+for i, _ in enumerate(documents): do_something(i) # Pythonic`,
+            language: "python",
+            label: "indexes.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+We’ll use this a lot.
+
+## zip and Argument Unpacking
+
+Often we will need to `zip` two or more lists together. `zip` transforms multiple lists into a single list of tuples of corresponding elements:
+
+<CodeBlock
+    codes={[
+        {
+            code: `list1 = ['a', 'b', 'c']
+list2 = [1, 2, 3]
+zip(list1, list2)   # is [('a', 1), ('b', 2), ('c', 3)]`,
+            language: "python",
+            label: "zip.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+If the lists are different lengths, `zip` stops as soon as the first list ends.
+
+You can also "unzip" a list using a strange trick:
+
+<CodeBlock
+    codes={[
+        {
+            code: `pairs = [('a', 1), ('b', 2), ('c', 3)]
+letters, numbers = zip(*pairs)`,
+            language: "python",
+            label: "unzip.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+The asterisk performs **argument unpacking**, which uses the elements of `pairs` as individual arguments to `zip`. It ends up the same as if you’d called:
+
+<CodeBlock
+    codes={[
+        {
+            code: `zip(('a', 1), ('b', 2), ('c', 3))`,
+            language: "python",
+            label: "zipping_tuples.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+which returns `[('a','b','c'), ('1','2','3')]`.
+
+You can use argument unpacking with any function:
+
+<CodeBlock
+    codes={[
+        {
+            code: `def add(a, b): return a + b
+
+add(1, 2)       # returns 3
+add([1, 2])     # TypeError!
+add(*[1, 2])    # returns 3`,
+            language: "python",
+            label: "unpacking.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+It is rare that we’ll find this useful, but when we do it’s a neat trick.

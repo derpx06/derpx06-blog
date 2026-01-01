@@ -1,0 +1,63 @@
+---
+title: Tuples
+publishedAt: '2024-01-01'
+summary: Tuples are lists' immutable cousins.
+---
+
+# Tuples
+
+Tuples are lists’ immutable cousins. Pretty much anything you can do to a list that doesn’t involve modifying it, you can do to a tuple. You specify a tuple by using parentheses (or nothing) instead of square brackets:
+
+<CodeBlock
+    codes={[
+        {
+            code: `my_list = [1, 2]
+my_tuple = (1, 2)
+other_tuple = 3, 4
+my_list[1] = 3      # my_list is now [1, 3]
+
+try:
+    my_tuple[1] = 3
+except TypeError:
+    print "cannot modify a tuple"`,
+            language: "python",
+            label: "tuples.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+## Multiple Return Values
+
+Tuples are a convenient way to return multiple values from functions:
+
+<CodeBlock
+    codes={[
+        {
+            code: `def sum_and_product(x, y):
+    return (x + y),(x * y)
+
+sp = sum_and_product(2, 3)            # equals (5, 6)
+s, p = sum_and_product(5, 10)         # s is 15, p is 50`,
+            language: "python",
+            label: "multiple_returns.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+## Swapping
+
+Tuples (and lists) can also be used for multiple assignment:
+
+<CodeBlock
+    codes={[
+        {
+            code: `x, y = 1, 2
+x, y = y, x     # Pythonic way to swap variables; now x is 2, y is 1`,
+            language: "python",
+            label: "swapping.py"
+        }
+    ]}
+    marginBottom="24"
+/>

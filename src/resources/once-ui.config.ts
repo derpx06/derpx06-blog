@@ -30,7 +30,8 @@ const display: DisplayConfig = {
   location: false,
   time: false,
   themeSwitcher: true,
-  chatbot: true,
+  chatbot: false,
+  search: false,
 };
 
 // Enable password protection on selected routes

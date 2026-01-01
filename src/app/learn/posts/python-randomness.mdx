@@ -1,0 +1,122 @@
+---
+title: Randomness
+publishedAt: '2024-01-01'
+summary: Generating random numbers and sampling.
+---
+
+# Randomness
+
+As we learn data science, we will frequently need to generate random numbers, which we can do with the `random` module:
+
+<CodeBlock
+    codes={[
+        {
+            code: `import random
+
+four_uniform_randoms = [random.random() for _ in range(4)]
+
+# [0.8444218515250481,
+#  0.7579544029403025,
+#  0.420571580830845,
+#  0.25891675029296335]
+
+# random.random() produces numbers
+# uniformly between 0 and 1
+# it's the random function we'll use most often`,
+            language: "python",
+            label: "random.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+The `random` module actually produces pseudorandom (that is, deterministic) numbers based on an internal state that you can set with `random.seed` if you want to get reproducible results:
+
+<CodeBlock
+    codes={[
+        {
+            code: `random.seed(10)         # set the seed to 10
+print random.random()   # 0.57140259469
+random.seed(10)         # reset the seed to 10
+print random.random()   # 0.57140259469 again`,
+            language: "python",
+            label: "seed.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+We’ll sometimes use `random.randrange`, which takes either 1 or 2 arguments and returns an element chosen randomly from the corresponding `range()`:
+
+<CodeBlock
+    codes={[
+        {
+            code: `random.randrange(10)    # choose randomly from range(10) = [0, 1, ..., 9]
+random.randrange(3, 6)  # choose randomly from range(3, 6) = [3, 4, 5]`,
+            language: "python",
+            label: "randrange.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+There are a few more methods that we’ll sometimes find convenient. `random.shuffle` randomly reorders the elements of a list:
+
+<CodeBlock
+    codes={[
+        {
+            code: `up_to_ten = range(10)
+random.shuffle(up_to_ten)
+print up_to_ten
+# [2, 5, 1, 9, 7, 3, 8, 6, 4, 0]
+# (your results will probably be different)`,
+            language: "python",
+            label: "shuffle.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+If you need to randomly pick one element from a list you can use `random.choice`:
+
+<CodeBlock
+    codes={[
+        {
+            code: `my_best_friend = random.choice(["Alice", "Bob", "Charlie"])
+# "Bob" for me`,
+            language: "python",
+            label: "choice.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+And if you need to randomly choose a sample of elements without replacement (i.e., with no duplicates), you can use `random.sample`:
+
+<CodeBlock
+    codes={[
+        {
+            code: `lottery_numbers = range(60)
+winning_numbers = random.sample(lottery_numbers, 6)
+# [16, 36, 10, 6, 25, 9]`,
+            language: "python",
+            label: "sample.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+To choose a sample of elements with replacement (i.e., allowing duplicates), you can just make multiple calls to `random.choice`:
+
+<CodeBlock
+    codes={[
+        {
+            code: `four_with_replacement = [random.choice(range(10))
+                         for _ in range(4)]
+# [9, 4, 4, 2]`,
+            language: "python",
+            label: "replacement.py"
+        }
+    ]}
+    marginBottom="24"
+/>
