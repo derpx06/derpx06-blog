@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Column, Text, SmartLink, Line, Row, IconButton } from "@once-ui-system/core";
+import { useEffect, useRef } from "react";
 import { Course } from "@/resources/courses";
 
 interface CourseSidebarProps {
@@ -12,6 +13,14 @@ interface CourseSidebarProps {
 
 export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSidebarProps) {
     const pathname = usePathname();
+    const pendingNavigationRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (pendingNavigationRef.current && pathname.includes(pendingNavigationRef.current)) {
+            pendingNavigationRef.current = null;
+            onClose?.();
+        }
+    }, [pathname, onClose]);
     let globalIndex = 0;
 
     return (
@@ -110,12 +119,17 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                             {topic.links.map((link) => {
                                 const index = globalIndex++;
                                 const isActive = pathname?.replace(/\/$/, '') === `/learn/${course.slug}/${link.slug}`.replace(/\/$/, '');
+
+                                const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                                    pendingNavigationRef.current = link.slug;
+                                };
+
                                 return (
                                     <SmartLink
                                         key={link.slug}
                                         href={`/learn/${course.slug}/${link.slug}`}
                                         style={{ textDecoration: "none" }}
-                                        onClick={onClose}
+                                        onClick={handleLinkClick}
                                     >
                                         <Column
                                             fillWidth

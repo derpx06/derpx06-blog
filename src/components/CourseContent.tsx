@@ -13,6 +13,8 @@ export function CourseContent({ children }: { children: React.ReactNode }) {
                     padding-left: 0 !important;
                     padding-right: 16px !important;
                     transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                    z-index: 1;
                 }
 
                 @media (min-width: 1025px) {
@@ -26,6 +28,7 @@ export function CourseContent({ children }: { children: React.ReactNode }) {
                     .course-content {
                         padding-left: 16px !important;
                         padding-right: 16px !important;
+                        z-index: 1;
                     }
                 }
                 @media (min-width: 769px) and (max-width: 1024px) and (max-height: 850px) {
