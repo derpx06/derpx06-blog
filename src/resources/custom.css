@@ -20,7 +20,7 @@
 
 /* Reduce brightness in light theme */
 [data-theme="light"] {
-  filter: brightness(0.85) saturate(0.85);
+  filter: brightness(0.90) saturate(1);
 }
 
 /* Alternative: Target specific backgrounds for more subtle effect */
