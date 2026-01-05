@@ -3,6 +3,8 @@ import React, { ReactNode } from "react";
 import { slugify as transliterate } from "transliteration";
 import { HeadingLink } from "@/components/HeadingLink";
 import { SafeCodeBlock } from "@/components/SafeCodeBlock";
+import { Timeline } from "@/components/Timeline";
+
 
 import {
   Heading,
@@ -217,7 +219,9 @@ const components = {
   Icon,
   Media,
   SmartLink,
+  Timeline,
 };
+
 
 type CustomMDXProps = MDXRemoteProps & {
   components?: typeof components;

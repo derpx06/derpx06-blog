@@ -1,0 +1,158 @@
+---
+title: Introduction to LangChain
+publishedAt: '2024-01-05'
+summary: A creative look at why LangChain creates order out of LLM chaos.
+image: /images/projects/project-01/cover-04.jpg
+---
+
+## What is LangChain?
+
+**LangChain** is an open-source framework that turns isolated LLMs into powerful applications.
+
+While models like GPT-4 are "brains," they are disconnected from the world. They can't access your private data, browse the live web, or remember past conversations on their own.
+
+**LangChain solves this by providing the "glue"**—standardized tools to:
+*   **Connect** LLMs to data sources (PDFs, databases).
+*   **Give** them tools (APIs, search functionality).
+*   **Remember** interactions (Memory).
+
+It is the industry standard for building context-aware, reasoning AI agents.
+
+## Why Raw LLMs Fall Short
+
+LLMs are brilliant. They know everything about quantum physics and 14th-century poetry.
+But they have two fatal flaws: **they have no memory**, and **they have no hands**.
+
+<Grid columns="2" s={{columns: 1}} gap="16" marginBottom="32">
+    <Card
+        padding="24"
+        radius="l"
+        direction="column"
+        border="neutral-medium"
+        background="surface"
+    >
+         <Row gap="12" vertical="center" marginBottom="16">
+            <Icon name="sparkle" size="m"/>
+            <Text variant="heading-strong-m">The Amnesiac Genius</Text>
+        </Row>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            Imagine the smartest person on Earth. Now imagine they reset their memory every 10 seconds.
+        </Text>
+        <br/>
+        <CodeBlock
+            codes={[
+                {
+                    code: `User: "I'm Bob."
+AI: "Hi Bob!"
+User: "Who am I?"
+AI: "I don't know."`,
+                    language: "text",
+                    label: "Without Memory"
+                }
+            ]}
+        />
+        <Text variant="body-default-s" onBackground="neutral-weak" marginTop="16">
+            **LangChain gives them a notepad.**
+        </Text>
+    </Card>
+
+    <Card
+        padding="24"
+        radius="l"
+        direction="column"
+        border="neutral-medium"
+        background="surface"
+    >
+        <Row gap="12" vertical="center" marginBottom="16">
+            <Icon name="tools" size="m"/>
+            <Text variant="heading-strong-m">The Armless Chef</Text>
+        </Row>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+             Imagine a world-class chef who can recite every recipe but cannot physically pick up a knife.
+        </Text>
+         <br/>
+        <CodeBlock
+            codes={[
+                {
+                    code: `User: "Book a flight."
+AI: "I cannot access the internet."`,
+                    language: "text",
+                    label: "Without Tools"
+                }
+            ]}
+        />
+        <Text variant="body-default-s" onBackground="neutral-weak" marginTop="16">
+            **LangChain gives them hands.**
+        </Text>
+    </Card>
+</Grid>
+
+## The Killer Feature: Chat with Your Data (RAG)
+
+The most popular use case for LangChain is **RAG (Retrieval Augmented Generation)**. This allows you to chat with your own PDFs, Notion docs, or SQL databases.
+
+LangChain handles the complexity of the data pipeline:
+1.  **Load**: Import data from 300+ sources (PDF, CSV, Slack, etc.).
+2.  **Split**: Break text into small chunks.
+3.  **Embed**: Convert text into vectors (math) for semantic search.
+4.  **Store**: Save vectors in a database (Pinecone, ChromaDB).
+
+<CodeBlock
+    codes={[
+        {
+            code: `from langchain.chains import RetrievalQA
+
+# 1 line to chat with your PDF
+qa = RetrievalQA.from_chain_type(llm=openai, retriever=vector_store.as_retriever())
+qa.run("Summarize the meeting notes")`,
+            language: "python",
+            label: "RAG in LangChain"
+        }
+    ]}
+/>
+
+<br/>
+
+## Core Features
+
+LangChain provides the modules to build end-to-end applications.
+
+<Grid columns="2" s={{columns: 1}} gap="32" marginBottom="32">
+    <Column gap="8">
+        <Row gap="8" vertical="center">
+            <Icon name="refresh" size="s"/>
+            <Text variant="heading-strong-s">Model I/O</Text>
+        </Row>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            Switch between models (OpenAI, Anthropic, Llama) by changing a single line of code.
+        </Text>
+    </Column>
+    <Column gap="8">
+        <Row gap="8" vertical="center">
+            <Icon name="gitBranch" size="s"/>
+            <Text variant="heading-strong-s">Chains</Text>
+        </Row>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            Link multiple processing steps together (e.g., Retrieve -> Summarize -> Email).
+        </Text>
+    </Column>
+    <Column gap="8">
+        <Row gap="8" vertical="center">
+            <Icon name="document" size="s"/>
+            <Text variant="heading-strong-s">Memory</Text>
+        </Row>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            Add context to stateless LLMs so they remember chat history.
+        </Text>
+    </Column>
+    <Column gap="8">
+        <Row gap="8" vertical="center">
+            <Icon name="sparkle" size="s"/>
+            <Text variant="heading-strong-s">Agents</Text>
+        </Row>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            Turn LLMs into reasoning engines that can use tools (Calculator, Search, API) to solve problems.
+        </Text>
+    </Column>
+</Grid>
+

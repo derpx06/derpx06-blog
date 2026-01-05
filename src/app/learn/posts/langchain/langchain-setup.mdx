@@ -1,0 +1,112 @@
+---
+title: Environment Setup
+publishedAt: '2024-01-05'
+summary: Comprehensive guide to Environment Setup in LangChain.
+---
+
+# Environment Setup
+
+In this lesson, we will cover how to set up your environment for building LangChain applications. We'll verify everything is working by installing the necessary packages, configuring your API keys, and running a simple completion.
+
+## Project Setup
+
+First, let's create a directory for our project.
+
+<CodeBlock
+    codes={[
+        {
+            code: `mkdir my-langchain-app
+cd my-langchain-app`,
+            language: "bash",
+            label: "terminal"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+Now, we need to set up a virtual environment and install LangChain. You can choose between the standard Python tools or the modern `uv` package manager.
+
+<CodeBlock
+    codes={[
+        {
+            code: `python -m venv .venv
+
+# Activate the virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows:
+# .venv\\Scripts\\activate
+
+# Install LangChain and integration packages
+pip install langchain langchain-openai langchain-google-genai`,
+            language: "bash",
+            label: "Pip"
+        },
+        {
+            code: `# Create a virtual environment
+uv venv
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Install LangChain and integration packages
+uv pip install langchain langchain-openai langchain-google-genai`,
+            language: "bash",
+            label: "uv"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+## Environment Configuration
+
+To use LLMs like OpenAI's GPT-4 or Google's Gemini, you need to set your API keys as environment variables. This creates a secure way for the LangChain library to access your credentials without hardcoding them in scripts.
+
+<CodeBlock
+    codes={[
+        {
+            code: `export OPENAI_API_KEY="sk-..."
+export GOOGLE_API_KEY="AIza..."`,
+            language: "bash",
+            label: ".env"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+## Basic Example
+
+Now that we have the library installed and the environment configured, let's run a simple script to verify our setup. We'll initialize a Chat Model and ask it a question.
+
+<CodeBlock
+    codes={[
+        {
+            code: `from langchain_openai import ChatOpenAI
+# Or for Google Gemini:
+# from langchain_google_genai import ChatGoogleGenerativeAI
+
+# Initialize the model
+llm = ChatOpenAI()
+# llm = ChatGoogleGenerativeAI(model="gemini-pro")
+
+# Invoke the model
+response = llm.invoke("Hello, how are you?")
+
+print(response.content)`,
+            language: "python",
+            label: "test_setup.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+## Summary
+
+You have now successfully:
+1. Created a project directory and virtual environment.
+2. Installed LangChain and integration packages (OpenAI, Google) using `pip` or `uv`.
+3. Configured your API keys.
+4. Verified the setup with a simple Python script.
+
+You are ready to start building!
+

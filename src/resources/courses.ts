@@ -27,72 +27,161 @@ export const courses: Course[] = [
         image: "/images/projects/project-01/cover-04.jpg",
         topics: [
             {
-                title: "Introduction",
+                title: "0. Introduction & Setup",
                 links: [
                     { title: "Introduction", slug: "langchain-intro", postSlugs: ["langchain-intro"] },
-                    { title: "Setup & Installation", slug: "langchain-setup", postSlugs: ["langchain-setup"] }
+                    { title: "Setup & Installation", slug: "langchain-setup", postSlugs: ["langchain-setup"] },
+                    { title: "Evolution of AI Agents", slug: "evolution-of-ai-agents", postSlugs: ["evolution-of-ai-agents"] }
                 ]
             },
             {
-                title: "Model I/O",
+                title: "1. Foundations of LLM Architecture",
                 links: [
-                    { title: "LLMs & Chat Models", slug: "langchain-llms", postSlugs: ["langchain-llms"] },
-                    { title: "Prompts", slug: "langchain-prompts", postSlugs: ["langchain-prompts"] },
-                    { title: "Prompt Templates", slug: "langchain-prompt-templates", postSlugs: ["langchain-prompt-templates"] },
-                    { title: "Advanced Prompts", slug: "langchain-advanced-prompts", postSlugs: ["langchain-advanced-prompts"] },
-                    { title: "Debugging Prompts", slug: "langchain-prompt-debugging", postSlugs: ["langchain-prompt-debugging"] },
-                    { title: "Output Parsers", slug: "langchain-parsers", postSlugs: ["langchain-parsers"] }
+                    { title: "The Transformer Blueprint", slug: "transformer-blueprint", postSlugs: ["transformer-blueprint"] },
+                    { title: "Self-Attention & Positional Encoding", slug: "self-attention", postSlugs: ["self-attention"] },
+                    { title: "Feed-Forward vs. Attention Layers", slug: "feed-forward-networks", postSlugs: ["feed-forward-networks"] },
+                    { title: "Context Economics", slug: "context-economics", postSlugs: ["context-economics"] },
+                    { title: "The 'Lost in the Middle' Phenomenon", slug: "lost-in-middle", postSlugs: ["lost-in-middle"] },
+                    { title: "Context Window Budgeting", slug: "context-window-budgeting", postSlugs: ["context-window-budgeting"] },
+                    { title: "KV Caching & Generation Speed", slug: "kv-caching", postSlugs: ["kv-caching"] },
+                    { title: "Production Token Management", slug: "production-token-management", postSlugs: ["production-token-management"] },
+                    { title: "Context Overflow Strategies", slug: "context-overflow-strategies", postSlugs: ["context-overflow-strategies"] },
+                    { title: "Handling Rate Limits", slug: "handling-rate-limits", postSlugs: ["handling-rate-limits"] }
                 ]
             },
             {
-                title: "Data Connection (RAG)",
+                title: "2. Advanced Model Communication",
                 links: [
-                    { title: "Introduction to RAG", slug: "langchain-rag-intro", postSlugs: ["langchain-rag-intro"] },
-                    { title: "Document Loaders", slug: "langchain-document-loaders", postSlugs: ["langchain-document-loaders"] },
-                    { title: "Text Splitters", slug: "langchain-text-splitters", postSlugs: ["langchain-text-splitters"] },
-                    { title: "Vector Stores", slug: "langchain-vector-stores", postSlugs: ["langchain-vector-stores"] },
-                    { title: "Retrievers", slug: "langchain-retrievers", postSlugs: ["langchain-retrievers"] },
-                    { title: "Advanced Retrieval", slug: "langchain-retrieval", postSlugs: ["langchain-retrieval"] }
+                    { title: "Interface Standards", slug: "interface-standards", postSlugs: ["interface-standards"] },
+                    { title: "LLM vs. ChatModel", slug: "llm-vs-chatmodel", postSlugs: ["llm-vs-chatmodel"] },
+                    { title: "Message Types", slug: "message-types", postSlugs: ["message-types"] },
+                    { title: "Structured Intelligence & Reliability", slug: "structured-intelligence", postSlugs: ["structured-intelligence"] },
+                    { title: "JSON Mode vs. Function Calling", slug: "json-mode-vs-functions", postSlugs: ["json-mode-vs-functions"] },
+                    { title: "PydanticOutputParser", slug: "pydantic-output-parser", postSlugs: ["pydantic-output-parser"] },
+                    { title: "OutputFixingParser", slug: "output-fixing-parser", postSlugs: ["output-fixing-parser"] },
+                    { title: "Prompt Architecture", slug: "prompt-architecture", postSlugs: ["prompt-architecture"] },
+                    { title: "System Prompt Engineering", slug: "system-prompt-engineering", postSlugs: ["system-prompt-engineering"] },
+                    { title: "Dynamic Few-Shotting", slug: "dynamic-few-shotting", postSlugs: ["dynamic-few-shotting"] },
+                    { title: "Chain-of-Thought & Tree-of-Thought", slug: "cot-tot-prompting", postSlugs: ["cot-tot-prompting"] }
                 ]
             },
             {
-                title: "Chains & LCEL",
+                title: "3. Data Ingestion & ETL Pipelines",
                 links: [
-                    { title: "Chains Basics", slug: "langchain-chains-core", postSlugs: ["langchain-chains-core"] },
-                    { title: "LCEL", slug: "langchain-lcel", postSlugs: ["langchain-lcel"] },
-                    { title: "Advanced Chains", slug: "langchain-advanced-chains", postSlugs: ["langchain-advanced-chains"] }
+                    { title: "Unstructured Data Parsing", slug: "unstructured-data-parsing", postSlugs: ["unstructured-data-parsing"] },
+                    { title: "HTML Cleaning", slug: "html-cleaning", postSlugs: ["html-cleaning"] },
+                    { title: "PDF Extraction Strategies", slug: "pdf-extraction", postSlugs: ["pdf-extraction"] },
+                    { title: "Chunking Strategies", slug: "chunking-strategies", postSlugs: ["chunking-strategies"] },
+                    { title: "RecursiveCharacterTextSplitter", slug: "recursive-text-splitter", postSlugs: ["recursive-text-splitter"] },
+                    { title: "Syntax-Aware Splitting", slug: "syntax-aware-splitting", postSlugs: ["syntax-aware-splitting"] },
+                    { title: "Markdown Header Splitting", slug: "markdown-header-splitting", postSlugs: ["markdown-header-splitting"] },
+                    { title: "Data Hygiene", slug: "data-hygiene", postSlugs: ["data-hygiene"] },
+                    { title: "Lazy Loading with Generators", slug: "lazy-loading-generators", postSlugs: ["lazy-loading-generators"] },
+                    { title: "Deduplication via Content Hashing", slug: "content-deduplication", postSlugs: ["content-deduplication"] },
+                    { title: "Metadata Enrichment", slug: "metadata-enrichment", postSlugs: ["metadata-enrichment"] }
                 ]
             },
             {
-                title: "Memory",
+                title: "4. Advanced RAG Architecture",
                 links: [
-                    { title: "Memory Basics", slug: "langchain-memory", postSlugs: ["langchain-memory"] },
-                    { title: "Memory Types", slug: "langchain-memory-types", postSlugs: ["langchain-memory-types"] },
-                    { title: "Tools & Memory", slug: "langchain-tools-memory", postSlugs: ["langchain-tools-memory"] }
+                    { title: "Query Translation & Expansion", slug: "query-translation", postSlugs: ["query-translation"] },
+                    { title: "Multi-Query Retrieval", slug: "multi-query-retrieval", postSlugs: ["multi-query-retrieval"] },
+                    { title: "RAG-Fusion", slug: "rag-fusion", postSlugs: ["rag-fusion"] },
+                    { title: "Step-Back Prompting", slug: "step-back-prompting", postSlugs: ["step-back-prompting"] },
+                    { title: "Query Decomposition", slug: "query-decomposition", postSlugs: ["query-decomposition"] },
+                    { title: "Advanced Indexing Strategies", slug: "advanced-indexing", postSlugs: ["advanced-indexing"] },
+                    { title: "Multi-Representation Indexing", slug: "multi-representation-indexing", postSlugs: ["multi-representation-indexing"] },
+                    { title: "RAPTOR", slug: "raptor-indexing", postSlugs: ["raptor-indexing"] },
+                    { title: "ColBERT / Late Interaction", slug: "colbert-interaction", postSlugs: ["colbert-interaction"] },
+                    { title: "Vector Space Theory", slug: "vector-space-theory", postSlugs: ["vector-space-theory"] },
+                    { title: "Dense vs. Sparse Vectors", slug: "dense-vs-sparse", postSlugs: ["dense-vs-sparse"] }
                 ]
             },
             {
-                title: "Agents",
+                title: "5. RAG Optimization",
                 links: [
-                    { title: "Agents Intro", slug: "langchain-agents-intro", postSlugs: ["langchain-agents-intro"] },
-                    { title: "Tools", slug: "langchain-tools", postSlugs: ["langchain-tools"] },
-                    { title: "Custom Tools", slug: "langchain-custom-tools", postSlugs: ["langchain-custom-tools"] },
-                    { title: "ReAct Agent", slug: "langchain-react", postSlugs: ["langchain-react"] },
-                    { title: "LangGraph", slug: "langchain-langgraph", postSlugs: ["langchain-langgraph"] }
+                    { title: "Hybrid Search Architecture", slug: "hybrid-search", postSlugs: ["hybrid-search"] },
+                    { title: "Ensemble Retrievers", slug: "ensemble-retrievers", postSlugs: ["ensemble-retrievers"] },
+                    { title: "Advanced Retrieval Patterns", slug: "advanced-retrieval-patterns", postSlugs: ["advanced-retrieval-patterns"] },
+                    { title: "Parent Document Retrieval", slug: "parent-document-retrieval", postSlugs: ["parent-document-retrieval"] },
+                    { title: "Hypothetical Document Embeddings (HyDE)", slug: "hyde-retrieval", postSlugs: ["hyde-retrieval"] },
+                    { title: "Self-Querying", slug: "self-querying", postSlugs: ["self-querying"] },
+                    { title: "Time-Weighted Retrieval", slug: "time-weighted-retrieval", postSlugs: ["time-weighted-retrieval"] },
+                    { title: "Post-Retrieval Refinement", slug: "post-retrieval-refinement", postSlugs: ["post-retrieval-refinement"] },
+                    { title: "Cross-Encoder Re-Ranking", slug: "cross-encoder-reranking", postSlugs: ["cross-encoder-reranking"] },
+                    { title: "Contextual Compression", slug: "contextual-compression", postSlugs: ["contextual-compression"] },
+                    { title: "Active Retrieval Architectures", slug: "active-retrieval", postSlugs: ["active-retrieval"] },
+                    { title: "FLARE", slug: "flare-retrieval", postSlugs: ["flare-retrieval"] }
                 ]
             },
             {
-                title: "Deployment",
+                title: "6. Orchestration with LCEL",
                 links: [
-                    { title: "Deployment", slug: "langchain-deployment", postSlugs: ["langchain-deployment"] },
-                    { title: "Streaming & Errors", slug: "langchain-streaming-errors", postSlugs: ["langchain-streaming-errors"] }
+                    { title: "The Runnable Protocol", slug: "runnable-protocol", postSlugs: ["runnable-protocol"] },
+                    { title: "Standard Methods", slug: "lcel-standard-methods", postSlugs: ["lcel-standard-methods"] },
+                    { title: "The Pipe Operator", slug: "lcel-pipe-operator", postSlugs: ["lcel-pipe-operator"] },
+                    { title: "High-Throughput Patterns", slug: "high-throughput-patterns", postSlugs: ["high-throughput-patterns"] },
+                    { title: "RunnableParallel", slug: "runnable-parallel", postSlugs: ["runnable-parallel"] },
+                    { title: "RunnableBranch", slug: "runnable-branch", postSlugs: ["runnable-branch"] },
+                    { title: "RunnablePassthrough", slug: "runnable-passthrough", postSlugs: ["runnable-passthrough"] },
+                    { title: "Streaming UX", slug: "streaming-ux", postSlugs: ["streaming-ux"] },
+                    { title: "Async Generators", slug: "async-generators", postSlugs: ["async-generators"] },
+                    { title: "Handling Latency (TTFT)", slug: "handling-latency-ttft", postSlugs: ["handling-latency-ttft"] }
                 ]
             },
             {
-                title: "Projects",
+                title: "7. Memory & State Management",
                 links: [
-                    { title: "PDF Chat", slug: "langchain-project-pdf", postSlugs: ["langchain-project-pdf"] },
-                    { title: "Research Assistant", slug: "langchain-project-research", postSlugs: ["langchain-project-research"] }
+                    { title: "Cognitive Load Management", slug: "cognitive-load", postSlugs: ["cognitive-load"] },
+                    { title: "Context Pollution", slug: "context-pollution", postSlugs: ["context-pollution"] },
+                    { title: "ConversationWindowMemory", slug: "conversation-window-memory", postSlugs: ["conversation-window-memory"] },
+                    { title: "Intelligent Strategies", slug: "intelligent-memory", postSlugs: ["intelligent-memory"] },
+                    { title: "ConversationSummaryMemory", slug: "conversation-summary-memory", postSlugs: ["conversation-summary-memory"] },
+                    { title: "Entity Memory", slug: "entity-memory", postSlugs: ["entity-memory"] },
+                    { title: "Persistence Layers", slug: "persistence-layers", postSlugs: ["persistence-layers"] },
+                    { title: "Database Backends", slug: "database-backends", postSlugs: ["database-backends"] },
+                    { title: "Session Isolation", slug: "session-isolation", postSlugs: ["session-isolation"] }
+                ]
+            },
+            {
+                title: "8. Agent Cognitive Architectures",
+                links: [
+                    { title: "Reasoning Frameworks", slug: "reasoning-frameworks", postSlugs: ["reasoning-frameworks"] },
+                    { title: "ReAct Paradigm", slug: "react-paradigm", postSlugs: ["react-paradigm"] },
+                    { title: "Plan-and-Solve", slug: "plan-and-solve", postSlugs: ["plan-and-solve"] },
+                    { title: "Reflexion", slug: "reflexion-agents", postSlugs: ["reflexion-agents"] },
+                    { title: "Tool Engineering Patterns", slug: "tool-engineering", postSlugs: ["tool-engineering"] },
+                    { title: "Robust Tooling", slug: "robust-tooling", postSlugs: ["robust-tooling"] },
+                    { title: "Tool Selection", slug: "tool-selection", postSlugs: ["tool-selection"] },
+                    { title: "Fallbacks & Error Handling", slug: "agent-fallbacks", postSlugs: ["agent-fallbacks"] },
+                    { title: "Human-in-the-Loop", slug: "human-in-the-loop", postSlugs: ["human-in-the-loop"] },
+                    { title: "Multi-Agent Concepts", slug: "multi-agent-concepts", postSlugs: ["multi-agent-concepts"] },
+                    { title: "Handoffs", slug: "agent-handoffs", postSlugs: ["agent-handoffs"] },
+                    { title: "Supervisor Pattern", slug: "supervisor-pattern", postSlugs: ["supervisor-pattern"] }
+                ]
+            },
+            {
+                title: "9. Security & Governance",
+                links: [
+                    { title: "Input Guardrails", slug: "input-guardrails", postSlugs: ["input-guardrails"] },
+                    { title: "Prompt Injection Defense", slug: "prompt-injection-defense", postSlugs: ["prompt-injection-defense"] },
+                    { title: "PII Masking", slug: "pii-masking", postSlugs: ["pii-masking"] },
+                    { title: "Output Guardrails", slug: "output-guardrails", postSlugs: ["output-guardrails"] },
+                    { title: "Hallucination Detection", slug: "hallucination-detection", postSlugs: ["hallucination-detection"] },
+                    { title: "Toxicity Filters", slug: "toxicity-filters", postSlugs: ["toxicity-filters"] }
+                ]
+            },
+            {
+                title: "10. Production Optimization",
+                links: [
+                    { title: "Semantic Caching", slug: "semantic-caching", postSlugs: ["semantic-caching"] },
+                    { title: "GPTCache / Redis", slug: "gptcache-redis", postSlugs: ["gptcache-redis"] },
+                    { title: "Observability", slug: "observability", postSlugs: ["observability"] },
+                    { title: "Tracing Latency", slug: "tracing-latency", postSlugs: ["tracing-latency"] },
+                    { title: "Evaluation (RAGAS & DeepEval)", slug: "evaluation", postSlugs: ["evaluation"] },
+                    { title: "Faithfulness & Relevance", slug: "faithfulness-relevance", postSlugs: ["faithfulness-relevance"] },
+                    { title: "Context Precision & Recall", slug: "context-precision-recall", postSlugs: ["context-precision-recall"] },
+                    { title: "Synthetic Data Generation", slug: "synthetic-data-generation", postSlugs: ["synthetic-data-generation"] }
                 ]
             }
         ]
