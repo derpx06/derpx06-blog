@@ -16,7 +16,7 @@ export async function generateMetadata() {
 
 export default function Learn() {
   return (
-    <Column maxWidth="m" paddingTop="24" paddingX="16">
+    <Column maxWidth="m" paddingTop="24" paddingX="16" horizontal="center">
       <Schema
         as="blogPosting"
         baseURL={baseURL}

@@ -34,7 +34,7 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
             padding="16"
             gap="8"
             style={{
-                width: "fit-content",
+                width: "16rem",
                 maxHeight: "calc(100vh - 128px)",
                 overflowY: "auto",
                 transition: "transform 0.3s ease-in-out, opacity 0.3s ease-in-out"

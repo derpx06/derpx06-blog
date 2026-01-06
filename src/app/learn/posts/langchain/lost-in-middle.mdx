@@ -7,3 +7,7 @@ summary: Why LLMs struggle to retrieve information from the middle of long conte
 # The 'Lost in the Middle' Phenomenon
 
 Research shows that LLMs are best at retrieving information from the beginning and end of their context window. Information buried in the middle is often "lost" or ignored.
+
+## Why this matters for RAG?
+
+If you retrieve 50 documents and stuff them all into the prompt, the model might miss the correct answer if it happens to be in document #25 (the middle). This is why sophisticated **Reranking** strategies are often needed to push the most relevant chunks to the "top" (start) or "bottom" (end) of the prompt.

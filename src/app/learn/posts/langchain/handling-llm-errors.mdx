@@ -1,0 +1,46 @@
+---
+title: "Handling Errors: Rate Limits & Overflow"
+summary: "Robust strategies for handling common LLM API errors."
+publishedAt: "2024-01-20"
+---
+
+# Handling LLM Errors
+
+When building production LLM apps, things will go wrong. The two most common barriers you will hit are **Rate Limits** and **Context Overflow**.
+
+<br />
+
+## 1. Handling Rate Limits (429 Too Many Requests)
+
+APIs like OpenAI or Anthropic limit how many requests you can make per minute. When you hit this wall, they return a `429 Too Many Requests` error.
+
+If your code crashes when this happens, your users will be frustrated. Instead, you must implement **Exponential Backoff**. This means if a request fails, you wait a short time and try again. If it fails again, you wait *longer*.
+
+<CodeBlock
+    codes={[
+        {
+            code: `import time
+import random
+
+def exponential_backoff(attempt):
+    delay = (2 ** attempt) + random.uniform(0, 1)
+    print(f"Rate limit hit. Retrying in {delay:.2f} seconds...")
+    time.sleep(delay)
+    return delay`,
+            language: "python",
+            label: "backoff.py"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+<br />
+
+## 2. Context Overflow Strategies
+
+Every model has a strict "Context Window" limit (e.g., 8k tokens, 128k tokens). If you try to stuff too much text into a prompt, you'll get a context error.
+
+When inputs exceed the limit, you have two main options:
+
+1.  **Sliding Window:** Break your long text into overlapping chunks (e.g., Page 1-3, Page 2-4, Page 3-5). Process each chunk separately.
+2.  **Summary-Refine:** Summarize the first chunk. Pass that summary + the second chunk to the model and ask it to refine the summary. Repeat until the end.

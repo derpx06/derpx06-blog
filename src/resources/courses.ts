@@ -27,7 +27,7 @@ export const courses: Course[] = [
         image: "/images/projects/project-01/cover-04.jpg",
         topics: [
             {
-                title: "0. Introduction & Setup",
+                title: "0. Intro & Setup",
                 links: [
                     { title: "Introduction", slug: "langchain-intro", postSlugs: ["langchain-intro"] },
                     { title: "Setup & Installation", slug: "langchain-setup", postSlugs: ["langchain-setup"] },
@@ -35,28 +35,38 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "1. Foundations of LLM Architecture",
+                title: "1. LLM Foundations (The Essentials)",
                 links: [
-                    { title: "The Transformer Blueprint", slug: "transformer-blueprint", postSlugs: ["transformer-blueprint"] },
-                    { title: "Self-Attention & Positional Encoding", slug: "self-attention", postSlugs: ["self-attention"] },
-                    { title: "Feed-Forward vs. Attention Layers", slug: "feed-forward-networks", postSlugs: ["feed-forward-networks"] },
-                    { title: "Context Economics", slug: "context-economics", postSlugs: ["context-economics"] },
-                    { title: "The 'Lost in the Middle' Phenomenon", slug: "lost-in-middle", postSlugs: ["lost-in-middle"] },
-                    { title: "Context Window Budgeting", slug: "context-window-budgeting", postSlugs: ["context-window-budgeting"] },
-                    { title: "KV Caching & Generation Speed", slug: "kv-caching", postSlugs: ["kv-caching"] },
-                    { title: "Production Token Management", slug: "production-token-management", postSlugs: ["production-token-management"] },
-                    { title: "Context Overflow Strategies", slug: "context-overflow-strategies", postSlugs: ["context-overflow-strategies"] },
-                    { title: "Handling Rate Limits", slug: "handling-rate-limits", postSlugs: ["handling-rate-limits"] }
+                    {
+                        title: "How LLMs Work: Tokens & Prediction",
+                        slug: "llm-tokens-prediction",
+                        postSlugs: ["llm-tokens-prediction"]
+                    },
+                    {
+                        title: "The Context Window & Budgeting",
+                        slug: "context-window-budgeting",
+                        postSlugs: ["context-window-budgeting"]
+                    },
+                    {
+                        title: "The 'Lost in the Middle' Phenomenon",
+                        slug: "lost-in-middle",
+                        postSlugs: ["lost-in-middle"]
+                    },
+                    {
+                        title: "Handling Errors: Rate Limits & Overflow",
+                        slug: "handling-llm-errors",
+                        postSlugs: ["handling-llm-errors"]
+                    }
                 ]
             },
             {
-                title: "2. Advanced Model Communication",
+                title: "2. Model Comms",
                 links: [
                     { title: "Interface Standards", slug: "interface-standards", postSlugs: ["interface-standards"] },
                     { title: "LLM vs. ChatModel", slug: "llm-vs-chatmodel", postSlugs: ["llm-vs-chatmodel"] },
                     { title: "Message Types", slug: "message-types", postSlugs: ["message-types"] },
-                    { title: "Structured Intelligence & Reliability", slug: "structured-intelligence", postSlugs: ["structured-intelligence"] },
-                    { title: "JSON Mode vs. Function Calling", slug: "json-mode-vs-functions", postSlugs: ["json-mode-vs-functions"] },
+                    { title: "Structured Reliability", slug: "structured-intelligence", postSlugs: ["structured-intelligence"] },
+                    { title: "JSON Mode vs. Functions", slug: "json-mode-vs-functions", postSlugs: ["json-mode-vs-functions"] },
                     { title: "PydanticOutputParser", slug: "pydantic-output-parser", postSlugs: ["pydantic-output-parser"] },
                     { title: "OutputFixingParser", slug: "output-fixing-parser", postSlugs: ["output-fixing-parser"] },
                     { title: "Prompt Architecture", slug: "prompt-architecture", postSlugs: ["prompt-architecture"] },
@@ -66,7 +76,7 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "3. Data Ingestion & ETL Pipelines",
+                title: "3. Data Ingestion",
                 links: [
                     { title: "Unstructured Data Parsing", slug: "unstructured-data-parsing", postSlugs: ["unstructured-data-parsing"] },
                     { title: "HTML Cleaning", slug: "html-cleaning", postSlugs: ["html-cleaning"] },
@@ -76,13 +86,13 @@ export const courses: Course[] = [
                     { title: "Syntax-Aware Splitting", slug: "syntax-aware-splitting", postSlugs: ["syntax-aware-splitting"] },
                     { title: "Markdown Header Splitting", slug: "markdown-header-splitting", postSlugs: ["markdown-header-splitting"] },
                     { title: "Data Hygiene", slug: "data-hygiene", postSlugs: ["data-hygiene"] },
-                    { title: "Lazy Loading with Generators", slug: "lazy-loading-generators", postSlugs: ["lazy-loading-generators"] },
+                    { title: "Lazy Loading", slug: "lazy-loading-generators", postSlugs: ["lazy-loading-generators"] },
                     { title: "Deduplication via Content Hashing", slug: "content-deduplication", postSlugs: ["content-deduplication"] },
                     { title: "Metadata Enrichment", slug: "metadata-enrichment", postSlugs: ["metadata-enrichment"] }
                 ]
             },
             {
-                title: "4. Advanced RAG Architecture",
+                title: "4. RAG Architecture",
                 links: [
                     { title: "Query Translation & Expansion", slug: "query-translation", postSlugs: ["query-translation"] },
                     { title: "Multi-Query Retrieval", slug: "multi-query-retrieval", postSlugs: ["multi-query-retrieval"] },
@@ -90,7 +100,7 @@ export const courses: Course[] = [
                     { title: "Step-Back Prompting", slug: "step-back-prompting", postSlugs: ["step-back-prompting"] },
                     { title: "Query Decomposition", slug: "query-decomposition", postSlugs: ["query-decomposition"] },
                     { title: "Advanced Indexing Strategies", slug: "advanced-indexing", postSlugs: ["advanced-indexing"] },
-                    { title: "Multi-Representation Indexing", slug: "multi-representation-indexing", postSlugs: ["multi-representation-indexing"] },
+                    { title: "Multi-Rep Indexing", slug: "multi-representation-indexing", postSlugs: ["multi-representation-indexing"] },
                     { title: "RAPTOR", slug: "raptor-indexing", postSlugs: ["raptor-indexing"] },
                     { title: "ColBERT / Late Interaction", slug: "colbert-interaction", postSlugs: ["colbert-interaction"] },
                     { title: "Vector Space Theory", slug: "vector-space-theory", postSlugs: ["vector-space-theory"] },
@@ -115,7 +125,7 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "6. Orchestration with LCEL",
+                title: "6. LCEL Orchestration",
                 links: [
                     { title: "The Runnable Protocol", slug: "runnable-protocol", postSlugs: ["runnable-protocol"] },
                     { title: "Standard Methods", slug: "lcel-standard-methods", postSlugs: ["lcel-standard-methods"] },
@@ -130,7 +140,7 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "7. Memory & State Management",
+                title: "7. Memory & State",
                 links: [
                     { title: "Cognitive Load Management", slug: "cognitive-load", postSlugs: ["cognitive-load"] },
                     { title: "Context Pollution", slug: "context-pollution", postSlugs: ["context-pollution"] },
@@ -144,9 +154,9 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "8. Agent Cognitive Architectures",
+                title: "8. Agent Architectures",
                 links: [
-                    { title: "Reasoning Frameworks", slug: "reasoning-frameworks", postSlugs: ["reasoning-frameworks"] },
+                    { title: "Reasoning", slug: "reasoning-frameworks", postSlugs: ["reasoning-frameworks"] },
                     { title: "ReAct Paradigm", slug: "react-paradigm", postSlugs: ["react-paradigm"] },
                     { title: "Plan-and-Solve", slug: "plan-and-solve", postSlugs: ["plan-and-solve"] },
                     { title: "Reflexion", slug: "reflexion-agents", postSlugs: ["reflexion-agents"] },
@@ -164,15 +174,15 @@ export const courses: Course[] = [
                 title: "9. Security & Governance",
                 links: [
                     { title: "Input Guardrails", slug: "input-guardrails", postSlugs: ["input-guardrails"] },
-                    { title: "Prompt Injection Defense", slug: "prompt-injection-defense", postSlugs: ["prompt-injection-defense"] },
+                    { title: "Prompt Injection", slug: "prompt-injection-defense", postSlugs: ["prompt-injection-defense"] },
                     { title: "PII Masking", slug: "pii-masking", postSlugs: ["pii-masking"] },
                     { title: "Output Guardrails", slug: "output-guardrails", postSlugs: ["output-guardrails"] },
-                    { title: "Hallucination Detection", slug: "hallucination-detection", postSlugs: ["hallucination-detection"] },
+                    { title: "Hallucination Checks", slug: "hallucination-detection", postSlugs: ["hallucination-detection"] },
                     { title: "Toxicity Filters", slug: "toxicity-filters", postSlugs: ["toxicity-filters"] }
                 ]
             },
             {
-                title: "10. Production Optimization",
+                title: "10. Optimization",
                 links: [
                     { title: "Semantic Caching", slug: "semantic-caching", postSlugs: ["semantic-caching"] },
                     { title: "GPTCache / Redis", slug: "gptcache-redis", postSlugs: ["gptcache-redis"] },
@@ -194,7 +204,7 @@ export const courses: Course[] = [
         image: "/images/projects/project-01/cover-04.jpg",
         topics: [
             {
-                title: "1. Foundations & Environment",
+                title: "1. Foundations",
                 links: [
                     {
                         title: "The Toolbox",
@@ -214,7 +224,7 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "2. Control Flow & Functions",
+                title: "2. Control Flow",
                 links: [
                     {
                         title: "Logic & Arithmetic",
@@ -250,7 +260,7 @@ export const courses: Course[] = [
 
             },
             {
-                title: "4. Advanced Data Tools",
+                title: "4. Advanced Tools",
                 links: [
                     {
                         title: "Sorting",
@@ -275,7 +285,7 @@ export const courses: Course[] = [
                 ]
             },
             {
-                title: "5. Working with Data",
+                title: "5. Data Work",
                 links: [
                     {
                         title: "Randomness",

@@ -1,0 +1,174 @@
+---
+title: "How LLMs Work: Tokens & Prediction"
+summary: "From Transformer architecture to the economics of token prediction."
+publishedAt: "2024-01-01"
+---
+
+<Row vertical="center" horizontal="center">
+    <Column flex={1} horizontal="center">
+        <Image
+            src="/images/learn/langchain/transform20fps.gif"
+            alt="Transformer Architecture Animation"
+            width={'100%'}
+            height={'auto'}
+            caption="Visualizing the Transformer: An architecture that changed everything."
+            enlarge={false}
+        />
+    </Column>
+</Row>
+<Row gap="32" vertical="center" s={{direction: 'column-reverse', align: 'center'}}>
+    <Column flex={1}>
+        We have been hearing about **Transformers** for a while now. It sounds like a robot from a movie, but in the world of Artificial Intelligence, it is the specific blueprint (architecture) that makes modern tools like ChatGPT possible.
+
+        To understand why they are such a big deal, we have to look at the "dark ages" of AI that came before them—and the very human story behind their creation.
+    </Column>
+        
+</Row>
+
+<br />
+
+## The Struggle Before Transfomers
+
+Before 2017, the best AI models we had were called **RNNs (Recurrent Neural Networks)**. An LLm Build on RNN used to be like someone reading a book but being awful at remebering wht it had read before.
+
+<Row gap="32" vertical="center" s={{direction: 'column', align: 'center'}}>
+    <Column flex={1}>
+        This RNNs had two major flaws:
+
+        1.  **The "One-by-One" Problem:** The RNNs could only read **sequentially**—one word at a time, from left to right. To understand the 100th word, they had to finish reading the previous 99 words first. They couldn't skip ahead or look at the whole page at once. This made training them incredibly slow because you couldn't use powerful computer chips (GPUs) to do multiple things at the same time.
+        2.  **The "Goldfish Memory" Problem:** This was the bigger issue. As the student read, they tried to pass information from one word to the next. But by the time they got to the end of a long paragraph, they would often forget how the sentence started They could not hold long context.
+    </Column>
+    <Column flex={1} horizontal="center">
+        <Image
+            src="/images/learn/langchain/encoder-decoder.png"
+            alt="RNN Sequential Processing"
+            width={'100%'}
+            height={'auto'}
+            caption="RNNs process data sequentially, leading to memory loss over long distances."
+            enlarge={false}
+        />
+    </Column>
+</Row>
+
+> **Example:** If a sentence started with *"The **boy**, who lived in a house across the street..."* and ended 50 words later with *"...was **happy**,"* the RNN would often forget who was happy. Was it the boy? The house? The street? The connection was lost in the distance.
+
+<br />
+
+## How  Transformer revolutionized AI
+
+<Row gap="32" vertical="center" s={{direction: 'column-reverse', align: 'center'}}>
+    <Column flex={1}>
+        In 2017, the Transformer model introduced a new way to process language. Instead of reading one word at a time like a human (or an RNN), it ingests the entire sentence at once, using a powerful mechanism called **Self-Attention**.
+        
+        The diagram on the right illustrates this machine's blueprint. It is divided into two main parts: the **Encoder** (the left stack) which analyzes the input text to build a rich understanding of its meaning, and the **Decoder** (right stack) which uses that understanding to generate a response one word at a time.
+        
+        Inside these stacks are layers of **Multi-Head Attention** that allow the model to focus on different parts of the sentence simultanously. For example, when processing the word "bank", one "head" might focus on the word "river" to understand the context, while another might focus on "money". This parallel processing capability is what allows Transformers to be trained on the massive datasets that power modern LLMs.
+    </Column>
+    <Column flex={1} horizontal="center">
+        <Image
+            src="/images/learn/langchain/transformers-architecture.png"
+            alt="The Transformer Architecture"
+            width={'auto'}
+            height={'100%'}
+            caption="The original Transformer architecture, illustrating how it processes inputs in parallel."
+            enlarge={false}
+        />
+    </Column>
+</Row>
+
+Unlike the RNN student, the Transformer is like an alien with a thousand eyes. It doesn't read left-to-right. It looks at every single word in a sentence simultaneously.
+
+This solved both problems instantly:
+
+*   **Speed:** Because it sees everything at once, it can use massive supercomputers to process huge amounts of data in parallel.
+*   **Memory:** Distance no longer mattered. The first word and the last word of a book are just as close to the Transformer as two words sitting right next to each other.
+
+
+<br />
+
+##  The Magic Trick
+
+The secret sauce that makes this work is called **Self-Attention**.
+Think of "Attention" as a spotlight. When the model looks at a specific word, it can dim the lights on irrelevant words and shine a bright spotlight on the words that give it context.
+
+<Row gap="32" vertical="center" s={{direction: 'column', align: 'center'}}>
+    <Column flex={1}>
+        Let's look at your example:
+
+        > *"The cat drank the milk because **it** was hungry."*
+        >
+        > *"The cat drank the milk because **it** was sweet."*
+
+        To a computer, the word "**it**" is vague. But the Transformer uses Self-Attention to calculate relationships ("attention scores") between every word.
+
+        *   In the first sentence, when looking at **"it"**, the model highlights the word **"cat"** (because cats get hungry) and dims the word "milk."
+        *   In the second sentence, when looking at **"it"**, the model highlights the word **"milk"** (because milk is sweet) and dims the word "cat."
+    </Column>
+    <Column flex={1} horizontal="center">
+        <Image
+            src="/images/learn/langchain/encoder-decoder-attention.png"
+            alt="Self-Attention Visualization"
+            width={'100%'}
+            height={'auto'}
+            caption="Visualizing Self-Attention: connecting words regardless of distance."
+            enlarge={false}
+        />
+
+    </Column>
+</Row>
+
+<Row vertical="center" horizontal="center">
+    <Column flex={1} horizontal="center">
+         <Image
+            src="/images/learn/langchain/relevance-transformers.png"
+            alt="Relevance and Context"
+            width={'100%'}
+            height={'auto'}
+            caption="How Transformers determine relevance and context."
+            enlarge={false}
+        />
+    </Column>
+</Row>
+
+It does this for every single word, creating a massive web of connections. In the phrase *"holding a blue ball"*, it creates a strong invisible thread connecting *"ball"* to *"blue"* (describing it) and *"holding"* (the action happening to it), while ignoring unrelated words like *"boy"*.
+
+<br />
+
+## How LLMs Work (The Basic Architecture)
+
+So, how does a  Large Language Model (LLM) actually use this to talk to you? Here is the basic factory floor of a Transformer:
+
+<Row gap="32" vertical="center" s={{direction: 'column', align: 'center'}}>
+    <Column flex={1}>
+        1.  **The Embeddings (The Translator):** Computers can't read English; they only understand math. First, the model turns every word (or token) into a list of numbers called a vector. Words with similar meanings (like "King" and "Queen") get numbers that are mathematically close to each other.
+        2.  **Positional Encoding (The Time Stamp):** Since the Transformer reads everything at once, it doesn't inherently know that "Dog bites man" is different from "Man bites dog." So, we inject a special math signal into the words to stamp them with their order (Word #1, Word #2, etc.).
+        3.  **The Encoder & Decoder (The Brain):**
+            *   **The Encoder** reads the input (your prompt) and creates a map of meanings using Self-Attention.
+            *   **The Decoder** takes that map and starts generating the answer, one word at a time.
+    </Column>
+    <Column flex={1} horizontal="center">
+        <Image
+            src="/images/learn/langchain/transformer%20architecture.png"
+            alt="Encoder-Decoder Architecture Details"
+            width={16}
+            height={9}
+            caption="The detailed anatomy of the Encoder and Decoder blocks."
+            enlarge={false}
+        />
+    </Column>
+</Row>
+
+4.  **Prediction:** Ultimately, the model is just a prediction machine. It looks at all the words you gave it, looks at the words it has already generated, and calculates the statistical probability of the next word.
+
+**In summary:** The Transformer took AI from a forgetful reader that stumbled through long sentences to a super-reader that instantly understands the entire context of a conversation, no matter how long it gets.
+
+<br />
+
+## Production Token Management
+
+The final piece of the puzzle is understanding that this "prediction machine" comes with a cost. In production, **tokens equal money and latency**.
+
+1. **Tokens determine cost:** You are billed for every token you send (input) and every token the model predicts (output).
+2. **Tokens determine speed:** The more tokens you ask the model to generate, the longer you wait.
+
+Therefore, building successful LLM applications isn't just about prompt engineering—it's about implementing rigorous **Token Management** strategies to ensure your app remains fast and affordable.

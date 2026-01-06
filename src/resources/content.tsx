@@ -5,7 +5,7 @@ const person: Person = {
   firstName: "Manas",
   lastName: "Khairnar",
   name: 'Derpx06',
-  role: "App Developer",
+  role: "Software Developer",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
   location: "Pune, India",
@@ -45,7 +45,7 @@ const home: Home = {
   label: "Home",
   title: `${person.name}'s Portfolio`,
   description: `Portfolio website showcasing my work as a ${person.role}`,
-  headline: <>Crafting solutions for simple problems</>,
+  headline: <>Turning problems into possibilities</>,
   featured: {
     display: true,
     title: (
@@ -61,7 +61,7 @@ const home: Home = {
   },
   subline: (
     <>
-      I'm Manas, a passionate App Developer crafting intuitive digital experiences.
+      I'm Manas. I like to solve problems, creating solutions that are both effective and intuitive.
     </>
   ),
 };
@@ -87,9 +87,9 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        Manas is an App Developer based in India, passionate about building intuitive digital experiences.
-        He specializes in React Native and Next.js, bridging the gap between design and technology
-        to create seamless applications.
+        Manas is a Software Engineer based in India, passionate about solving meaningful problems.
+        He uses React Native and Next.js as tools to bridge the gap between complex requirements
+        and elegant solutions.
       </>
     ),
   },
@@ -225,14 +225,16 @@ const explainers: Blog = {
   path: "/explainers",
   label: "Explainers",
   title: "Explainers",
+
+
   description: "Simple Explanations to various research papers",
 };
 
 const learn: Blog = {
   path: "/learn",
   label: "Learn",
-  title: "Learn with Derpx06",
-  description: "Courses and tutorials by Manas",
+  title: `Learn with ${person.name}`,
+  description: `Courses and tutorials by ${person.name}`,
 };
 
 const work: Work = {
