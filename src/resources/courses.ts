@@ -48,9 +48,9 @@ export const courses: Course[] = [
                         postSlugs: ["context-window-budgeting"]
                     },
                     {
-                        title: "The 'Lost in the Middle' Phenomenon",
-                        slug: "lost-in-middle",
-                        postSlugs: ["lost-in-middle"]
+                        title: "Prompting Essentials",
+                        slug: "prompting-essentials",
+                        postSlugs: ["prompting-essentials"]
                     },
                     {
                         title: "Handling Errors: Rate Limits & Overflow",
