@@ -36,7 +36,7 @@ Before 2017, the best AI models we had were called **RNNs (Recurrent Neural Netw
         This RNNs had two major flaws:
 
         1.  **The "One-by-One" Problem:** The RNNs could only read **sequentially**—one word at a time, from left to right. To understand the 100th word, they had to finish reading the previous 99 words first. They couldn't skip ahead or look at the whole page at once. This made training them incredibly slow because you couldn't use powerful computer chips (GPUs) to do multiple things at the same time.
-        2.  **The "Goldfish Memory" Problem:** This was the bigger issue. As the student read, they tried to pass information from one word to the next. But by the time they got to the end of a long paragraph, they would often forget how the sentence started They could not hold long context.
+        2.  **The "Goldfish Memory" Problem:** This was the bigger issue. As the LLMs read, they tried to pass information from one word to the next. But by the time they got to the end of a long paragraph, they would often forget how the sentence started They could not hold long context.
     </Column>
     <Column flex={1} horizontal="center">
         <Image
