@@ -1,9 +1,58 @@
 ---
 title: "RecursiveCharacterTextSplitter"
+summary: "The gold standard for general text. Respecting the hierarchy of language."
 publishedAt: "2026-01-10"
-summary: "Learn about RecursiveCharacterTextSplitter."
 ---
 
 # RecursiveCharacterTextSplitter
 
-Placeholder content for RecursiveCharacterTextSplitter.
+## 1. The Strategy
+
+The `RecursiveCharacterTextSplitter` is the default choice for a reason.
+It doesn't just cut; it attempts to keep related text together by using a list of **Separators**.
+
+## 2. The Hierarchy of Separation
+
+It tries to split by the first separator. If the chunk is still too big, it moves to the next separator.
+
+Format: `["\n\n", "\n", " ", ""]` (Paragraphs -> Lines -> Words -> Characters)
+
+1.  **Paragraphs (`\n\n`):** Try to keep paragraphs intact. Ideally, a chunk is just 3-4 paragraphs.
+2.  **Lines (`\n`):** If a paragraph is too long (bigger than chunk_size), split it by sentences/lines.
+3.  **Words (` `):** If a sentence is too enormous, split by words.
+4.  **Chars (`""`):** If a word is too long (like a URL), force split it characters.
+
+## 3. Implementation
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+    separators=["\\n\\n", "\\n", " ", ""]
+)
+
+docs = splitter.create_documents([long_text])`,
+        language: 'python',
+        label: 'recursive_split.py'
+    }]}
+/>
+
+## 4. Why Overlap Matters
+
+Notice `chunk_overlap=200`.
+This creates a "sliding window."
+Chunk 1: `[Paragraph A, Paragraph B]`
+Chunk 2: `[Paragraph B, Paragraph C]`
+
+Paragraph B appears in both. Why?
+Because if a query matches the *end* of A and the *start* of B, we need a vector that contains **both** to capture the relationship. Overlap prevents "boundary semantic loss."
+
+## 5. Summary
+
+Recursive splitting mimics how humans read: Paragraph by paragraph.
+It only degrades to word-splitting when absolutely forced.
+
+> **Key Intuition:** "Split at the strongest pause possible."

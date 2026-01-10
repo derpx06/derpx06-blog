@@ -1,9 +1,40 @@
 ---
 title: "Metadata Enrichment Strategies"
+summary: "Metadata is more than labels. It is signal amplification."
 publishedAt: "2026-01-10"
-summary: "Learn about Metadata Enrichment Strategies."
 ---
 
 # Metadata Enrichment Strategies
 
-Placeholder content for Metadata Enrichment Strategies.
+## 1. Metadata > Vectors
+
+Vectors are fuzzy. Metadata is precise.
+Sometimes, the best search isn't semantic—it's structural.
+Enriching your chunks with extrat data improves filtering and ranking.
+
+## 2. Enrichment Type A: Contextual Summary
+
+If you split a document, Chunk #52 doesn't know it belongs to a "Legal Contract."
+Strategy: Prepend the document summary to the chunk.
+
+Original: `"The tenant must pay by the 5th."`
+Enriched: `"(Context: Lease Agreement 2024, Section: Payments) The tenant must pay by the 5th."`
+
+Now, the vector "knows" this is about a lease payment, not a dinner bill.
+
+## 3. Enrichment Type B: Questions Generation
+
+Users ask questions. Documents contain statements. There is a "Mismatch."
+Strategy: Ask an LLM to generate 3 questions that *this chunk answers*, and embed those questions.
+
+*   **Chunk:** "The API limit is 500 requests."
+*   **Enriched:** "What is the rate limit? How many calls can I make? The API limit is 500 requests."
+
+Now, a user asking "rate limit" hits a direct semantic match.
+
+## 4. Summary
+
+Don't just index what is written. Index what is *meant*.
+Metadata enrichment bridges the gap between the user's intent and the author's text.
+
+> **Key Intuition:** "Embed the question, not just the answer."

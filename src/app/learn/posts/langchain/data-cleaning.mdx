@@ -1,9 +1,61 @@
 ---
 title: "Cleaning & Normalization"
+summary: "Why raw text is noise. Balancing signal vs semantic damage."
 publishedAt: "2026-01-10"
-summary: "Learn about Cleaning & Normalization."
 ---
 
 # Cleaning & Normalization
 
-Placeholder content for Cleaning & Normalization.
+## 1. Raw Text is Noisy
+
+Text extracted from the real world is dirty.
+*   **Encoding Artifacts:** `Hello\xa0World` (Non-breaking spaces).
+*   **Whitespace:** `Title          Subtitle` (Tabs/Padding).
+*   **Boilerplate:** "Copyright 2024" on every single page.
+
+If you embed noise, you retrieve noise.
+If 500 documents all end with "Copyright 2024," and the user searches "2024," the retriever might return random legal footers instead of relevant content.
+
+## 2. Normalization Steps
+
+Common cleaning functions applied *before* chunking:
+
+### A. Whitespace Standardization
+Replace multiple spaces/tabs/newlines with a single space or newline.
+`"Hello   World"` -> `"Hello World"`
+
+### B. Unicode Normalization
+Convert fancy quotes `“”` to standard quotes `""`.
+Convert accented characters if your model doesn't support them (though most modern LLMs handle UTF-8 well).
+
+### C. Structural Markers
+Sometimes "noise" is actually signal.
+`# Header` is markup. Removing the `#` destroys the hierarchy.
+**Rule:** Clean artifacts, preserve structure.
+
+## 3. The Trade-off: Over-Cleaning
+
+Be careful.
+If you remove all newlines to save space, you destroy lists and tables.
+If you lowercase everything, "Apple" (the company) becomes "apple" (the fruit).
+
+<CodeBlock
+    codes={[{
+        code: `def clean_text(text: str) -> str:
+    # 1. Fix encoding
+    text = text.replace("\\xa0", " ")
+    # 2. Collapse whitespace BUT preserve paragraph breaks
+    text = re.sub(r" +", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()`,
+        language: 'python',
+        label: 'cleaner.py'
+    }]}
+/>
+
+## 4. Summary
+
+Cleaning increases the **Signal-to-Noise Ratio** of your embeddings.
+But remember: Intelligence requires nuance. Don't scrub the nuance away.
+
+> **Key Intuition:** "Clean inputs, sharp retrieval."

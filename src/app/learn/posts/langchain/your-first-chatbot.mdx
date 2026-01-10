@@ -1,0 +1,115 @@
+---
+title: "Your First Chatbot: Talking to an LLM"
+summary: "Understand what an LLM call actually is, before we add the abstractions."
+publishedAt: "2026-01-10"
+---
+
+# Your First Chatbot: Talking to an LLM
+
+## 1. The Fear of Abstraction
+
+Most people get confused by LangChain because they start with "Chains" and "Agents" before they have ever formatted a raw prompt string.
+
+In this lesson, we are going to do something radical: **We are going to do almost nothing.**
+
+We will not use Chains.
+We will not use LCEL.
+We will just talk to the model.
+
+## 2. What is a ChatModel?
+
+At its core, a ChatModel is a function designed to do one thing:
+**Take a list of Messages -> Return a Message.**
+
+That is it. It is not a brain in a jar. It is a text-processing function.
+
+### The Raw Reality
+When you use the OpenAI API directly, you send this:
+```json
+// Interaction with raw API
+{
+  "messages": [
+    {"role": "user", "content": "Hello!"}
+  ]
+}
+```
+
+And you get back this:
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Hi there! How can I help?"
+      }
+    }
+  ]
+}
+```
+
+LangChain wraps this raw JSON shuffle into clean Python objects.
+
+## 3. Building the Minimal Chatbot
+
+Let's build a script that takes user input and prints the AI's response.
+
+### Step 1: Initialize the Model
+First, we create our model object. This object handles the API keys and network requests for us.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_openai import ChatOpenAI
+
+# Initialize the model
+# temperature=0 means "be precise, don't be creative"
+model = ChatOpenAI(model="gpt-4o", temperature=0)`,
+        language: 'python',
+        label: 'init_model.py'
+    }]}
+/>
+
+### Step 2: The Loop
+Now, we create a loop that keeps the conversation going.
+
+<CodeBlock
+    codes={[{
+        code: `while True:
+    # 1. Get User Input
+    user_text = input("You: ")
+    
+    if user_text.lower() == "exit":
+        break
+
+    # 2. Call the Model
+    # We send a list containing one human message
+    response = model.invoke([
+        {"role": "user", "content": user_text}
+    ])
+
+    # 3. Print Response
+    # The response is an AIMessage object. We want the .content content.
+    print(f"AI: {response.content}")`,
+        language: 'python',
+        label: 'chatbot_v0.py'
+    }]}
+/>
+
+## 4. Why Use LangChain Here?
+
+You might look at `model.invoke` and ask: *"Why didn't we just use the OpenAI SDK directly?"*
+
+For this specific example? You could have.
+
+But look at what `model.invoke` gave us:
+1.  **Uniform Interface:** If you swap `ChatOpenAI` for `ChatAnthropic` (Claude) or `ChatOllama` (Llama 3), the code `model.invoke(...)` **does not change**.
+2.  **Object Wrapper:** The `response` isn't a complex dictionary you have to dig through (`['choices'][0]['message']...`). It is a standard object with a `.content` property.
+
+## 5. Summary
+
+We haven't built a "system" yet. But we verified the most important truth of AI engineering:
+
+> **LangChain does not replace the model.**
+> **It organizes how we talk to it.**
+
+Next, we will see what happens when we want to do more than just "send text." We will see why we need a **Composition Engine**.

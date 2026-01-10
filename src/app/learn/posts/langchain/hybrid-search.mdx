@@ -1,9 +1,52 @@
 ---
 title: "Hybrid Search Concepts"
+summary: "The best of both worlds. Reciprocal Rank Fusion."
 publishedAt: "2026-01-10"
-summary: "Learn about Hybrid Search Concepts."
 ---
 
 # Hybrid Search Concepts
 
-Placeholder content for Hybrid Search Concepts.
+## 1. Why Choose?
+
+We saw that Dense Search (Vectors) and Sparse Search (Keywords) have opposite strengths.
+**Hybrid Search** runs both and combines the results.
+
+## 2. Theoretical Workflow
+
+1.  **User Query:** "Error 501 on login page."
+2.  **Dense Retriever:** Finds docs about "Login Issues" (Concepts).
+3.  **Sparse Retriever:** Finds docs containing "Error 501" (Exact Match).
+4.  **Ensemble:** Combine the two lists.
+
+## 3. Reciprocal Rank Fusion (RRF)
+
+How do you combine the lists? You can't just add the scores (Cosine Similarity score 0.8 is not comparable to BM25 score 15.0).
+We use **Rank Fusion**.
+
+We look at the *rank*, not the score.
+*   Doc A: Rank 1 in Dense, Rank 5 in Sparse.
+*   Doc B: Rank 10 in Dense, Rank 1 in Sparse.
+
+RRF gives points for being high on *either* list.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain.retrievers import EnsembleRetriever
+
+ensemble_retriever = EnsembleRetriever(
+    retrievers=[bm25_retriever, vector_retriever],
+    weights=[0.5, 0.5]
+)
+
+docs = ensemble_retriever.get_relevant_documents("query")`,
+        language: 'python',
+        label: 'hybrid_search.py'
+    }]}
+/>
+
+## 4. Summary
+
+Hybrid Search is the current state-of-the-art for production RAG.
+It provides the "Safety" of keywords with the "Magic" of vectors.
+
+> **Key Intuition:** "Don't put all your eggs in one index."

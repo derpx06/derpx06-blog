@@ -1,9 +1,44 @@
 ---
 title: "Similarity vs MMR"
+summary: "Diversity leads to better answers. Avoiding the echo chamber."
 publishedAt: "2026-01-10"
-summary: "Learn about Similarity vs MMR."
 ---
 
 # Similarity vs MMR
 
-Placeholder content for Similarity vs MMR.
+## 1. The Trap of Redundancy
+
+User asks: *"Tell me about the iPhone 15 camera."*
+
+**Similarity Search (k=4) returns:**
+1.  iPhone 15 has a 48MP camera.
+2.  The camera on iPhone 15 is 48MP.
+3.  The iPhone 15 features a 48MP sensor.
+4.  48MP is the resolution of the iPhone 15.
+
+The LLM gets 4 versions of the same sentence. It misses info about "Night Mode," "Zoom," or "Video."
+This is **Redundancy Collapse**.
+
+## 2. Maximal Marginal Relevance (MMR)
+
+MMR tries to maximize **Relevance** (Similarity) while punishing **Redundancy** (Similarity to already selected docs).
+
+Algorithm intuition:
+1.  Find the most similar doc (Doc A). Select it.
+2.  Find the next doc that is similar to Query BUT dissimilar to Doc A.
+3.  Repeat.
+
+## 3. The Result
+
+**MMR (k=4) returns:**
+1.  iPhone 15 has a 48MP camera. (High Relevance)
+2.  Night Mode is improved by 2x. (High Relevance, Low overlap with #1)
+3.  Video supports 4K60. (High Relevance, Low overlap with #1, #2)
+4.  The new Telephoto lens is 5x. (High Relevance, Low overlap with #1, #2, #3)
+
+## 4. Summary
+
+If your RAG answers feel repetitive or shallow, switch to MMR.
+It forces the retriever to explore the "Concept Space" rather than getting stuck in one corner.
+
+> **Key Intuition:** "Don't tell me the same thing 5 times."

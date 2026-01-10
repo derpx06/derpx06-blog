@@ -1,9 +1,58 @@
 ---
 title: "Why Memory Breaks Systems"
+summary: "LLMs are stateless. The illusion of continuity is your job."
 publishedAt: "2026-01-10"
-summary: "Learn about Why Memory Breaks Systems."
 ---
 
 # Why Memory Breaks Systems
 
-Placeholder content for Why Memory Breaks Systems.
+## 1. The Fiction of "Chat"
+
+When you talk to ChatGPT, it feels like a continuous conversation.
+But the model does not remember you.
+It does not remember what you said 2 seconds ago.
+
+**LLMs are Stateless Sequence Predictors.**
+Every time you send a message, you are actually resending the *entire conversation history* up to that point.
+
+**Turn 1:**
+Input: `[User: Hi]`
+Output: `[AI: Hello]`
+
+**Turn 2:**
+Input: `[User: Hi, AI: Hello, User: My name is Bob]`
+Output: `[AI: Nice to meet you Bob]`
+
+If you drop the history, the model forgets who Bob is instantly.
+
+## 2. Why "Just Keep History" Fails
+
+New engineers think: *"Easy! I'll just append every message to a list string."*
+This works for 5 minutes. Then it breaks.
+
+### A. The Context Window Limit
+Models have a hard limit (e.g., 8k tokens).
+If your history is 9k tokens, the API throws an error. You *must* delete something. But what?
+
+### B. Latency
+Sending 100 words takes 100ms. Sending 10,000 words takes 2s.
+Infinite memory = Infinite latency.
+
+### C. The "Lost in the Middle" Effect
+As history grows, the model's attention dilutes. It starts ignoring instructions buried in the middle of the chat logs.
+
+## 3. Memory is a System Problem
+
+Memory is not a feature of the model. It is a feature of the **Application Layer**.
+You are building a "State Engine" that sits in front of a "Stateless Processor."
+
+If this engine fails, you get:
+1.  **Hallucination:** The AI invents facts because it forgot the retrieved docs.
+2.  **Privacy Leaks:** User B sees User A's history because you messed up session isolation.
+
+## 4. Summary
+
+To build a chatbot, you must become a **State Architect**.
+You must decide what to remember, what to forget, and where to store it.
+
+> **Key Intuition:** "The model lives in the eternal Now. Only the System has a Past."

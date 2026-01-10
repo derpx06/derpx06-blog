@@ -1,9 +1,67 @@
 ---
 title: "Deployment & API Serving"
+summary: "Shipping it. From script to service."
 publishedAt: "2026-01-10"
-summary: "Learn about Deployment & API Serving."
 ---
 
 # Deployment & API Serving
 
-Placeholder content for Deployment & API Serving.
+## 1. Hosting Models != Hosting Logic
+
+**Hosting Models (LLMops):**
+Running Llama-3 on a GPU cluster (vLLM, TGI).
+Focus: Cuda Cores, VRAM, Throughput.
+Tools: AWS SageMaker, RunPod, Modal.
+
+**Hosting Logic (Backend):**
+Running your LangChain Agent (Python Code).
+Focus: API Efficiency, Database Connections, WebSockets.
+Tools: FastAPI, LangServe, Docker.
+
+Most of you will do "Hosting Logic" and call OpenAI (Hosted Model).
+
+## 2. LangServe
+
+LangChain provides `LangServe` to turn any Chain into a REST API.
+It automatically handles streaming, types, and OpenAPI documentation.
+
+<CodeBlock
+    codes={[{
+        code: `from langserve import add_routes
+from fastapi import FastAPI
+
+app = FastAPI()
+add_routes(app, chain, path="/chat")
+
+# Run: uvicorn server:app --reload
+# Access: POST /chat/invoke`,
+        language: 'python',
+        label: 'langclass_serve.py'
+    }]}
+/>
+
+## 3. Versioning
+
+In traditional software, you version Code (Git SHA).
+In AI, you must version:
+1.  **Code** (The retrieval logic)
+2.  **Prompt** (The instructions)
+3.  **Model** (gpt-4-0613 vs gpt-4-0125)
+
+If OpenAI updates the model, your app might break.
+**Pin your model versions.** Use `gpt-4-0613`, not `gpt-4`.
+
+## 4. Governance as a System Property
+
+Who asked what? When?
+You need an Audit Log (LangSmith).
+If a user sues you because the bot lied, you need to prove:
+"At 10:00 AM, the Retrieval system returned document X, so the bot answered Y. We have fixed the document."
+
+## 5. Final Thoughts: Production is the Real Test
+
+LLMs don't fail loudly in production.
+They fail gradually—through latency, content drift, silent errors, and weak governance.
+Building a demo is easy. Building a system that survives the real world is engineering.
+
+> **Key Intuition:** "It works on my machine" is not a deployment strategy.

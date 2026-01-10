@@ -1,9 +1,93 @@
 ---
 title: "RunnableLambda & Custom Logic"
+summary: "Injecting custom Python functions into your AI chain."
 publishedAt: "2026-01-10"
-summary: "Learn about RunnableLambda & Custom Logic."
 ---
 
 # RunnableLambda & Custom Logic
 
-Placeholder content for RunnableLambda & Custom Logic.
+## 1. The Problem: "But I need to Uppercase it!"
+
+You have this chain:
+`chain = prompt | model | parser`
+
+But you realize the user input is messy. You want to:
+1.  Lower-case the input topic.
+2.  Log the length of the joke generated.
+
+Where does this logic go?
+You *could* ask the Prompt to "Please read this lowercase text," but that wastes tokens.
+Logic belongs in code, not in prompts.
+
+## 2. Enter RunnableLambda
+
+`RunnableLambda` wraps any standard Python function and turns it into a pipe-compatible step.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_core.runnables import RunnableLambda
+
+def length_function(text):
+    return len(text)
+
+# Make it a runnable
+runnable = RunnableLambda(length_function)`,
+        language: 'python',
+        label: 'lambda_intro.py'
+    }]}
+/>
+
+## 3. Real World Example: Sanitizing Input
+
+Let's modify our joke chain to sanitize bad inputs.
+
+<CodeBlock
+    codes={[{
+        code: `def sanitize_input(user_input):
+    # Ensure it's a string and strip whitespace
+    clean_topic = str(user_input["topic"]).strip().lower()
+    return {"topic": clean_topic}
+
+# Define the chain
+chain = (
+    RunnableLambda(sanitize_input)  # Step 1: Python Function
+    | prompt                        # Step 2: Prompt
+    | model                         # Step 3: Model
+    | parser                        # Step 4: Parser
+)
+
+chain.invoke({"topic": "  BEARS  "})
+# Flow:
+# 1. "  BEARS  " -> "bears"
+# 2. Prompt fills with "bears"`,
+        language: 'python',
+        label: 'sanitize_chain.py'
+    }]}
+/>
+
+## 4. The @chain Decorator
+
+There is an even cleaner way to write this using the `@chain` decorator. It turns any function into a Runnable automatically.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_core.runnables import chain
+
+@chain
+def custom_chain(text):
+    text = text.upper()
+    return model.invoke(text)
+
+# usage
+custom_chain.invoke("hello")`,
+        language: 'python',
+        label: 'decorator.py'
+    }]}
+/>
+
+## 5. Summary
+
+Don't force the LLM to do basic string manipulation. It's slow and expensive.
+Use `RunnableLambda` to inject pure Python logic seamlessly into your pipeline.
+
+> **Key Intuition:** "Not everything belongs in a prompt. Code is for logic; LLMs are for reasoning."

@@ -1,9 +1,76 @@
 ---
 title: "Session Isolation"
+summary: "Security 101. Why global variables kill chatbots."
 publishedAt: "2026-01-10"
-summary: "Learn about Session Isolation."
 ---
 
 # Session Isolation
 
-Placeholder content for Session Isolation.
+## 1. The Global Variable Trap
+
+In a coding tutorial, you often see:
+`memory = ConversationBufferMemory()`
+
+This is a **Global Variable**.
+If User A says "My password is 1234," it goes into the global memory.
+If User B then asks "What is my password?", the AI (using the global memory) might reply "It is 1234."
+
+**Data Lease & Contamination.**
+This is the #1 security flaw in amateur LLM apps.
+
+## 2. Session IDs
+
+Every interaction must be scoped to a `session_id`.
+Memory is not a singleton; it is a dictionary of memories, keyed by Session ID.
+
+```python
+# Conceptual Structure
+memory_store = {
+    "session_user_alice": MemoryObject(...),
+    "session_user_bob": MemoryObject(...)
+}
+```
+
+## 3. Implementation in LangChain
+
+Use `RunnableWithMessageHistory`. It wraps your chain and handles the session lookup logic automatically.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_core.runnables.history import RunnableWithMessageHistory
+
+def get_session_history(session_id):
+    if session_id not in store:
+        store[session_id] = ChatMessageHistory()
+    return store[session_id]
+
+# Wrap the chain
+chain_with_history = RunnableWithMessageHistory(
+    chain,
+    get_session_history
+)
+
+# Call with session_id
+chain_with_history.invoke(
+    {"input": "Hi"},
+    config={"configurable": {"session_id": "alice_123"}}
+)`,
+        language: 'python',
+        label: 'session_isolation.py'
+    }]}
+/>
+
+## 4. Concurrency
+
+If Alice opens two tabs, does she share memory?
+*   If `session_id` is "alice_main", yes.
+*   If `session_id` is "alice_tab1" and "alice_tab2", no.
+
+You must design your session scopes carefully.
+
+## 5. Summary
+
+Never use a bare `memory` object in a web server.
+Always Key-Value map your state to a User ID or Session ID.
+
+> **Key Intuition:** "What happens in Vegas (Session A), stays in Vegas (Session A)."

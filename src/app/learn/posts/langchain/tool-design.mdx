@@ -1,9 +1,79 @@
 ---
 title: "Designing Tool Schemas"
+summary: "Why tools are contracts. Vague inputs create unsafe agents."
 publishedAt: "2026-01-10"
-summary: "Learn about Designing Tool Schemas."
 ---
 
-# Designing Tool Schemas
+# Designing Tool Schemas: The Contract of Agency
 
-Placeholder content for Designing Tool Schemas.
+## 1. Why Tools Change Everything
+
+A raw LLM is a **closed system**. It lives in a frozen universe that ended in 2023 (or whenever it was trained).
+It can generate text, but it cannot *do* anything. It cannot check the weather, query a database, or send an email.
+
+**Tools** are the bridge between the "Dream World" of the LLM and the "Real World" of your system.
+When you give an LLM a tool, you are converting it from a **Writer** into an **Operator**.
+
+But here is the danger:
+An LLM operating a tool is like a very smart, very literal intern. If you give them vague instructions, they will break things.
+
+## 2. The Tool Schema IS The Prompt
+
+Most engineers spend hours refining their System Prompt but leave their Tool Schemas messy.
+This is backward.
+The Tool Schema (Name, Description, Args) is the **most important prompt** in an agentic system.
+
+When an LLM decides to check the weather, it looks at the schema:
+*   **Name:** `get_weather`
+*   **Description:** `Gets current weather for a location.`
+*   **Args:** `city (string)`
+
+If your description is `"Func to get weather"`, the LLM might pass `"London"` or `"London, UK"` or `"lat=51.5"`.
+If your description is `"Must be a valid US Zip Code"`, the LLM will try to find a Zip Code.
+
+## 3. Designing for Reliability (The "StrictMode" Mindset)
+
+### A. Explicit Types
+Don't just say "Date." Say `YYYY-MM-DD`.
+Structure your input using Pydantic.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain.tools import tool
+from pydantic import BaseModel, Field
+
+class SearchInput(BaseModel):
+    query: str = Field(description="Search term")
+    max_results: int = Field(description="Max valid is 10. Default is 5.")
+
+@tool(args_schema=SearchInput)
+def search_google(query: str, max_results: int = 5):
+    """Search Google for recent news."""
+    return search_api(query, limit=max_results)`,
+        language: 'python',
+        label: 'robust_tool.py'
+    }]}
+/>
+
+### B. Input Validation
+Putting types in the prompt doesn't guarantee the LLM respects them.
+You must **validate** inside the tool.
+If the LLM sends `max_results=100`, your code should throw a customized error:
+`"Error: max_results cannot exceed 10. Please retry with a lower number."`
+
+The LLM will see this error, apologize, and retry with `max_results=10`. This is the **Self-Correction Loop**.
+
+## 4. Deterministic vs Flexible schemas
+
+*   **Deterministic:** `turn_light_on(room_id: int)` -> Safe. Easy to control.
+*   **Flexible:** `execute_sql(query: str)` -> Dangerous. High capability, high risk.
+
+Start highly specific. Only open up flexibility if absolutely needed.
+
+## 5. Summary
+
+A tool is a contract.
+If the contract is vague, the agent will breach it.
+If the contract is strict, the agent becomes reliable software.
+
+> **Key Intuition:** "The code inside the tool is for the computer. The schema outside the tool is for the brain."

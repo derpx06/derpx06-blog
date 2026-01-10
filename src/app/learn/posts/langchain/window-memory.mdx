@@ -1,9 +1,62 @@
 ---
 title: "ConversationBuffer & Window Memory"
+summary: "Short-term recall. The simplest memory is a list."
 publishedAt: "2026-01-10"
-summary: "Learn about ConversationBuffer & Window Memory."
 ---
 
 # ConversationBuffer & Window Memory
 
-Placeholder content for ConversationBuffer & Window Memory.
+## 1. ConversationBuffer (The List)
+
+The simplest form of memory is "Keep Everything."
+This is `ConversationBufferMemory`.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain.memory import ConversationBufferMemory
+
+memory = ConversationBufferMemory()
+memory.save_context({"input": "Hi"}, {"output": "Hello"})
+memory.load_memory_variables({})
+# Result: "Human: Hi\nAI: Hello"`,
+        language: 'python',
+        label: 'buffer_memory.py'
+    }]}
+/>
+
+**Pros:** Perfect recall. The AI knows exactly what you said.
+**Cons:** It crashes your app after ~20 turns because you hit the token limit.
+
+## 2. ConversationBufferWindow (The Slide)
+
+To stop the crash, we use a **Sliding Window**.
+We only keep the last $K$ interactions (e.g., $k=5$).
+When message #6 arrives, message #1 is deleted forever.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain.memory import ConversationBufferWindowMemory
+
+memory = ConversationBufferWindowMemory(k=2)
+# Stores strictly the last 2 exchanges.`,
+        language: 'python',
+        label: 'window_memory.py'
+    }]}
+/>
+
+## 3. The Trade-off: Recency Bias
+
+Window memory assumes "Recent = Relevant."
+This is usually true for chit-chat.
+*"What is my name?"* (User said it 2 mins ago -> window has it).
+
+It is disastrous for long tasks.
+*"Here is the rule for the game."* (User said it 10 mins ago -> window deleted it).
+The AI now plays the game wrong because the "Rule" fell off the edge of the world.
+
+## 4. Summary
+
+Window memory requires no intelligence. It is cheap and fast.
+Use it for short, transactional sessions. Do not use it for long-running companions.
+
+> **Key Intuition:** "If it scrolls off the screen, it doesn't exist."

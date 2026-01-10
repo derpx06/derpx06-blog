@@ -1,9 +1,58 @@
 ---
 title: "Function Calling in LangChain"
+summary: "The execution loop. Why API schemas beat text parsing."
 publishedAt: "2026-01-10"
-summary: "Learn about Function Calling in LangChain."
 ---
 
 # Function Calling in LangChain
 
-Placeholder content for Function Calling in LangChain.
+## 1. The Old Way: Text Parsing
+
+In 2022, if you wanted an LLM to search Wikipedia, you prompted:
+"If you need to search, output JSON like `{"action": "search", "query": "..."}`"
+
+Then you wrote a messy Regex parser to find that JSON in the chaotic output.
+It failed constantly. The LLM would forget a quote, add a comment, or hallucinate a key.
+
+## 2. The New Way: Function Calling (Tool Binding)
+
+Modern Models (GPT-4o, Claude 3.5 Sonnet) have been fine-tuned to output **actions** natively.
+They don't output "text"; they output a structured "Tool Call Object."
+
+**The Workflow:**
+1.  **Bind:** You send the user query + a list of available tool schemas.
+2.  **Decide:** The Model thinks: *"I cannot answer 'What is stock AAPL?' with my internal weights. I need the `get_stock` tool."*
+3.  **Output:** The Model stops graduating text. It returns a `tool_call` payload: `name='get_stock', args={'symbol': 'AAPL'}`.
+4.  **Execute:** LangChain (the Runtime) sees this signal. It pauses the LLM, runs the Python function `get_stock("AAPL")`, and gets `$200`.
+5.  **Resume:** LangChain sends the result `$200` back to the LLM.
+6.  **Answer:** The LLM now has the context. It replies: *"Apple stock is currently $200."*
+
+## 3. Implementation
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o")
+llm_with_tools = llm.bind_tools([search_google, get_weather])
+
+response = llm_with_tools.invoke("What is the weather in Paris?")
+# Content=" " (Empty content!)
+# Tool_Calls=[{'name': 'get_weather', 'args': {'city': 'Paris'}}]`,
+        language: 'python',
+        label: 'bind_tools.py'
+    }]}
+/>
+
+## 4. Why This is Safer
+
+It eliminates "Syntax Errors."
+The model is constrained to generate valid JSON that matches your Pydantic schema.
+You are no longer parsing natural language; you are handling an event stream.
+
+## 5. Summary
+
+Function Calling turns the LLM into a Router.
+It treats your API tools as extensions of its own vocabulary.
+
+> **Key Intuition:** "The model doesn't run the code. It just pushes the button."

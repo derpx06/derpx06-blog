@@ -1,9 +1,46 @@
 ---
 title: "Plan-and-Solve Agents"
+summary: "Measure twice, cut once. Separating strategy from execution."
 publishedAt: "2026-01-10"
-summary: "Learn about Plan-and-Solve Agents."
 ---
 
 # Plan-and-Solve Agents
 
-Placeholder content for Plan-and-Solve Agents.
+## 1. The Chaos of ReAct
+
+ReAct agents are "myopic." They only see the next step.
+If you ask ReAct to "Write a novel," it will try to write Chapter 1, then Chapter 2... and by Chapter 3 it forgets the plot.
+It wanders.
+
+**Plan-and-Solve** separates the "Architect" from the "Builder."
+
+## 2. The Planner Pattern
+
+**Step 1: The Planner**
+A prompt that cannot use tools. Its only job is to output a checklist.
+User: "Research the history of coffee and write a blog post."
+Planner:
+1.  Search for coffee origins (Ethiopia).
+2.  Search for spread to Europe.
+3.  Search for modern wave.
+4.  Write section 1.
+5.  Write section 2.
+
+**Step 2: The Executor**
+A ReAct agent that takes Item #1, executes it, returns the result. Then takes Item #2.
+
+## 3. Replanning
+
+Real life breaks plans.
+"Search for Ethiopian records" might return 0 results.
+A robust Plan-and-Solve agent has a **Replanner** Step.
+If Step 1 fails, it goes back to the Architect: *"I couldn't find records. Update the plan."*
+New Plan: "Search for 'Legend of Kaldi' instead."
+
+## 4. Summary
+
+Small tasks -> ReAct.
+Big projects -> Plan-and-Solve.
+You wouldn't build a house without blueprints. Don't let your AI build software without a plan.
+
+> **Key Intuition:** "First we think. Then we do."

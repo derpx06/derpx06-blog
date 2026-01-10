@@ -1,9 +1,48 @@
 ---
 title: "Deduplication via Content Hashing"
+summary: "Why duplicates kill quality and cost. How to fix it with MD5."
 publishedAt: "2026-01-10"
-summary: "Learn about Deduplication via Content Hashing."
 ---
 
 # Deduplication via Content Hashing
 
-Placeholder content for Deduplication via Content Hashing.
+## 1. The Duplicate Tax
+
+If you ingest a dataset twice, most naive RAG pipelines index it twice.
+Vector stores don't care. They will happily store 2 identical vectors.
+
+**The Cost:**
+1.  **Storage $$:** You pay double.
+2.  **Retrieval Logic:** When you search, the top 5 results are just the *same* document 5 times. You lose diversity.
+
+## 2. Solution: Content Hashing
+
+Before embedding, hash the content string. Use the Hash as the ID.
+
+<CodeBlock
+    codes={[{
+        code: `import hashlib
+
+def generate_id(content):
+    return hashlib.md5(content.encode()).hexdigest()
+
+doc.id = generate_id(doc.page_content)
+
+# Upsert uses ID. If ID exists, it overwrites (doesn't duplicate).
+vector_store.add_documents([doc])`,
+        language: 'python',
+        label: 'hashing.py'
+    }]}
+/>
+
+## 3. RecordManager
+
+LangChain has a `RecordManager` to handle this automatically for large datasets.
+It tracks which docs exist and handles updates/deletions.
+
+## 4. Summary
+
+An indexed document must be unique.
+If you don't deduplicate, your top-k results will be an echo chamber.
+
+> **Key Intuition:** "Idempotency prevents insanity."

@@ -1,9 +1,97 @@
 ---
 title: "Pipe Operator & Data Flow"
+summary: "Making the invisible visible. Understanding how data moves through a chain."
 publishedAt: "2026-01-10"
-summary: "Learn about Pipe Operator & Data Flow."
 ---
 
 # Pipe Operator & Data Flow
 
-Placeholder content for Pipe Operator & Data Flow.
+## 1. Why the Pipe Exists
+
+As your AI chains grow, they often turn into "Spaghetti Code."
+
+```python
+# Bad Pattern
+res1 = step1(input)
+res2 = step2(res1)
+if res2.score > 0.5:
+   res3 = step3(res2)
+else:
+   res3 = step4(res2)
+final = step5(res3)
+```
+
+This is hard to read. You have to track variable names (`res1`, `res2`) mentally.
+The Pipe operator (`|`) exists to make the **Data Flow** the main character.
+
+## 2. What `|` Actually Does
+
+In Python, the `|` operator is usually "Bitwise OR."
+LangChain overrides this operator.
+
+When you write `A | B`, it translates to:
+**"Take the output of A, and pass it as the input to B."**
+
+`Source -> A(input) -> Output A -> B(Output A) -> Output B`
+
+It creates a `RunnableSequence`.
+
+## 3. Debugging the Flow
+
+The scariest thing about pipelines is that they are "Black Boxes." Values go in, magic happens, and values come out. But what happens in the middle?
+
+Let's inspect the flow.
+
+<Row gap="md" vertical="start">
+    <Column flex={50}>
+        **The Chain**
+        <CodeBlock
+            codes={[{
+                code: `chain = prompt | model | parser`,
+                language: 'python',
+                label: 'simple_chain.py'
+            }]}
+        />
+    </Column>
+    <Column flex={50}>
+        **The Data Types**
+        <CodeBlock
+            codes={[{
+                code: `# 1. Input: Dict
+{"topic": "bears"} 
+   |
+   v
+# 2. Prompt Output: StringPromptValue
+"Tell me a joke about bears."
+   |
+   v
+# 3. Model Output: AIMessage
+content="Why did the bear..."
+   |
+   v
+# 4. Parser Output: String
+"Why did the bear..."`,
+                language: 'text',
+                label: 'data_flow.txt'
+            }]}
+        />
+    </Column>
+</Row>
+
+## 4. Common Bug: Type Mismatch
+
+The most common error is a Type Mismatch.
+Example: The `Prompt` expects a dictionary `{"key": "value"}`, but you pass a raw string `"value"`.
+
+**The Fix:** Always verify what the **previous** step outputs.
+
+*   Prompts output `PromptValue` (Wrapper around string).
+*   ChatModels output `AIMessage` (Wrapper around content).
+*   Parsers output `String` or `Dict`.
+
+## 5. Summary
+
+Chains are not just code; they are readable stories of transformation.
+The Pipe operator enforces a clear, linear narrative.
+
+> **Key Intuition:** "Data flows like water. The pipe just directs it."

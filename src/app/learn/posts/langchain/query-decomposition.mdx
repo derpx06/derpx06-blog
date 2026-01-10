@@ -1,9 +1,50 @@
 ---
 title: "Query Decomposition"
+summary: "Breaking complex questions into solvable parts."
 publishedAt: "2026-01-10"
-summary: "Learn about Query Decomposition."
 ---
 
 # Query Decomposition
 
-Placeholder content for Query Decomposition.
+## 1. The Multi-Hop Problem
+
+User Query: *"Is the revenue of Apple in 2022 higher than Microsoft's?"*
+
+A single vector search fails here. There is no single document comparing Apple and Microsoft revenue for 2022 directly.
+The answer exists in **two** documents:
+1.  Apple 2022 10-K
+2.  Microsoft 2022 10-K
+
+If you search for the whole sentence, you might get neither.
+
+## 2. Decomposition Strategy
+
+We use an LLM to break the query into independent sub-questions.
+
+**Step 1:** Decompose
+*   Q1: "What was Apple's revenue in 2022?"
+*   Q2: "What was Microsoft's revenue in 2022?"
+
+**Step 2:** Retrieve
+*   Search Q1 -> gets Apple Doc ($394B).
+*   Search Q2 -> gets MSFT Doc ($198B).
+
+**Step 3:** Answer
+*   The LLM context now has both numbers. It can perform the comparison.
+
+## 3. Least-to-Most Prompting
+
+For even harder problems, query 2 might depend on the answer to query 1.
+*"Who is the CEO of the company that made the iPhone?"*
+
+1.  Q1: "Who made the iPhone?" -> Answer: Apple.
+2.  Q2: "Who is the CEO of Apple?" -> Answer: Tim Cook.
+
+This requires a loop (Agentic behavior), not just parallel retrieval.
+
+## 4. Summary
+
+If your users ask compound questions, simple retrieval is mathematically impossible.
+You must break the bond.
+
+> **Key Intuition:** "Solve the parts to solve the whole."

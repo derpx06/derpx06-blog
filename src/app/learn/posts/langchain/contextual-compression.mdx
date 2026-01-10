@@ -1,9 +1,40 @@
 ---
 title: "Contextual Compression"
+summary: "Trimming the fat. Why send 1000 tokens when 50 will do?"
 publishedAt: "2026-01-10"
-summary: "Learn about Contextual Compression."
 ---
 
 # Contextual Compression
 
-Placeholder content for Contextual Compression.
+## 1. The Retrieval Paradox
+
+You retrieve 10 documents because you want **High Recall**.
+But now your context window is full of irrelevant noise.
+If the answer is in the 7th document, the LLM might miss it ("Lost in the Middle").
+
+## 2. The Compressor
+
+A **Contextual Compressor** sits between the Retriever and the LLM.
+It takes the 10 retrieved docs and asks:
+*"Given the user query, what parts of these docs are actually useful?"*
+
+It acts like a highlighter pen.
+
+## 3. Techniques
+
+### A. LLMChainExtractor
+Uses a small, fast LLM to rewrite the chunk.
+*   **Original:** "The CEO, John Smith, announced earnings today. He also mentioned he likes golf. Revenue is up 5%."
+*   **Query:** "What is the revenue?"
+*   **Compressed:** "Revenue is up 5%."
+
+### B. EmbeddingsFilter
+Embeds the query and the sentences within the chunk. Only keeps sentences with high similarity.
+Cheaper than LLM extraction.
+
+## 4. Summary
+
+Retrieval gets the document. Compression extracts the answer.
+This creates a higher quality "Context Density" for the final generation model.
+
+> **Key Intuition:** "Don't pay for tokens you don't need."

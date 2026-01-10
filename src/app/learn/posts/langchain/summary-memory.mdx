@@ -1,9 +1,58 @@
 ---
 title: "ConversationSummaryMemory"
+summary: "Compressing the past. Recall vs Resolution."
 publishedAt: "2026-01-10"
-summary: "Learn about ConversationSummaryMemory."
 ---
 
 # ConversationSummaryMemory
 
-Placeholder content for ConversationSummaryMemory.
+## 1. The Compression Strategy
+
+If you can't keep every word, maybe you can keep the *gist*.
+**ConversationSummaryMemory** uses an LLM to rewrite the history as it grows.
+
+**Turn 1:**
+*   History: "User: My name is Bob. I like coding."
+*   Summary: "User's name is Bob. He likes coding."
+
+**Turn 2:**
+*   History: "+ User: What is my favorite hobby?"
+*   New Summary: "User (Bob) asked about his hobby (coding)."
+
+## 2. How It Works
+
+It maintains a running summary.
+Every time a new message comes in, it triggers an internal LLM call:
+`LLM(Old Summary + New Message) -> New Summary`
+This new summary is then injected into the System Prompt of the next turn.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain.memory import ConversationSummaryMemory
+
+memory = ConversationSummaryMemory(llm=llm)
+# The prompt will receive: "Current Summary: Bob is a coder..."`,
+        language: 'python',
+        label: 'summary_memory.py'
+    }]}
+/>
+
+## 3. The Trade-offs
+
+### A. Lossy Compression
+Every time you summarize, you lose detail.
+*   Original: "I am allergic to peanuts."
+*   Summary: "User has dietary restrictions."
+*   Result: AI offers almond butter (which might be cross-contaminated).
+
+### B. Latency & Cost
+You are doubling your LLM calls.
+1 call to summarize. 1 call to answer.
+This gets expensive fast.
+
+## 4. Summary
+
+Summary memory extends the effective window indefinitely, but at the cost of resolution.
+Use it when "Global Context" matters more than "Exact Phrasing."
+
+> **Key Intuition:** "It's like a blurry JPEG of the conversation."

@@ -1,9 +1,39 @@
 ---
 title: "Parent Document Retrieval"
+summary: "Embed small chunks. Retrieve big context."
 publishedAt: "2026-01-10"
-summary: "Learn about Parent Document Retrieval."
 ---
 
 # Parent Document Retrieval
 
-Placeholder content for Parent Document Retrieval.
+## 1. The Context Trade-off
+
+**Small Chunks:** Great for similarity search. They are dense and specific.
+**Big Chunks:** Great for LLM comprehension. They provide continuity and background.
+
+If you embed big chunks, you lose search precision.
+If you return small chunks, the LLM loses context.
+
+## 2. Best of Both Worlds: Decoupled Indexing
+
+**Parent Document Retrieval** separates "What we search" from "What we deliver."
+
+1.  **Split:** Take a large document (Parent). Split it into 10 small pieces (Children).
+2.  **Index:** Embed the **Children**.
+3.  **Store:** Store the **Parent** in a key-value store (using doc ID).
+4.  **Retrieve:**
+    *   Search matches Child #4.
+    *   Look up Parent ID of Child #4.
+    *   Return the **Parent** to the LLM.
+
+## 3. Benefits
+
+The retrieval signal is laser-focused (Child), but the context window is rich (Parent).
+This is excellent for Q&A on technical manuals where the answer depends on the surrounding paragraphs.
+
+## 4. Summary
+
+Don't force the embedding model and the generation model to see the same text.
+Optimize one for math (embeddings) and one for reading (generation).
+
+> **Key Intuition:** "Search for the needle, return the haystack."

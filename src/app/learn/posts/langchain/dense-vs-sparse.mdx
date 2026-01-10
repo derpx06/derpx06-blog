@@ -1,9 +1,39 @@
 ---
 title: "Dense vs Sparse (BM25 Overview)"
+summary: "Keywords vs Semantic Meaning. Why you probably need both."
 publishedAt: "2026-01-10"
-summary: "Learn about Dense vs Sparse (BM25 Overview)."
 ---
 
-# Dense vs Sparse (BM25 Overview)
+# Dense vs Sparse Retrieval
 
-Placeholder content for Dense vs Sparse (BM25 Overview).
+## 1. Two Ways to Search
+
+### Sparse Retrieval (Keyword Search / BM25)
+*   **How it works:** Matches exact words. Counts frequency (TF-IDF).
+*   **Strengths:** Finding specific names ("Model X-15"), error codes ("Error 501"), and rare terms.
+*   **Weaknesses:** Fails at synonyms. "Laptop" does not match "Notebook."
+
+### Dense Retrieval (Vector/Semantic Search)
+*   **How it works:** Embeddings.
+*   **Strengths:** Understanding intent. "Device for work" matches "Laptop."
+*   **Weaknesses:** Fails at exact matches. It might think "Java" (language) is similar to "Coffee" (drink) and return irrelevant results if the context is weak.
+
+## 2. When Semantic Fails
+
+If a user searches for an acronym "W2-Form," semantic search might retrieve "Tax Documents."
+That is *conceptually* correct, but the user wants the exact form.
+BM25 would find the exact document containing "W2-Form."
+
+## 3. The Gap
+
+Pure Vector Search is often "too smart for its own good."
+Pure Keyword Search is "too dumb."
+
+We need a system that understands *meaning* but respects *keywords*.
+
+## 4. Summary
+
+Don't abandon keywords.
+Google still uses keywords for a reason. Precision matters.
+
+> **Key Intuition:** "Vectors for Concept. Keywords for Precision."

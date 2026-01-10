@@ -1,9 +1,51 @@
 ---
 title: "Metadata Filtering"
+summary: "Narrowing the search space. Mixing structured and unstructured data."
 publishedAt: "2026-01-10"
-summary: "Learn about Metadata Filtering."
 ---
 
-# Metadata Filtering
+# Metadata Filtering as a First-Class Signal
 
-Placeholder content for Metadata Filtering.
+## 1. The False Positive Problem
+
+You ask: *"What did the 2023 financial report say about profit?"*
+The vector store finds a chunk: *"Profit increased by 10% (2020 report)."*
+Semantically, it is very close.
+Factually, it is wrong.
+
+Vectors define "Aboutness." Metadata defines "Exactness."
+You cannot rely on vectors to filter by year, user ID, or category.
+
+## 2. Pre-Filtering vs Post-Filtering
+
+### Pre-Filtering (Better)
+Logic: "Find all docs where `year=2023`, THEN find the most similar ones."
+*   **Pros:** Efficient. Guarantees the constraint is met.
+*   **Cons:** Harder for database to optimize (HNSW index).
+
+### Post-Filtering (Common but risky)
+Logic: "Find top 100 similar docs. THEN remove ones where `year!=2023`."
+*   **Risk:** What if all top 100 are from 2022? You filter them all out and return 0 results.
+
+## 3. Implementation
+
+Most vector stores now support Pre-filtering native.
+
+<CodeBlock
+    codes={[{
+        code: `results = vectorstore.similarity_search(
+    "profit growth",
+    k=5,
+    filter={"year": 2023, "department": "finance"}
+)`,
+        language: 'python',
+        label: 'filter_search.py'
+    }]}
+/>
+
+## 4. Summary
+
+Always attach metadata during ingestion.
+Effective RAG is 50% Vector Search + 50% SQL-style filtering.
+
+> **Key Intuition:** "Filters are hard constraints. Vectors are soft suggestions."

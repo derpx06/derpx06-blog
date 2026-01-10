@@ -62,6 +62,7 @@ export const courses: Course[] = [
             {
                 title: "2. LCEL & Prompt Architecture",
                 links: [
+                    { title: "Your First Chatbot: Talking to an LLM", slug: "your-first-chatbot", postSlugs: ["your-first-chatbot"] },
                     { title: "LCEL: Why LangChain Is a Composition Engine", slug: "lcel-mental-model", postSlugs: ["lcel-mental-model"] },
                     { title: "The Runnable Protocol (invoke, batch, stream)", slug: "runnable-protocol", postSlugs: ["runnable-protocol"] },
                     { title: "Pipe Operator & Data Flow", slug: "pipe-operator", postSlugs: ["pipe-operator"] },

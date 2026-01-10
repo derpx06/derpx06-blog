@@ -1,9 +1,60 @@
 ---
 title: "Vector Stores: FAISS, Chroma"
+summary: "Where the numbers live. Indexing vs Brute Force."
 publishedAt: "2026-01-10"
-summary: "Learn about Vector Stores: FAISS, Chroma."
 ---
 
 # Vector Stores: FAISS, Chroma
 
-Placeholder content for Vector Stores: FAISS, Chroma.
+## 1. What is a Vector Store?
+
+It is a specialized database.
+It stores:
+1.  **Vector** (Index)
+2.  **Metadata** (Filter)
+3.  **Content** (Payload)
+
+We use it because SQL databases are too slow for vector math.
+
+## 2. Indexing vs Searching
+
+If you have 1 million vectors, comparing your query to *every single one* (Brute Force) is slow.
+Vector stores use **ANN (Approximate Nearest Neighbor)** indexing.
+They group similar vectors into clusters. When you search, they only check the relevant cluster.
+**Trade-off:** You gain Speed (100x), you lose Recall (1-5% errors).
+
+## 3. FAISS vs Chroma
+
+### FAISS (Facebook AI Similarity Search)
+*   **Pros:** Incredibly fast. Runs on GPU. The rigorous standard.
+*   **Cons:** Hard to use. No metadata filtering natively (without wrappers). In-memory only (usually).
+
+### ChromaDB
+*   **Pros:** Developer friendly. "Just works." Handles metadata/storage/embedding for you.
+*   **Cons:** Newer, less optimized for massive scale (yet).
+
+## 4. Usage in LangChain
+
+They share the same interface.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_community.vectorstores import Chroma
+
+# Add
+db = Chroma.from_documents(docs, embedding_model)
+
+# Search
+results = db.similarity_search("How do I reset password?")`,
+        language: 'python',
+        label: 'chroma_usage.py'
+    }]}
+/>
+
+## 5. Summary
+
+For < 100k docs, use Chroma/FAISS locally.
+For > 1M docs, use Pinecone/Weaviate/Milvus.
+The logic is the same: Index vectors to find neighbors fast.
+
+> **Key Intuition:** "It's a map of meaning, not a list of keywords."

@@ -1,21 +1,20 @@
 ---
-title: "The Unix Pipe for AI: Understanding LCEL"
-publishedAt: '2026-01-10'
+title: "LCEL: Why LangChain Is a Composition Engine"
 summary: "Why we stopped writing Python glue code and started using the Pipe (|) operator."
+publishedAt: '2026-01-10'
 ---
 
-# The Unix Pipe for AI: Understanding LCEL
+# LCEL: Why LangChain Is a Composition Engine
 
 ## 1. The "Python Glue" Trap
 
-To understand LangChain Expression Language (LCEL), you have to first feel the pain of building LLM apps without it.
+In the previous lesson, we called the model directly: `model.invoke(text)`.
 
-Imagine you are building a simple "joke generator."
-You need to:
-1.  Take a user's topic (e.g., "bears").
-2.  Insert it into a Prompt Template.
-3.  Send that prompt to ChatGPT.
-4.  Clean up the output string.
+But real apps aren't that simple.
+You usually need to:
+1.  **Format** the user input into a Prompt.
+2.  **Call** the model.
+3.  **Parse** the output string into a clean format.
 
 In standard Python, you write this:
 
@@ -97,28 +96,6 @@ return chain.invoke(input)`,
     </Column>
 </Row>
 
-## 3. What is LCEL? (The Definition)
-
-**LangChain Expression Language (LCEL)** is a protocol that allows you to chain arbitrary components together using the Unix Pipe `|` operator.
-
-It works because every component implements the **Runnable** interface.
-
-<Table
-    data={{
-        headers: [
-            { content: "Method", key: "method" },
-            { content: "What it does", key: "desc" }
-        ],
-        rows: [
-            ["`.invoke()`", "Run the chain on a single input."],
-            ["`.stream()`", "Yield output tokens as they are generated."],
-            ["`.batch()`", "Run multiple inputs in parallel."]
-        ]
-    }}
-/>
-
-This is **LCEL**. It is not a new programming language; it is a declaration of a workflow.
-
 ## 4. Why This Changes Everything
 
 You might think, "It's just syntactic sugar." But look what happened to the requirements from your boss:
@@ -145,8 +122,6 @@ chain.batch([{"topic": "bears"}, {"topic": "cats"}, ...])`,
         label: 'batch.py'
     }]}
 />
-
-Because the chain abstracts the flow, the *engine* handles the complexity. You just define the steps.
 
 ## 5. Mental Model: The Assembly Line
 
@@ -192,19 +167,9 @@ rag_chain = setup_and_retrieval | prompt | model | parser`,
 3.  **Pipe:** Pass the prompt to the model.
 4.  **Pipe:** Parse the answer.
 
-## 7. When to Use It (And When Not To)
-
-**Use LCEL when:**
-*   You have a sequence of steps (Chain).
-*   You need streaming or batching (which is almost always in production).
-*   You want to easily swap components (change GPT-4 to Claude without rewriting logic).
-
-**Do NOT use LCEL when:**
-*   You have complex loops or highly dynamic flow control (while/if) that depends on the model's output in the middle of a generation. Standard Python code is still better for rigid logic.
-
 ## Summary
 
-LCEL is not magic. It is a standard interface (`Runnable`) that allows us to compose AI systems using the Unix philosophy:
+LCEL is not magic. It is **plumbing**.
 
 > "Make each program do one thing well. To do a new job, build afresh rather than complicate old programs by adding new 'features'."
 

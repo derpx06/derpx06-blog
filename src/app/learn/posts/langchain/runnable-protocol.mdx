@@ -1,9 +1,105 @@
 ---
-title: "The Runnable Protocol (invoke, batch, stream)"
+title: "The Runnable Protocol: Invoke, Batch, and Stream"
+summary: "One chain, many execution styles. Understanding the universal interface of LangChain."
 publishedAt: "2026-01-10"
-summary: "Learn about The Runnable Protocol (invoke, batch, stream)."
 ---
 
-# The Runnable Protocol (invoke, batch, stream)
+# The Runnable Protocol
 
-Placeholder content for The Runnable Protocol (invoke, batch, stream).
+## 1. The Problem: One Logic, Many Shapes
+
+You built a chatbot. It works great.
+But now you need to integrate it into a real webserver (FastAPI/Django).
+
+**Requirement 1:** A user sends a message. You need to reply. (`invoke`)
+**Requirement 2:** A user uploads a CSV of 500 questions. You need to reply to all of them efficiently. (`batch`)
+**Requirement 3:** The frontend wants the text to "type out" like ChatGPT. (`stream`)
+
+In the old world, you would write three different functions:
+`def chat(msg): ...`
+`def chat_batch(msgs): ...`
+`def chat_stream(msg): ...`
+
+This duplication is the root of most bugs.
+
+## 2. The Runnable Solution
+
+LangChain defines a standard interface called the **Runnable Protocol**. If an object is a "Runnable," it implements all three methods automatically.
+
+You define the logic **ONCE**:
+
+<CodeBlock
+    codes={[{
+        code: `chain = prompt | model | parser`,
+        language: 'python',
+        label: 'chain_def.py'
+    }]}
+/>
+
+And you get three behaviors for free.
+
+## 3. Method 1: invoke() (The Singular Call)
+
+This is the standard, synchronous call.
+**Input:** Single input (dictionary or string).
+**Output:** Complete response.
+
+<CodeBlock
+    codes={[{
+        code: `response = chain.invoke({"topic": "bears"})
+print(response)
+# Output: "Why did the bear dissolved? It was polar."`,
+        language: 'python',
+        label: 'invoke_example.py'
+    }]}
+/>
+
+**Use Case:** Typical REST API endpoints, background jobs, testing.
+
+## 4. Method 2: stream() (The User Experience)
+
+This returns an **Iterator** that yields chunks of the output as soon as they are available.
+
+<CodeBlock
+    codes={[{
+        code: `for chunk in chain.stream({"topic": "bears"}):
+    print(chunk, end="|", flush=True)
+
+# Output: W|h|y| |d|i|d| |t|h|e|...`,
+        language: 'python',
+        label: 'stream_example.py'
+    }]}
+/>
+
+**Why this matters:**
+Start-up latency (Time to First Token) determines if your app feels "fast." waiting 5 seconds for a paragraph feels slow. Waiting 0.5s for the first word feels instant.
+
+## 5. Method 3: batch() (The Scale)
+
+This takes a **List** of inputs and returns a **List** of outputs.
+
+<CodeBlock
+    codes={[{
+        code: `inputs = [
+    {"topic": "bears"},
+    {"topic": "cats"},
+    {"topic": "dogs"}
+]
+
+results = chain.batch(inputs)
+# Output: ["Bear joke...", "Cat joke...", "Dog joke..."]`,
+        language: 'python',
+        label: 'batch_example.py'
+    }]}
+/>
+
+**The Secret Power:**
+Under the hood, `batch` uses a `ThreadPoolExecutor`. It runs your calls in parallel (up to the limit of the connection pool).
+If you used a simple `for` loop, it would take 3x longer. `batch` gives you concurrency for free.
+
+## 6. Summary
+
+The Runnable Protocol is the contract that makes LangChain components composable.
+It separates **What** you want to do (the Chain logic) from **How** you want to run it (Invoke, Stream, Batch).
+
+> **Key Intuition:** "One chain, many execution styles."

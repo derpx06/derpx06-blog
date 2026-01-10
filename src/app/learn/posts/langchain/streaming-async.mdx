@@ -1,9 +1,61 @@
 ---
 title: "Streaming Tokens & Async Chains"
+summary: "Making your AI app feel fast. Sync vs Async."
 publishedAt: "2026-01-10"
-summary: "Learn about Streaming Tokens & Async Chains."
 ---
 
 # Streaming Tokens & Async Chains
 
-Placeholder content for Streaming Tokens & Async Chains.
+## 1. The Latency Problem
+
+GPT-4 is slow. Generating a paragraph can take 10 seconds.
+If you use standard `invoke()`, your user stares at a spinner for 10 seconds. They assume your app is broken.
+
+## 2. Sync vs Async
+
+In a web server (like FastAPI), blocking the thread for 10 seconds kills your throughput. You can only handle 1 user per thread.
+You **must** use `async/await`.
+
+<CodeBlock
+    codes={[{
+        code: `import asyncio
+
+async def main():
+    # .ainvoke() is the async version
+    response = await chain.ainvoke({"topic": "bears"})
+    print(response)
+
+# Run it
+asyncio.run(main())`,
+        language: 'python',
+        label: 'async_invoke.py'
+    }]}
+/>
+
+## 3. Streaming (The UX Fix)
+
+To fix the "Spinner of Death," we stream tokens.
+LangChain objects support `.astream()`.
+
+<CodeBlock
+    codes={[{
+        code: `async def stream_chat():
+    async for chunk in chain.astream({"topic": "bears"}):
+        # In a real web app, you would send this via WebSocket/SSE
+        print(chunk.content, end="", flush=True)`,
+        language: 'python',
+        label: 'async_stream.py'
+    }]}
+/>
+
+## 4. Cancellation
+
+One hidden benefit of Async is **Cancellation**.
+If the user clicks "Stop Generating" or closes the tab, an async chain can be cancelled instantly, saving you money. A synchronous request would keep running on the server until it finishes.
+
+## 5. Summary
+
+Production AI requires Async for scale and Streaming for UX.
+LangChain supports both out of the box with the `a-` prefix methods (`ainvoke`, `astream`, `abatch`).
+
+> **Key Intuition:** "Speed is part of intelligence."

@@ -1,9 +1,84 @@
 ---
 title: "Prompt Architecture & Reusability"
+summary: "Moving from magic strings to a Prompt Registry. How to manage large prompts."
 publishedAt: "2026-01-10"
-summary: "Learn about Prompt Architecture & Reusability."
 ---
 
-# Prompt Architecture & Reusability
+# Prompt Architecture
 
-Placeholder content for Prompt Architecture & Reusability.
+## 1. The "Magic String" Problem
+
+In a demo, your prompt is 3 lines.
+In production, your prompt is 3 pages.
+
+If you keep 3-page strings inside your Python files (`main.py`), your code becomes unreadable. You can't version control the logic separately from the text.
+
+## 2. Solution: The Prompt Registry Pattern
+
+Treat prompts like assets.
+Create a folder structure:
+
+```text
+src/
+  prompts/
+    __init__.py
+    support_agent.py
+    sales_agent.py
+```
+
+Inside `support_agent.py`:
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_core.prompts import ChatPromptTemplate
+
+SYSTEM_TEMPLATE = """
+You are a support agent for company X.
+Current Time: {time}
+Rules:
+1. Be polite.
+2. Never promise refunds.
+"""
+
+def get_support_prompt():
+    return ChatPromptTemplate.from_messages([
+        ("system", SYSTEM_TEMPLATE),
+        ("human", "{input}")
+    ])`,
+        language: 'python',
+        label: 'support_agent.py'
+    }]}
+/>
+
+This seems simple, but it allows you to:
+1.  **Import** the prompt anywhere: `from prompts.support_agent import get_support_prompt`
+2.  **Test** the prompt in isolation.
+3.  **Diff** changes easily in Git (text files).
+
+## 3. Composition (Layered Prompts)
+
+Sometimes you have a "Base Prompt" (Company Tone) and a "Specific Prompt" (Task).
+You can compose them.
+
+<CodeBlock
+    codes={[{
+        code: `BASE_SYSTEM = "Always speak in a professional tone."
+
+TASK_SPECIFIC = "User is asking about billing."
+
+full_prompt = ChatPromptTemplate.from_messages([
+    ("system", BASE_SYSTEM),
+    ("system", TASK_SPECIFIC), # Yes, you can stack system messages
+    ("human", "{input}")
+])`,
+        language: 'python',
+        label: 'composition.py'
+    }]}
+/>
+
+## 4. Summary
+
+Don't bury prompts in your logic.
+Externalize them. Modularize them.
+
+> **Key Intuition:** "Prompts should evolve like code."

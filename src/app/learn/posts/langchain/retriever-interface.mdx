@@ -1,9 +1,64 @@
 ---
 title: "The Retriever Interface"
+summary: "Retrieval is a pipeline, not a query. The gatekeeper of truth."
 publishedAt: "2026-01-10"
-summary: "Learn about The Retriever Interface."
 ---
 
 # The Retriever Interface
 
-Placeholder content for The Retriever Interface.
+## 1. Retrieval as a System
+
+Retrieval is not "Search + LLM."
+It is the **Gatekeeper of Truth**.
+
+If your retriever fails to find the relevant document, the LLM hallucinates.
+If your retriever finds irrelevant documents, the LLM gets confused.
+The quality of your RAG system is bounded by the quality of your retrieval, not the intelligence of your model.
+
+## 2. The Abstraction
+
+In LangChain, a Retriever is anything that adheres to this interface:
+`get_relevant_documents(query: str) -> List[Document]`
+
+This abstraction is powerful because it hides the complexity.
+Behind that simple function call, you might have:
+*   A Vector Store (Semantic Search)
+*   A Keyword Search (BM25)
+*   A SQL Database
+*   The Internet (Google Search)
+
+## 3. Why Retrievers Define "Recall"
+
+Precision is "How much of what I found is useful?"
+Recall is "Did I find everything that matters?"
+
+Retrievers are biased towards Recall. Their job is to cast a net wide enough to catch the answer, but narrow enough to fit in the context window.
+
+## 4. Implementation
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_community.vectorstores import Chroma
+
+# A VectorStore is NOT a Retriever
+vectorstore = Chroma(...)
+
+# But it can be turned into one
+retriever = vectorstore.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 5}
+)
+
+# Now it is a standard interface
+docs = retriever.invoke("How do I reset my password?")`,
+        language: 'python',
+        label: 'retriever_basic.py'
+    }]}
+/>
+
+## 5. Summary
+
+The Retriever is the component that selects "What the model sees."
+It is the most critical component in any RAG Architecture.
+
+> **Key Intuition:** "The model is the reasoning engine. The retriever is the memory."

@@ -1,9 +1,55 @@
 ---
 title: "Persisting & Reloading Indexes"
+summary: "Saving your work. Avoiding expensive re-computation."
 publishedAt: "2026-01-10"
-summary: "Learn about Persisting & Reloading Indexes."
 ---
 
 # Persisting & Reloading Indexes
 
-Placeholder content for Persisting & Reloading Indexes.
+## 1. Embeddings Are Expensive
+
+Calculating embeddings costs time (GPU cycles) and money (API credits).
+If you re-embed your PDF every time you restart the script, you are burning money.
+You must **Persist** (save) the index.
+
+## 2. In-Memory vs Persistent
+
+*   **In-Memory:** `vectorstore = Chroma.from_documents(...)`.
+    *   Fastest.
+    *   Dies when script ends.
+    *   Good for testing.
+
+*   **Persistent:** `vectorstore = Chroma(persist_directory="./db")`.
+    *   Saves to disk.
+    *   Reloads instantly on next run.
+
+## 3. Reloading Strategy
+
+In production, you separate **Ingestion** from **Querying**.
+
+**Script A (Ingestion):**
+Run nightly. Reads docs -> Embeds -> Save to `./db`.
+
+**Script B (FastAPI):**
+Run continuously. Loads `./db` -> Serves queries.
+
+<CodeBlock
+    codes={[{
+        code: `# Script A: Write
+db = Chroma(persist_directory="./chroma_db", embedding_function=model)
+db.add_documents(docs)
+
+# Script B: Read
+db = Chroma(persist_directory="./chroma_db", embedding_function=model)
+# No embedding happens here! Instant load.`,
+        language: 'python',
+        label: 'persist_reload.py'
+    }]}
+/>
+
+## 4. Summary
+
+Treat your Vector Store like a database, not a temporary variable.
+Persist to disk (or cloud) so your app starts instantly.
+
+> **Key Intuition:** "Compute once, query forever."
