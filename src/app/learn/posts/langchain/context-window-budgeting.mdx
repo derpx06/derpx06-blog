@@ -14,21 +14,19 @@ Unlike a human brain, which retains a continuous stream of consciousness and lon
 
 The **Context Window** is the maximum capacity of this re-sent data. It defines the model's "working memory"—the rigid boundary of text it can perceive, analyze, and reference at any single moment during inference. If information falls outside this window, it is effectively deleted; to the model, it ceases to exist.
 
+<br />
+
 ## 2. Why We Cannot Have Infinite Memory
 
 If context is so critical, why do models have limits (e.g., 8k, 32k, or 128k)? The limitation is physical and mathematical, rooted in the **Self-Attention Mechanism** of the Transformer architecture.
 
 ### The Quadratic Cost of Attention
-
 For an LLM to "understand" a sentence, it must calculate the relationship between every unit of data and every other unit in the window.
-
-*   To understand unit A, it looks at B, C, and D.
-*   To understand unit B, it looks at A, C, and D.
-
 This process has **Quadratic Complexity ($O(n^2)$)**.
-
 *   If you double the length of the context window, the computational power required does not double; it quadruples.
 *   This creates a massive bottleneck in hardware memory (VRAM) and processing speed (Latency).
+
+<br />
 
 ## 3. The "Lost in the Middle" Phenomenon
 
@@ -41,8 +39,6 @@ A larger context window does not automatically equal better understanding. Resea
         1.  **Primacy Bias (High Accuracy):** Information at the very **start** of the window (typically System Instructions) is retained well.
         2.  **Recency Bias (High Accuracy):** Information at the very **end** of the window (the user's most recent question) is retained well.
         3.  **The Trough (Low Accuracy):** Critical details buried in the **middle** of a long context block are frequently overlooked or "forgotten" during generation.
-
-        **Strategic Implication:** Critical instructions should never be placed in the middle of a prompt. They must be defined in the System Prompt (start) or reiterated immediately before the query (end).
     </Column>
     <Column flex={1} horizontal="center">
         <Image
@@ -56,82 +52,93 @@ A larger context window does not automatically equal better understanding. Resea
     </Column>
 </Row>
 
-## 4. Advanced Context Engineering
+> [!WARNING]
+> **Strategic Implication:** Critical instructions should never be placed in the middle of a prompt. They must be defined in the System Prompt (start) or reiterated immediately before the query (end).
 
-As we move toward building agents that need to operate for days or weeks, we can't simply stuff everything into the window. We have to treat the context window like limited luggage space for a long trip. You wouldn't pack a whole wardrobe; you'd pack smart.
+<br />
+
+## 4. Advanced Context Engineering & Agent Memory 🧠
+
+As we move toward building agents that need to operate for days or weeks, we can't simply stuff everything into the window. We need optimization strategies.
 
 ### A. Semantic Compression (The "Zip File" Method)
+Human language is full of "fluff" (connecting words, articles). In Context Engineering, we strip this away to increase density using structured state.
 
-Human language is roughly mostly "fluff" (connecting words, articles, politeness). In Context Engineering, we strip this away to increase density.
+**The Human Way (38 Tokens)**
+> "The user explicitly stated that they are interested in buying a house in New York, specifically in Brooklyn, and their budget is around 1 million dollars. They also mentioned they have a dog."
 
-*   **The Human Way (Bad Context):** "The user explicitly stated that they are interested in buying a house in New York, specifically in Brooklyn, and their budget is around 1 million dollars. They also mentioned they have a dog." (38 Tokens)
-*   **The Engineered Way (High Density):** `User:{Goal:Buy House, Loc:Brooklyn/NY, Budget:$1M, Pets:Dog}` (16 Tokens)
+**The Engineered Way (16 Tokens)**
+<CodeBlock
+    codes={[
+        {
+            code: `User: {
+  "Goal": "Buy House",
+  "Loc": "Brooklyn/NY",
+  "Budget": "1M",
+  "Pets": "Dog"
+}`,
+            language: "json",
+            label: "compressed_state.json"
+        }
+    ]}
+/>
 
-**Technique:** Forcing your application to store conversation history as Structured State Objects (JSON/YAML) rather than raw dialogue strings cuts token usage by ~50% while maintaining perfect recall.
+### B. Two Types of Memory: Episodic vs. Semantic
+Effective agents separate memory into two piles.
 
-### B. Two Types of Memory (The Fact Bank vs. The Diary)
+<Table
+    data={{
+        headers: [
+            { content: "Memory Type", key: "type" },
+            { content: "Purpose", key: "purpose" },
+            { content: "Retention Rule", key: "rule" }
+        ],
+        rows: [
+            ["Semantic Memory", "Permanent Facts (User Name, Preferences)", "Never delete. Store in 'Fact Bank'."],
+            ["Episodic Memory", "Recent Events (Greetings, Jokes)", "Delete often. Keep last 3-5 turns."]
+        ]
+    }}
+/>
 
-Effective agents separate memory into two piles: **Episodic** and **Semantic**.
+### C. The Delta Method (State Updates)
+Don't re-transmit the entire state every turn. Send only the *diff*.
+If the user updates their age, just send `Update: {Age: 26}`. The model applies this patch to its internal state, saving massive amounts of tokens compared to re-sending the whole user profile.
 
-1.  **[PERMANENT FACTS]: The Semantic Memory**
-    *   *Example:* "User's name is Sid," "User likes Python code."
-    *   *Rule:* This is gold. Never delete this.
-2.  **[RECENT EVENTS]: The Episodic Memory**
-    *   *Example:* "User said hello," "User asked for a joke," "AI told a joke."
-    *   *Rule:* This gets old fast. Delete this often. You don't need to remember "Hello" from 20 minutes ago.
+<br />
 
-**Optimization Strategy:** Keep the last 3-5 turns in the buffer. When the buffer fills up, extract any new facts to the "Fact Bank," and then clear the buffer.
-
-### C. The Save Method
-Most simple chatbots waste space by re-stating the entire world state every turn. It’s like saving a video game by copying the entire game code every time you reach a checkpoint.
-
-A better approach is the **Delta Method**. If the user updates their age, don't re-send their entire profile. Just send the *change*: `Update: {Age: 26}`. The model is smart enough to apply this patch to its internal understanding, just like a game engine only tracks what moved.
-
-### D. Priming the Lens
-When you hand a model a massive 50-page document, it tends to "skim," often missing the one detail you care about. This isn't just a capacity issue; it's an attention issue.
-
-To fix this, we use **Context Priming**. Before you paste the document, tell the model exactly what to hunt for. Say, *"I am about to share a report. Put on your 'detective glasses' and look ONLY for dates and deadlines."* This simple instruction acts like a spotlight, forcing the model's attention mechanism to focus heavily on the tokens that look like dates, ensuring they don't get lost in the noise.
-
-### E. Hygiene
-Finally, be a janitor. Before text touches your window, scrub it. Remove the invisible whitespace, the messy HTML tags, and the broken characters. They add nothing to the meaning but costs just as much as the content.
-
-## 5. Agentic Context Strategy
-
-Autonomous agents are even greedier than chatbots. Because they "think" before they act, they can fill a context window in minutes. We need a different playbook here.
-
-### Pruning the "Chain of Thought"
-Agents often use a "Chain of Thought" to plan their next move—*"I need to check the file... okay, file checked... now I will edit..."*. This reasoning is crucial for *doing* the task, but useless *after* the task is done.
-
-Once an agent finishes a step, we should perform **Thought Pruning**. We summarize the messy reasoning into a clean confirmation—*"Edited file X"*—and delete the scratchpad work. This keeps the history clean and focused on results, not the messy process of getting there.
-
-### The "Heads-Up Display"
-In a long task, an agent can easily forget its original goal as it gets distracted by sub-tasks. To prevent this, don't rely on the agent scrolling back to the beginning of the chat.
-
-Instead, inject a **State Object** at the very top of every single prompt. It should track the `Current Goal`, `Inventory`, and `Status`. This ensures that no matter how deep the rabbit hole goes, the agent always sees its "True North" at a glance.
-
-### Efficient Tool Definitions
-Finally, consider how you explain tools. You don't need a legally binding 50-word description for every function parameter. A crisp TypeScript signature like `readFile(path: string): string` is often clearer to a code-trained model than a verbose paragraph, and it costs a fraction of the tokens.
-
-## 6. Escaping the Limit: Retrieval Augmented Generation (RAG)
+## 5. Escaping the Limit: Retrieval Augmented Generation (RAG)
 
 When an application requires access to a dataset larger than the context window (e.g., a company's entire internal documentation), the architecture shifts to **Retrieval Augmented Generation (RAG)**.
 
 RAG decouples "Knowledge" from "Processing."
-
 1.  **Storage:** The vast dataset is indexed in an external Vector Database.
 2.  **Retrieval:** When a user asks a question, the system conceptually "searches" the database for the specific paragraphs relevant to that question.
 3.  **Injection:** Only those specific paragraphs are injected into the Context Window.
 
 This allows a model with a small window to appear as though it has access to infinite knowledge, by dynamically swapping the contents of its "working memory" for every specific query.
 
-## 7. Inference Control: Hyperparameters
+<br />
 
-While the Context Window defines *what* the model sees, Hyperparameters define *how* it processes that information to generate a response.
+# 6. Inference Control: Hyperparameters
 
-*   **Temperature:** Controls the "randomness". Lower values (0.1) force the model to pick the most likely prediction (deterministic). Higher values (0.8+) allow for less likely, more creative choices.
-*   **Top-P (Nucleus Sampling):** The "Community Choice" filter. It dynamically shrinks the pool of words to the top X% of cumulative probability (e.g., 0.9). It allows for creativity while preventing pure gibberish.
-*   **Top-K:** The "Hard Cap" filter. It strictly limits the model to choosing from the top K most likely words (e.g., Top-40), regardless of how likely or unlikely they are.
-*   **Frequency Penalty:** Punishes words based on how *many times* they have appeared. Use this to prevent immediate repetition (loops).
-*   **Presence Penalty:** Punishes words if they have appeared *at all*. Use this to force the model to switch topics or avoid getting stuck in one train of thought.
-*   **Min-P:** A modern alternative to Top-P. It ignores any token that is clearling less likely than the top choice (e.g., "If top choice is 50%, ignore anything below 5%"). It scales better than Top-P for different confidence levels.
-*   **Stop Sequences:** Custom strings (e.g., `User:`, `\n`) that force the model to immediately cease generation. Essential for controlling agents.
+While the Context Window defines *what* the model sees, Hyperparameters define *how* it processes that information.
+
+### Temperature
+*   **Definition:** Controls the randomness of the output.
+*   **Low (0.1):** The model becomes **deterministic**, always picking the highest probability token. Use for fact retrieval and code.
+*   **High (0.8+):** The model increases the weights of lower-probability tokens. Use for creative writing and brainstorming.
+
+### Top P (Nucleus Sampling)
+*   **Definition:** A smarter alternative to Temperature. It limits the token pool to the top $P$% of probability mass.
+*   **Low P (0.1):** Only considers the top 10% most likely words. Extremely confident and factual.
+*   **High P (0.9):** Considers the top 90% of plausible words. More diverse.
+> **Tip:** Alter Temperature OR Top P, but rarely both.
+
+### Frequency Penalty
+*   **Definition:** Punishes a token based on how **many times** it has already appeared.
+*   **Effect:** The higher the penalty, the less likely the model is to repeat the same word verbatim. Use this to reduce repetitive loops.
+
+### Stop Sequences
+*   **Definition:** A specific string (e.g., "User:", "\n\n") that forces the model to halt generation immediately.
+*   **Use Case:** Essential for preventing the model from hallucinating a continuation of a conversation (e.g., generating the User's reply for them).
+

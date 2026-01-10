@@ -12,7 +12,8 @@ LLM APIs are different. They are **probabilistic** and **resource-constrained** 
 *   **Probabilistic:** The model might refuse a request today that it accepted yesterday because the "safety filter" rolled a different probability on your input.
 *   **Resource Intensity:** Generating text requires massive GPU memory and compute. Providers like OpenAI and Anthropic aggressively throttle traffic to keep their systems stable.
 
-In production, errors are not exceptions; they are **normal operating conditions**. A robust LLM application is not one that avoids errors, but one that handles them gracefully without crashing the user experience.
+> [!NOTE]
+> In production, errors are not exceptions; they are **normal operating conditions**. A robust LLM application is not one that avoids errors, but one that handles them gracefully without crashing the user experience.
 
 <br />
 
@@ -73,8 +74,9 @@ Every model has a strict **Context Window**—the maximum amount of text (tokens
 
 This is a **hard limit**. You cannot "buy" more context for a specific request. If you send 129k tokens to a 128k model, the API will throw a `400 Bad Request` or simply truncate (cut off) the end of your text silently.
 
-**Why "Just Add More Text" Fails:**
-Even if you fit inside the limit, filling the context window to the brim often degrades performance. The "Lost in the Middle" phenomenon means models struggle to find details buried in the center of a massive prompt.
+> [!WARNING]
+> **Why "Just Add More Text" Fails:**
+> Even if you fit inside the limit, filling the context window to the brim often degrades performance. The "Lost in the Middle" phenomenon means models struggle to find details buried in the center of a massive prompt.
 
 <br />
 
@@ -109,8 +111,8 @@ In Agentic workflows, LLMs often feed into each other.
 
 If Agent A creates a subtle bug, Agent B might hallucinate that it's "correct," and Agent C crashes production. This is **Failure Propagation**.
 
-**Key Insight:** Confidence $\neq$ Correctness.
-An LLM will often be *most* confident when it is hallucinating. You cannot rely on the model to "self-correct" reliably without external validation tools (like running the code, checking syntax, or verifying against a database).
+**Key Insight:** Confidence ≠ Correctness. An LLM will often be most confident when it is hallucinating. You cannot rely on the model to "self-correct" reliably without external validation tools (like running the code, checking syntax, or verifying against a database).
+
 
 <br />
 
@@ -118,10 +120,23 @@ An LLM will often be *most* confident when it is hallucinating. You cannot rely 
 
 Since you cannot eliminate errors, you must design for them.
 
-1.  **Fallbacks > Retries:** If GPT-4 fails 3 times, don't just fail. Fallback to a cheaper/faster model (like GPT-3.5 or Claude Haiku) to give *some* response, or fallback to a hard-coded "Safe Mode" response.
-2.  **Graceful Degradation:** If the "Summarize this 100-page PDF" feature fails, allow the user to continue using the "Chat" feature. Don't crash the whole app.
-3.  **Circuit Breakers:** If your error rate spikes to 10%, stop sending requests entirely for 5 minutes. Let the provider recover, and save your money.
+<Table
+    data={{
+        headers: [
+            { content: "Strategy", key: "strategy" },
+            { content: "Description", key: "description" },
+            { content: "Example", key: "example" }
+        ],
+        rows: [
+            ["Fallbacks > Retries", "Don't just fail; degrade gracefully.", "If GPT-4 fails, fallback to Claude Haiku."],
+            ["Graceful Degradation", "Keep correct parts of the app running.", "If 'Summary' fails, keep 'Chat' working."],
+            ["Circuit Breakers", "Stop requests if error rate spikes.", "If 10% errors, pause all calls for 5m."],
+            ["Validator Functions", "Check output before using it.", "Verify JSON output matches schema."]
+        ]
+    }}
+/>
 
+> [!TIP]
 > **Reliability comes from system design, not better prompts.** No amount of "Please be careful" in a prompt will fix a 502 Bad Gateway error.
 
 <br />
