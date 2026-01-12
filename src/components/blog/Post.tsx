@@ -3,6 +3,7 @@
 import { Card, Column, Media, Row, Avatar, Text } from "@once-ui-system/core";
 import { formatDate } from "@/utils/formatDate";
 import { person } from "@/resources";
+import { SmartTruncate } from "@/components/SmartTruncate";
 
 interface PostProps {
   post: any;
@@ -54,9 +55,13 @@ export default function Post({ post, thumbnail, direction, pathPrefix = "blog" }
               {post.metadata.title}
             </Text>
             {post.metadata.summary && (
-              <Text variant="body-default-m" onBackground="neutral-weak" style={{ overflowWrap: "break-word" }}>
+              <SmartTruncate
+                as={Text}
+                variant="body-default-m"
+                onBackground="neutral-weak"
+              >
                 {post.metadata.summary}
-              </Text>
+              </SmartTruncate>
             )}
             {post.metadata.topics && post.metadata.topics.length > 0 && (
               <Row gap="8" wrap>

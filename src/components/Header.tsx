@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 
 import {
   Avatar,
@@ -65,10 +66,20 @@ const TimeDisplay: React.FC<TimeDisplayProps> = ({
 export const Header = () => {
   const pathname = usePathname() ?? "";
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const scrollDirection = useScrollDirection();
+  const isHidden = scrollDirection === "down";
 
   return (
     <>
-      <Fade s={{ hide: true }} m={{ hide: true }} fillWidth position="fixed" height="80" zIndex={9} />
+      <Fade
+        s={{ hide: true }}
+        m={{ hide: true }}
+        fillWidth
+        position="fixed"
+        height="80"
+        zIndex={9}
+        className={`${styles.desktopFade} ${isHidden ? styles.hidden : ''}`}
+      />
 
       <Fade
         hide
@@ -80,6 +91,7 @@ export const Header = () => {
         to="top"
         height="80"
         zIndex={9}
+        className={`${styles.mobileFade} ${isHidden ? styles.hidden : ''}`}
       />
 
 
@@ -88,7 +100,7 @@ export const Header = () => {
 
       <Row
         fitHeight
-        className={`${styles.position} ${styles.compactHeader}`}
+        className={`${styles.position} ${isHidden ? styles.hidden : ''} ${styles.compactHeader}`}
         as="header"
         zIndex={9}
         fillWidth
@@ -312,7 +324,7 @@ export const Header = () => {
           paddingX="12"
           paddingY="8"
           style={{ zIndex: 50 }}
-          className={styles.mobileSearchRow}
+          className={`${styles.mobileSearchRow} ${isHidden ? styles.hidden : ''}`}
           horizontal={showMobileSearch ? "center" : "end"}
           pointerEvents={showMobileSearch ? undefined : "none"}
         >

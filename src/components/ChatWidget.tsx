@@ -4,9 +4,13 @@ import { IconButton, Flex, Column, Input, Text } from "@once-ui-system/core";
 import { useState, useEffect } from "react";
 import { AiIcon } from "./icons/AiIcon";
 import styles from "./ChatWidget.module.scss";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 
 export const ChatWidget = ({ variant = "bubble" }: { variant?: "bubble" | "inline" }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const scrollDirection = useScrollDirection();
+    const shouldHide = variant === "bubble" && !isOpen && scrollDirection === "down";
+
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
         {
@@ -188,7 +192,13 @@ export const ChatWidget = ({ variant = "bubble" }: { variant?: "bubble" | "inlin
                 position={variant === "bubble" ? "fixed" : "static"}
                 bottom={variant === "bubble" ? "32" : undefined}
                 right={variant === "bubble" ? "32" : undefined}
-                style={{ zIndex: 50 }}
+                style={{
+                    zIndex: 50,
+                    transition: "transform 0.3s ease-in-out, opacity 0.3s ease-in-out",
+                    transform: shouldHide ? "translateY(200%)" : "translateY(0)",
+                    opacity: shouldHide ? 0 : 1,
+                    pointerEvents: shouldHide ? "none" : "auto",
+                }}
                 s={
                     variant === "bubble"
                         ? {

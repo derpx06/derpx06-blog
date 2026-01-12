@@ -100,7 +100,7 @@ export default async function CourseLesson({
     if (!primaryPost) notFound();
 
     return (
-        <Column fillWidth horizontal="center">
+        <Column fillWidth horizontal="center" paddingBottom="160">
             <Row maxWidth="l" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }} gap="l">
                 <Column maxWidth="m" s={{ maxWidth: "100%" }} m={{ maxWidth: "100%" }} gap="l">
                     <Schema
@@ -180,7 +180,8 @@ export default async function CourseLesson({
                 </Column>
                 <Column
                     maxWidth={12}
-                    paddingLeft="40"
+                    paddingLeft="16"
+                    paddingRight="16"
                     fitHeight
                     position="sticky"
                     top="80"
@@ -188,19 +189,9 @@ export default async function CourseLesson({
                     m={{ hide: true }}
                     s={{ hide: true }}
                 >
-                    <Row
-                        gap="12"
-                        paddingLeft="2"
-                        vertical="center"
-                        onBackground="neutral-medium"
-                        textVariant="label-default-s"
-                    >
-                        <Icon name="document" size="xs" />
-                        On this page
-                    </Row>
                     <TableOfContents />
                 </Column>
-            </Row>
-        </Column>
+            </Row >
+        </Column >
     );
 }

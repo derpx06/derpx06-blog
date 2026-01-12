@@ -6,6 +6,7 @@ import { Flex, IconButton, Row, useTheme } from "@once-ui-system/core";
 import { CourseSidebar } from "@/components/CourseSidebar";
 import { CourseContent } from "@/components/CourseContent";
 import styles from "@/components/Header.module.scss";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 
 import { Course } from "@/resources/courses";
 
@@ -18,6 +19,8 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
     const { theme } = useTheme();
     const [activePanel, setActivePanel] = useState<"menu" | "search" | null>(null);
     const [currentTheme, setCurrentTheme] = useState("light");
+    const scrollDirection = useScrollDirection();
+    const shouldHide = scrollDirection === "down" && activePanel !== "menu";
 
     useEffect(() => {
         setCurrentTheme(document.documentElement.getAttribute("data-theme") || "light");
@@ -56,7 +59,12 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 hide
                 s={{ hide: false, top: "0" }}
                 m={{ hide: false, top: "0", paddingLeft: "80px", height: "80" }}
-                style={{ zIndex: 30, pointerEvents: "none" }}
+                style={{
+                    zIndex: 30,
+                    pointerEvents: "none",
+                    transition: "transform 0.3s ease-in-out",
+                    transform: shouldHide ? "translateY(-100%)" : "translateY(0)"
+                }}
                 className={styles.compactHeader}
             >
                 {activePanel === "menu" ? (

@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import { CustomMDX, ScrollToHash } from "@/components";
+import { CustomMDX, ScrollToHash, TableOfContents } from "@/components";
 import {
     Meta,
     Schema,
     Column,
     Heading,
-    HeadingNav,
     Icon,
     Row,
     Text,
@@ -157,10 +156,9 @@ export default async function ExplainerPost({ params }: { params: Promise<{ slug
                     onBackground="neutral-medium"
                     textVariant="label-default-s"
                 >
-                    <Icon name="document" size="xs" />
-                    On this page
+
                 </Row>
-                <HeadingNav fitHeight />
+                <TableOfContents />
             </Column>
         </Row>
     );
