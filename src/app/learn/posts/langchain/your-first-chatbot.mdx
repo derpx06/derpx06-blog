@@ -1,115 +1,129 @@
 ---
-title: "Your First Chatbot: Talking to an LLM"
-summary: "Understand what an LLM call actually is, before we add the abstractions."
+title: "Your First Chatbot"
+summary: "Build a working CLI chatbot. We will explain every line of code so you understand how LLMs actually receive and process text."
 publishedAt: "2026-01-10"
 ---
 
-# Your First Chatbot: Talking to an LLM
+# Your First Chatbot
 
-## 1. The Fear of Abstraction
+We are going to build a command-line chatbot that you can talk to. 
 
-Most people get confused by LangChain because they start with "Chains" and "Agents" before they have ever formatted a raw prompt string.
+By the end of this lesson, you will have a script that runs a continuous conversation with an AI model. We will explain exactly what is happening under the hood.
 
-In this lesson, we are going to do something radical: **We are going to do almost nothing.**
+## 1. The Setup
 
-We will not use Chains.
-We will not use LCEL.
-We will just talk to the model.
+First, we need to choose which "brain" needs to be used.
+In LangChain, every model (whether it's OpenAI, Google, or a local file) looks exactly the same to your code. This is called a **Chat Model**.
 
-## 2. What is a ChatModel?
-
-At its core, a ChatModel is a function designed to do one thing:
-**Take a list of Messages -> Return a Message.**
-
-That is it. It is not a brain in a jar. It is a text-processing function.
-
-### The Raw Reality
-When you use the OpenAI API directly, you send this:
-```json
-// Interaction with raw API
-{
-  "messages": [
-    {"role": "user", "content": "Hello!"}
-  ]
-}
-```
-
-And you get back this:
-```json
-{
-  "choices": [
-    {
-      "message": {
-        "role": "assistant",
-        "content": "Hi there! How can I help?"
-      }
-    }
-  ]
-}
-```
-
-LangChain wraps this raw JSON shuffle into clean Python objects.
-
-## 3. Building the Minimal Chatbot
-
-Let's build a script that takes user input and prints the AI's response.
-
-### Step 1: Initialize the Model
-First, we create our model object. This object handles the API keys and network requests for us.
+Select your provider below and run this setup code:
 
 <CodeBlock
-    codes={[{
-        code: `from langchain_openai import ChatOpenAI
+    codes={[
+        {
+            code: `from langchain_openai import ChatOpenAI
 
-# Initialize the model
-# temperature=0 means "be precise, don't be creative"
-model = ChatOpenAI(model="gpt-4o", temperature=0)`,
-        language: 'python',
-        label: 'init_model.py'
-    }]}
+# 1. Initialize the model
+# We set temperature=0.7 to make it a bit creative.
+model = ChatOpenAI(model="gpt-4o", temperature=0.7)`,
+            language: "python",
+            label: "OpenAI"
+        },
+        {
+            code: `from langchain_anthropic import ChatAnthropic
+
+model = ChatAnthropic(model="claude-3-opus-20240229")`,
+            language: "python",
+            label: "Anthropic"
+        },
+        {
+            code: `from langchain_google_genai import ChatGoogleGenerativeAI
+
+model = ChatGoogleGenerativeAI(model="gemini-pro")`,
+            language: "python",
+            label: "Gemini"
+        },
+        {
+            code: `from langchain_community.chat_models import ChatOllama
+
+# Ensure you ran 'ollama run llama3' in your terminal first!
+model = ChatOllama(model="llama3")`,
+            language: "python",
+            label: "Local (Ollama)"
+        }
+    ]}
 />
 
-### Step 2: The Loop
-Now, we create a loop that keeps the conversation going.
+### What did we just do?
+We created a `model` object. This object handles all the messy network requests, API keys, and JSON formatting for you. You just give it text, and it gives you back text.
+
+## 2. The Loop
+
+Now, let's write the actual chatbot. We need a way to keep the conversation going forever (until we quit).
+
+Copy this code into a file named `chatbot.py`:
 
 <CodeBlock
     codes={[{
-        code: `while True:
-    # 1. Get User Input
-    user_text = input("You: ")
+        code: `print("--- Chatbot Started (Type 'exit' to quit) ---")
+
+while True:
+    # 1. Get Input
+    user_input = input("You: ")
     
-    if user_text.lower() == "exit":
+    # Check if the user wants to quit
+    if user_input.lower() in ["exit", "quit"]:
         break
-
-    # 2. Call the Model
-    # We send a list containing one human message
-    response = model.invoke([
-        {"role": "user", "content": user_text}
-    ])
-
-    # 3. Print Response
-    # The response is an AIMessage object. We want the .content content.
+    
+    # 2. Invoke the Model
+    # We send the user's string directly to the model.
+    # It sends it to the API and waits for a reply.
+    response = model.invoke(user_input)
+    
+    # 3. Print the Result
+    # The response is an 'AIMessage' object. 
+    # The actual text is hiding inside the '.content' property.
     print(f"AI: {response.content}")`,
         language: 'python',
-        label: 'chatbot_v0.py'
+        label: 'chatbot.py'
     }]}
 />
 
-## 4. Why Use LangChain Here?
+## 3. Breaking it Down
 
-You might look at `model.invoke` and ask: *"Why didn't we just use the OpenAI SDK directly?"*
+Let's look at the key concepts we used here.
 
-For this specific example? You could have.
+### model.invoke()
+This is the most important function in LangChain. 
+You passed it a simple string: `"Hello"`. i I
+LangChain automatically wraps this string into a message format that the API understands (like `{"role": "user", "content": "Hello"}`), sends it, and waits.
 
-But look at what `model.invoke` gave us:
-1.  **Uniform Interface:** If you swap `ChatOpenAI` for `ChatAnthropic` (Claude) or `ChatOllama` (Llama 3), the code `model.invoke(...)` **does not change**.
-2.  **Object Wrapper:** The `response` isn't a complex dictionary you have to dig through (`['choices'][0]['message']...`). It is a standard object with a `.content` property.
+### The Response
+The variable `response` is not just a string. It is an **AIMessage** object.
+It contains:
+- `.content`: The actual text reply.
+- `.response_metadata`: Extra data like how many tokens you used.
 
-## 5. Summary
+We used `response.content` to print just the text.
 
-We haven't built a "system" yet. But we verified the most important truth of AI engineering:
+## 4. The "Memory" Problem
 
-> **LangChain does not replace the model.**
-> **It organizes how we talk to it.**
+If you run this script, try this interaction:
 
-Next, we will see what happens when we want to do more than just "send text." We will see why we need a **Composition Engine**.
+<CodeBlock
+    codes={[{
+        code: `You: Hi, my name is Bob.
+AI: Hello Bob!
+You: What is my name?
+AI: I don't know your name.`,
+        language: 'text',
+        label: 'Concept'
+    }]}
+/>
+
+**Wait, what?**
+
+Every time the loop runs, we send ONLY the `user_input` for that turn. We are **not** sending the previous conversation history.
+
+The model has no memory. It doesn't remember the last loop.
+
+To fix this, we need to manage **Chat History**. We need to save what the AI said and send it back in the next turn. That is what we will build next.

@@ -38,7 +38,7 @@ source .venv/bin/activate
 # .venv\\Scripts\\activate
 
 # Install LangChain and integration packages
-pip install langchain langchain-openai langchain-google-genai`,
+pip install langchain langchain-openai langchain-anthropic langchain-google-genai langchain-community`,
             language: "bash",
             label: "Pip"
         },
@@ -50,9 +50,61 @@ uv venv
 source .venv/bin/activate
 
 # Install LangChain and integration packages
-uv pip install langchain langchain-openai langchain-google-genai`,
+uv pip install langchain langchain-openai langchain-anthropic langchain-google-genai langchain-community`,
             language: "bash",
             label: "uv"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+
+
+### Optional: Installing Ollama (Local Models)
+
+If you want to run models locally (free & private), you need to install [Ollama](https://ollama.com/).
+
+<CodeBlock
+    codes={[
+        {
+            code: `# macOS / Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Windows
+# Download from https://ollama.com/download`,
+            language: "bash",
+            label: "Install Ollama"
+        },
+        {
+            code: `# Pull a model to test (4GB download)
+ollama pull llama3`,
+            language: "bash",
+            label: "Download Model"
+        }
+    ]}
+    marginBottom="24"
+/>
+
+Once installed, you can talk to the model directly in your terminal to verify it works:
+
+<CodeBlock
+    codes={[
+        {
+            code: `# Start an interactive chat session
+ollama run llama3
+
+# You should see a prompt like:
+# >>> Hello!
+# Hello! How can I help you today?`,
+            language: "bash",
+            label: "Terminal Chat"
+        },
+        {
+            code: `# Start the API server explicitly
+# (Usually happens automatically, but useful for debugging)
+ollama serve`,
+            language: "bash",
+            label: "Serve Mode"
         }
     ]}
     marginBottom="24"
@@ -62,10 +114,16 @@ uv pip install langchain langchain-openai langchain-google-genai`,
 
 To use LLMs like OpenAI's GPT-4 or Google's Gemini, you need to set your API keys as environment variables. This creates a secure way for the LangChain library to access your credentials without hardcoding them in scripts.
 
+Get your API keys here:
+- **OpenAI**: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Anthropic**: [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+- **Google Gemini**: [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+
 <CodeBlock
     codes={[
         {
             code: `export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
 export GOOGLE_API_KEY="AIza..."`,
             language: "bash",
             label: ".env"
