@@ -66,6 +66,7 @@ export default function Learn() {
               }}
               thumbnail
               pathPrefix="learn"
+              direction="column"
             />
           ))}
         </Grid>

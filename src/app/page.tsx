@@ -13,7 +13,7 @@ import {
   Grid,
 } from "@once-ui-system/core";
 import { home, about, person, baseURL, routes } from "@/resources";
-import { Mailchimp } from "@/components";
+import { Mailchimp, SeeAllButton } from "@/components";
 import { Projects } from "@/components/work/Projects";
 import { Posts } from "@/components/blog/Posts";
 import Post from "@/components/blog/Post";
@@ -85,10 +85,11 @@ export default function Home() {
             <Line maxWidth={48} />
           </Row>
           <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
-            <Row flex={1} paddingLeft="l" paddingTop="24">
+            <Row flex={1} paddingLeft="l" paddingRight="l" paddingTop="24" horizontal="between" vertical="center">
               <Heading as="h2" variant="display-strong-xs" wrap="balance">
                 Latest Courses
               </Heading>
+              <SeeAllButton href="/learn" />
             </Row>
             <Row flex={3} paddingX="20">
               <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
@@ -107,6 +108,7 @@ export default function Home() {
                     }}
                     thumbnail
                     pathPrefix="learn"
+                    direction="column"
                   />
                 ))}
               </Grid>
@@ -120,10 +122,11 @@ export default function Home() {
             <Line maxWidth={48} />
           </Row>
           <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
-            <Row flex={1} paddingLeft="l" paddingTop="24">
+            <Row flex={1} paddingLeft="l" paddingRight="l" paddingTop="24" horizontal="between" vertical="center">
               <Heading as="h2" variant="display-strong-xs" wrap="balance">
                 Latest Explainers
               </Heading>
+              <SeeAllButton href="/explainers" />
             </Row>
             <Row flex={3} paddingX="20">
               <Posts
@@ -144,10 +147,11 @@ export default function Home() {
             <Line maxWidth={48} />
           </Row>
           <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
-            <Row flex={1} paddingLeft="l" paddingTop="24">
+            <Row flex={1} paddingLeft="l" paddingRight="l" paddingTop="24" horizontal="between" vertical="center">
               <Heading as="h2" variant="display-strong-xs" wrap="balance">
                 Latest from the blog
               </Heading>
+              <SeeAllButton href="/blog" />
             </Row>
             <Row flex={3} paddingX="20">
               <Posts range={[1, 6]} columns="3" thumbnail direction="column" />

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, MouseEvent } from "react";
 import { Card, Column, Media, Row, Avatar, Text } from "@once-ui-system/core";
 import { formatDate } from "@/utils/formatDate";
 import { person } from "@/resources";
 import { SmartTruncate } from "@/components/SmartTruncate";
+import "./post-3d.css";
 
 interface PostProps {
   post: any;
@@ -13,8 +15,35 @@ interface PostProps {
 }
 
 export default function Post({ post, thumbnail, direction, pathPrefix = "blog" }: PostProps) {
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (direction !== "column") return;
+
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -2.5;
+    const rotateY = ((x - centerX) / centerX) * 2.5;
+
+    setRotation({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setRotation({ x: 0, y: 0 });
+  };
+
+  // Only apply 3D tilt for column direction (grid cards)
+  const shouldApplyTilt = direction === "column";
+
   return (
     <Card
+      className="post-3d-card"
       fillWidth
       key={post.slug}
       href={post.metadata.link || `/${pathPrefix}/${post.slug}`}
@@ -26,6 +55,14 @@ export default function Post({ post, thumbnail, direction, pathPrefix = "blog" }
       radius="l-4"
       gap={direction === "column" ? undefined : "24"}
       s={{ direction: "column" }}
+      {...(shouldApplyTilt && {
+        onMouseMove: handleMouseMove,
+        onMouseLeave: handleMouseLeave,
+        style: {
+          transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+          transition: "transform 0.1s ease-out",
+        },
+      })}
     >
       {post.metadata.image && thumbnail && (
         <Media
