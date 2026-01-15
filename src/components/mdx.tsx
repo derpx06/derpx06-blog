@@ -3,6 +3,7 @@ import React, { ReactNode } from "react";
 import { slugify as transliterate } from "transliteration";
 import { HeadingLink } from "@/components/HeadingLink";
 import { SafeCodeBlock } from "@/components/SafeCodeBlock";
+import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
 import { Timeline } from "@/components/Timeline";
 
 
@@ -135,36 +136,146 @@ function createInlineCode({ children }: { children: ReactNode }) {
   return <InlineCode>{children}</InlineCode>;
 }
 
-function createCodeBlock(props: any) {
-  // Debugging Turbopack crash: temporarily disable custom CodeBlock
-  /*
-  // For pre tags that contain code blocks
-  if (props.children && props.children.props && props.children.props.className) {
-    const { className, children } = props.children.props;
+import fs from 'fs';
+import path from 'path';
 
-    // Extract language from className (format: language-xxx)
-    const language = className.replace("language-", "");
-    const label = language.charAt(0).toUpperCase() + language.slice(1);
+function ServerCodeBlock(props: any) {
+  const { codes, showOutput, ...rest } = props;
 
-    return (
-      <CodeBlock
-        marginTop="8"
-        marginBottom="16"
-        codes={[
-          {
-            code: children,
-            language,
-            label,
-          },
-        ]}
-        copyButton={true}
-      />
-    );
+  // If showOutput is true and we have Jupyter notebook cells, use JupyterCodeBlock
+  if (showOutput && Array.isArray(codes)) {
+    const jupyterCells = codes.map((codeItem: any) => {
+      if (codeItem.file && codeItem.file.endsWith('.ipynb')) {
+        try {
+          const filePath = path.join(process.cwd(), codeItem.file);
+          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          const notebook = JSON.parse(fileContent);
+          const cells = notebook.cells;
+
+          // Use single cellIndex instead of cellIndices array
+          const cellIndex = codeItem.cellIndex !== undefined ? codeItem.cellIndex : 0;
+          const cell = cells[cellIndex];
+
+          if (!cell) {
+            return {
+              code: `Error: Cell ${cellIndex} not found`,
+              label: codeItem.label || 'Code',
+              language: 'text',
+              showOutput: false
+            };
+          }
+
+          // Extract code from the single cell
+          const code = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+
+          // Extract output from the cell if it exists
+          let output = "";
+          if (cell.outputs && cell.outputs.length > 0) {
+            cell.outputs.forEach((outputItem: any) => {
+              if (outputItem.text) {
+                output += Array.isArray(outputItem.text) ? outputItem.text.join('') : outputItem.text;
+              } else if (outputItem.data && outputItem.data['text/plain']) {
+                output += Array.isArray(outputItem.data['text/plain']) ? outputItem.data['text/plain'].join('') : outputItem.data['text/plain'];
+              }
+            });
+          }
+
+          return {
+            code,
+            output: output || undefined,
+            label: codeItem.label || 'Code',
+            language: codeItem.language || 'python',
+            showOutput: codeItem.showOutput === true  // Default to false
+          };
+        } catch (error) {
+          console.error(`Error reading notebook file: ${codeItem.file}`, error);
+          return {
+            code: `Error: Could not read file ${codeItem.file}`,
+            label: codeItem.label || 'Code',
+            language: 'text',
+            showOutput: false
+          };
+        }
+      }
+      return {
+        code: codeItem.code || '',
+        output: codeItem.output,
+        label: codeItem.label || 'Code',
+        language: codeItem.language || 'text',
+        showOutput: codeItem.showOutput === true
+      };
+    });
+
+    return <JupyterCodeBlock cells={jupyterCells} marginBottom={rest.marginBottom} />;
   }
-  */
 
-  // Fallback for other pre tags or empty code blocks
-  return <pre {...props} />;
+  // Original processing for regular CodeBlock
+  let processedCodes = codes;
+
+  if (Array.isArray(codes)) {
+    processedCodes = codes.map((codeItem: any) => {
+      if (codeItem.file) {
+        try {
+          const filePath = path.join(process.cwd(), codeItem.file);
+          const fileContent = fs.readFileSync(filePath, 'utf-8');
+
+          // Handle Jupyter Notebooks
+          if (codeItem.file.endsWith('.ipynb')) {
+            const notebook = JSON.parse(fileContent);
+            const cells = notebook.cells;
+            let content = "";
+
+            // Extract output from the LAST specified cell if displayOutput is true
+            if (codeItem.displayOutput) {
+              const cellIndex = codeItem.cellIndices ? codeItem.cellIndices[codeItem.cellIndices.length - 1] : 0;
+              const cell = cells[cellIndex];
+              if (cell && cell.outputs) {
+                // Prioritize 'text' field which might be an array or string
+                // Standard nbformat: outputs[i].text or outputs[i].data['text/plain']
+                cell.outputs.forEach((output: any) => {
+                  if (output.text) {
+                    content += Array.isArray(output.text) ? output.text.join('') : output.text;
+                  } else if (output.data && output.data['text/plain']) {
+                    content += Array.isArray(output.data['text/plain']) ? output.data['text/plain'].join('') : output.data['text/plain'];
+                  }
+                });
+              }
+            } else {
+              // Extract Source Code
+              const indices = codeItem.cellIndices || [];
+              // Concatenate source from all specified cells
+              content = indices.map((index: number) => {
+                const cell = cells[index];
+                if (!cell || !cell.source) return "";
+                const source = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+                return source;
+              }).join('\n\n');
+            }
+
+            return {
+              ...codeItem,
+              code: content
+            };
+          }
+
+          // Handle other files (text/py/etc)
+          return {
+            ...codeItem,
+            code: fileContent
+          };
+        } catch (error) {
+          console.error(`Error reading file: ${codeItem.file}`, error);
+          return {
+            ...codeItem,
+            code: `Error: Could not read file ${codeItem.file}`
+          };
+        }
+      }
+      return codeItem;
+    });
+  }
+
+  return <SafeCodeBlock codes={processedCodes} {...rest} />;
 }
 
 function createList({ children }: { children: ReactNode }) {
@@ -199,14 +310,14 @@ const components = {
   Image: createImage as any,
   a: CustomLink as any,
   code: createInlineCode as any,
-  pre: createCodeBlock as any,
+  pre: ServerCodeBlock as any,
   ol: createList as any,
   ul: createList as any,
   li: createListItem as any,
   hr: createHR as any,
   Heading,
   Text,
-  CodeBlock: SafeCodeBlock,
+  CodeBlock: ServerCodeBlock,
   InlineCode,
   Accordion,
   AccordionGroup,

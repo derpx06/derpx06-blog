@@ -25,9 +25,6 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
 
     return (
         <Column
-            position="fixed"
-            top="104"
-            left="32"
             radius="l"
             border="neutral-medium"
             background="surface"
@@ -40,28 +37,43 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                 transition: "transform 0.3s ease-in-out, opacity 0.3s ease-in-out"
             }}
             zIndex={10}
+            // Desktop: sticky positioning
+            l={{
+                position: "sticky",
+                top: "104",
+                alignSelf: "flex-start",
+                width: "16rem",
+                maxHeight: "calc(100vh - 128px)",
+                background: "surface",
+                border: "neutral-medium",
+                radius: "l",
+                padding: "16",
+                overflowY: "auto",
+            }}
+            // Mobile: fixed overlay
             s={{
                 position: "fixed",
-                top: "0",
+                top: "56",
+                bottom: "120",
                 left: "0",
                 width: "85%",
                 maxWidth: "320px",
-                height: "100%",
-                zIndex: 40, // Higher than header
+                maxHeight: "calc(100vh - 136px)",
+                zIndex: 40,
                 background: "page",
                 border: "neutral-medium",
                 radius: "none",
                 padding: "24",
                 overflowY: "auto",
-                // Slide in/out logic
             }}
             m={{
                 position: "fixed",
-                top: "0",
+                top: "80",
+                bottom: "80",
                 left: "0",
                 width: "85%",
                 maxWidth: "320px",
-                height: "100%",
+                maxHeight: "calc(100vh - 160px)",
                 zIndex: 40,
                 background: "page",
                 border: "neutral-medium",

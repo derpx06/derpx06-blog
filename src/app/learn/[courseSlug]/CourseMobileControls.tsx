@@ -36,18 +36,7 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
 
     return (
         <Flex fillWidth style={{ minHeight: "100vh" }} direction="column">
-            <CourseSidebar
-                course={course}
-                mobileOpen={activePanel === "menu"}
-                onClose={closePanel}
-            />
-            {activePanel === "menu" && (
-                <div
-                    style={{ position: "fixed", inset: 0, zIndex: 19 }}
-                    onClick={closePanel}
-                />
-            )}
-
+            {/* Fixed menu button for mobile */}
             <Row
                 position="fixed"
                 left="0"
@@ -98,7 +87,28 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 )}
             </Row>
 
-            <CourseContent>{children}</CourseContent>
+            {/* Backdrop overlay when menu is open */}
+            {activePanel === "menu" && (
+                <div
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        zIndex: 35,  // Higher than controls (30) but lower than sidebar (40)
+                        backgroundColor: "rgba(0, 0, 0, 0.3)",  // Visible backdrop
+                        pointerEvents: "none"  // Allow clicks to pass through to sidebar
+                    }}
+                />
+            )}
+
+            {/* Main content area with sidebar and content */}
+            <Flex fillWidth flex={1} direction="row" position="relative">
+                <CourseSidebar
+                    course={course}
+                    mobileOpen={activePanel === "menu"}
+                    onClose={closePanel}
+                />
+                <CourseContent>{children}</CourseContent>
+            </Flex>
         </Flex>
     );
 }
