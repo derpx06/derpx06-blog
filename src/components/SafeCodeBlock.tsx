@@ -38,8 +38,8 @@ export class SafeCodeBlock extends Component<Props, State> {
     render() {
         if (this.state.hasError) {
             return (
-                <pre style={{ padding: '1rem', background: '#f5f5f5', color: '#000', borderRadius: '4px', overflow: 'auto' }}>
-                    <code>{JSON.stringify(this.props.codes || this.props.children, null, 2)}</code>
+                <pre style={{ padding: '1rem', background: '#ffebee', color: '#c62828', borderRadius: '4px', overflow: 'auto' }}>
+                    <code>Error rendering code block. Check console for details.</code>
                 </pre>
             );
         }

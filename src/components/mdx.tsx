@@ -5,6 +5,8 @@ import { HeadingLink } from "@/components/HeadingLink";
 import { SafeCodeBlock } from "@/components/SafeCodeBlock";
 import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
 import { Timeline } from "@/components/Timeline";
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 
 import {
@@ -275,6 +277,16 @@ function ServerCodeBlock(props: any) {
     });
   }
 
+  // Handle standard Markdown usage (children + className)
+  if (!processedCodes && rest.children) {
+    const language = rest.className ? rest.className.replace('language-', '') : 'text';
+    processedCodes = [{
+      code: rest.children.toString(),
+      language: language,
+      label: language.charAt(0).toUpperCase() + language.slice(1)
+    }];
+  }
+
   return <SafeCodeBlock codes={processedCodes} {...rest} />;
 }
 
@@ -340,5 +352,16 @@ type CustomMDXProps = MDXRemoteProps & {
 };
 
 export function CustomMDX(props: CustomMDXProps) {
-  return <MDXRemote {...props} components={{ ...components, ...(props.components || {}) }} />;
+  return (
+    <MDXRemote
+      {...props}
+      components={{ ...components, ...(props.components || {}) }}
+      options={{
+        mdxOptions: {
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
+        },
+      }}
+    />
+  );
 }

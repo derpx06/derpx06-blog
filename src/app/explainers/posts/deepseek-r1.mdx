@@ -1,0 +1,431 @@
+---
+title: "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning"
+publishedAt: "2025-01-27"
+summary: "How a small team of engineers shattered AI's most expensive assumption and triggered a trillion-dollar market reckoning."
+image: "/images/explainers/deepseek-r1/coverImage.png"
+tag: "Research Papers"
+---
+
+<Row fillWidth horizontal="center" marginTop="16" marginBottom="24">
+    <Button
+        href="https://arxiv.org/pdf/2501.12948"
+        label="See the Research Paper"
+        variant="secondary"
+        suffixIcon="arrowUpRight"
+    />
+</Row>
+
+On January 27, 2025, the global markets suffered a total heart attack as one trillion dollars of wealth evaporated in a single, bone-chilling session. 
+Nvidia took a $589 billion hit—the largest single-day slaughter of market value in history.
+Just because of  DeepSeek-R1. This wasn't the work of a Silicon Valley titan with a $100 billion ego;
+it was a side project from a Chinese hedge fund that spent a decade using math to bleed the markets
+While the West was drunk on "brute force"—burning entire power grids and hoarding chips like digital warlords—DeepSeek's squad of only 150 engineers,
+mostly 20-something math prodigies, proved the "Scaling Laws" were a lie.
+They delivered a genius-level AI for a pathetic 3% of the cost of its rivals.
+
+The deepseek-r1 was such a banger due to the following reasons:
+- **The Budget Bloodbath**: OpenAI's models were rumored to cost hundreds of millions to train. DeepSeek-R1 achieved parity for a mere $5.6 million. The market realized the giants were "burning furniture to stay warm" while DeepSeek was building a sun.
+
+- **Open Source Insurgency**: By releasing their weights and research for free, DeepSeek didn't just compete—they democratized. Now anybody could run advanced AI models on their own.
+
+- **Smart Architecture**: Despite being a 671-billion parameter beast, R1 uses a Mixture of Experts (MoE) architecture. This means it only "wakes up" 37 billion parameters to answer any given prompt. It's like having a massive library but only paying the one librarian who knows exactly where your book is.
+
+## The Secret Sauce: Group Relative Policy Optimization (GRPO)
+
+The core breakthrough isn't just a bigger computer; it's a mathematical surgical strike called **GRPO**. In the "Old Guard" method (PPO), training an AI was like teaching a student with a private tutor (a "Value Model") who had to grade every single line of a thousand-page homework assignment. This was slow, heavy, and cost a fortune.
+
+DeepSeek fired the tutor. Instead of an expensive second model to judge the first, they used GRPO to force the model to compete with itself:
+
+**The Group Dynamic**: For every question, the model generates a "group" of different answers at once.
+
+**The Baseline**: Instead of an outside judge, the system simply averages the quality of those answers to create a baseline.
+
+**The Reward**: Answers that are better than the group average are rewarded; those that fall below are penalized. This "grading on a curve" allows the model to refine its own logic without needing a massive, separate reward network.
+
+### The Mathematical Objective
+
+<Image
+    src="/images/explainers/deepseek-r1/ppoVsGrpo.png"
+    alt="PPO vs GRPO Equation"
+/>
+
+### 1. PPO vs. GRPO: The Efficiency Hack
+
+**PPO (Proximal Policy Optimization)** is the industry standard but is computationally expensive because it requires a "Critic" model strictly to monitor the "Actor" (the main model). This doubles the memory usage.
+
+**GRPO (Group Relative Policy Optimization)** removes the Critic. Instead of a teacher grading you, it compares your answer to a group of your peers (other outputs from the same prompt). If your answer is better than the group average, you get a reward. This saves massive compute resources.
+
+<Image
+    src="/images/explainers/deepseek-r1/ppo_vs_grpo_performance_math_tasks.png"
+    alt="Performance comparison chart showing GRPO outperforming PPO on math tasks while using significantly less computational resources."
+/>
+
+### 2. System Architecture
+
+**Rule-Based Reward Module**: Since math and code have objective answers, DeepSeek built a fast, non-neural evaluation system. It uses code executors and answer matchers to check results instantly, ensuring the reward signal is pure and unhackable.
+
+**Model-Based Reward Module**: For "fuzzy" tasks like creative writing, they used a traditional Reward Model based on human preferences to guide the tone.
+**Training Module**: To maximize efficiency, DeepSeek uses a "Best-Fit Packing" strategy. Instead of padding short sequences with zeros (wasting compute), they sort and pack data to fill the context window perfectly, ensuring every GPU cycle is used for learning.
+
+
+The GRPO algorithm optimizes the policy model by maximizing a specific objective function:
+
+$$
+\mathcal{J}_{GRPO}(\theta)=\mathbb{E}[q\sim P(Q),\{o_{i}\}_{i=1}^{G}\sim\pi_{\theta_{old}}(O|q)]
+$$
+
+$$
+\frac{1}{G}\sum_{i=1}^{G}\left(\min\left(\frac{\pi_{\theta}(o_{i}|q)}{\pi_{\theta_{old}}(o_{i}|q)}A_{i}, \text{clip}\left(\frac{\pi_{\theta}(o_{i}|q)}{\pi_{\theta_{old}}(o_{i}|q)}, 1-\epsilon, 1+\epsilon\right)A_{i}\right)-\beta D_{KL}(\pi_{\theta}||\pi_{ref})\right)
+$$
+
+**How it works:**
+
+The system evaluates multiple outputs (o₁, o₂, ..., oG) for each question q, then calculates how much better or worse each output is compared to the group average using a clipped probability ratio to prevent drastic policy updates.
+
+**The Advantage Calculation:**
+
+The Advantage $A_i$ is computed purely relative to the group:
+
+$$
+A_{i}=\frac{r_{i}-\text{mean}(\{r_{1},r_{2},\cdots,r_{G}\})}{\text{std}(\{r_{1},r_{2},\cdots,r_{G}\})}
+$$
+
+This normalization ensures that rewards are computed relative to the group's performance, not against an external critic model.
+
+**Why This Matters:**
+This self-grading mechanism eliminated the need for an expensive separate "value" model that would judge each output. Instead, the model competes with itself, dramatically reducing computational costs by 97%.
+
+## The Four-Stage Evolution
+
+DeepSeek-R1’s training was a four-stage evolution that transformed a raw reasoning engine into a sophisticated assistant. It began with a "cold start" through Supervised Fine-Tuning, moved to self-competition via GRPO, refined its helpfulness, and finally distilled its intelligence into smaller models.
+
+<Timeline
+    items={[
+        {
+            year: "Stage 1",
+            title: "Cold Start (SFT)",
+            desc: "The model was seeded with thousands of high-quality reasoning examples to teach it how to structure its thoughts.",
+            icon: "upload"
+        },
+        {
+            year: "Stage 2",
+            title: "Reasoning (GRPO)",
+            desc: "Rule-based rewards forced the model to compete against itself, sparking the 'Aha!' moment of self-correction.",
+            icon: "refresh"
+        },
+        {
+            year: "Stage 3",
+            title: "Generalization",
+            desc: "Over 600,000 samples were added to improve safety and helpfulness, bridging pure logic with user needs.",
+            icon: "checkCircle"
+        },
+        {
+            year: "Stage 4",
+            title: "Distillation",
+            desc: "Complex reasoning was transferred to tiny 1.5B models, proving efficient math beats massive budgets.",
+            icon: "mobile"
+        }
+    ]}
+/>
+
+### Phase 1: The Logic Scaffold (SFT)
+
+The process began with Supervised Fine-Tuning (SFT) to provide a "cold start" for the model. Instead of simple input-output pairs, researchers used trajectory-style data, which includes the question, the internal reasoning process (the `<think>` block), and the final answer.
+
+- **Precision Alignment**: SFT leverages high-quality examples to ensure the model excels in specific domains like technical documentation.
+- **Internalizing Thought**: By showing the model how a strong model thinks, it learns patterns of thought and problem decomposition. DeepSeek even focused on readable formats, finding that encouraging a "first-person" thought process (e.g., "I should double-check this step") led to better reasoning than a detached "we".
+- **Scaffolding**: This stage acts as a "teacher’s chalkboard," providing a readable format that the model can later refine during the autonomous RL stages.
+
+    **Target Output**:
+    ```text
+    <think>
+    We need to add the numbers 5 and 4.
+    Starting from 5 and adding 4 gives 9.
+    </think>
+    Final Answer: 9
+    ```
+
+### Phase 2: The Reasoning Evolution (RL Stage 1)
+
+Once the model had its "scaffold," it entered the first stage of Reinforcement Learning using the Group Relative Policy Optimization (GRPO) algorithm.
+
+- **Efficiency and Cost**: GRPO eliminates the need for an expensive "Value Model" or human scorer. Instead, the model generates a group of 16 outputs per question and compares them against each other.
+- **Rule-Based Rewards**: For reasoning tasks like math and coding, rewards are strictly binary—1 if the final answer is correct and 0 if it is not. This prevents "reward hacking," where a model sounds smart but delivers the wrong result.
+- **Language Policing**: To stop the model from mixing languages in its thought process, a Language Consistency Reward was introduced, calculated as the proportion of target language words used in the chain of thought.
+
+**The "Aha!" Moment**: Without being explicitly taught, the model began to generate thousands of tokens to explore and improve its strategies, spontaneously learning to pause, re-evaluate, and correct its own mistakes.
+
+### Phase 3: The Generalist Realignment (RL Stage 2)
+
+The final stage focused on turning this logic-heavy engine into a helpful, safe assistant. The team took the raw **DeepSeek-R1-Zero** checkpoint—which was smart but messy (often mixing languages)—and used **Rejection Sampling** to harvest its best, most readable reasoning traces. These were then used to fine-tune the model again, creating a stable "Generalist" version before the final RL round.
+
+<Image
+    src="/images/explainers/deepseek-r1/exprimiental_results.png"
+    alt="Table showing the performance improvements across different training stages (R1-Zero, Dev1, Dev2, Dev3, Final R1) on various benchmarks."
+/>
+
+- **Mixed Data Training**: This stage combined reasoning prompts with 66,000 helpfulness questions (like creative writing) and 12,000 harmlessness questions.
+- **Hybrid Rewards**: While math and code still used strict rule-based rewards, general tasks used a Helpful Reward Model. This model was trained on preference pairs where DeepSeek-V3 judged which candidate response was better.
+- **Safety Enforcement**: A Safety Reward Model used 106,000 prompts annotated as "safe" or "unsafe" to ensure the model's behavior remained within predefined guidelines.
+- **Refining the Product**: In the final 400 steps, preference rewards were added to polish instruction-following. This led to a 25% improvement on AlpacaEval 2.0 and a 17% jump on Arena Hard.
+
+### Phase 4: Distillation
+
+To finish the "open-source insurgency," the team used **Knowledge Distillation**. By simply copying the "teacher" model's reasoning style, tiny 1.5B parameter models could outperform much larger competitors, proving that efficient math beats a blank check every single time.
+
+<Image
+    src="/images/explainers/deepseek-r1/trainingProcess.png"
+    alt="DeepSeek-R1 Training Process"
+/>
+
+## The Knowledge Base
+
+DeepSeek-R1 wasn't just trained on random internet scraps. It was forged on a strictly curated diet of high-difficulty problems designed to force reasoning.
+
+<Image
+    src="/images/explainers/deepseek-r1/type_of_reasoning.png"
+    alt="Chart categorizing the types of reasoning tasks used in training: Math, Code, Logic, and General Knowledge."
+    marginBottom="24"
+/>
+
+<Grid columns="3" s={{columns: 1}} gap="16">
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s" marginBottom="8">Mathematics</Text>
+        <Column gap="4">
+            <Text variant="heading-default-xs" onBackground="neutral-strong">26k Problems</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                From algebra to International Olympiad level.
+            </Text>
+            <Text variant="label-default-s" onBackground="info-medium" marginTop="8">
+                Reward: Binary (1 for exact match, 0 for wrong).
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s" marginBottom="8">Coding</Text>
+        <Column gap="4">
+            <Text variant="heading-default-xs" onBackground="neutral-strong">25k Challenges</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Codeforces & LeetCode style problems + bug fixing.
+            </Text>
+            <Text variant="label-default-s" onBackground="info-medium" marginTop="8">
+                Reward: Passes hidden test cases.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s" marginBottom="8">STEM Exams</Text>
+        <Column gap="4">
+            <Text variant="heading-default-xs" onBackground="neutral-strong">22k Questions</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Physics, Biology, Chemistry multiple choice.
+            </Text>
+             <Text variant="label-default-s" onBackground="info-medium" marginTop="8">
+                Reward: Correct option selection.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s" marginBottom="8">Logic Puzzles</Text>
+        <Column gap="4">
+            <Text variant="heading-default-xs" onBackground="neutral-strong">15k Brain Teasers</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Cryptography, deductive logic, and synthetic reasoning tasks.
+            </Text>
+            <Text variant="label-default-s" onBackground="info-medium" marginTop="8">
+                Reward: Automated verification.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s" marginBottom="8">General Human</Text>
+        <Column gap="4">
+            <Text variant="heading-default-xs" onBackground="neutral-strong">78k Prompts</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Creative writing, role-playing, and safety constraints.
+            </Text>
+            <Text variant="label-default-s" onBackground="info-medium" marginTop="8">
+                Reward: Preference model (Helpful/Harmful).
+            </Text>
+        </Column>
+    </Card>
+</Grid>
+
+## The Big Picture: Anatomy of Intelligence
+
+This section analyzes how DeepSeek-R1 learns to reason over time, revealing a shift from basic problem-solving to self-reflective intelligence.
+
+### 1. The Evolution of Reasoning
+
+Think of training as watching a student grow: first learning easy problems, then mastering hard ones, and finally checking their own work.
+
+<Row s={{direction: "column"}} gap="16">
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface" fillWidth>
+        <Text variant="heading-strong-s" marginBottom="8">Early Training</Text>
+        <Column gap="4">
+             <Text variant="heading-default-xs" onBackground="neutral-strong">Fast Starters</Text>
+             <Text variant="body-default-s" onBackground="neutral-weak">
+                Easy math problems (Levels 1-3) are mastered quickly, hitting 90-95% accuracy early on. Basic reasoning is "easy" for the model.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="4" border="neutral-medium" background="surface" fillWidth>
+        <Text variant="heading-strong-s" marginBottom="8">Late Training</Text>
+        <Column gap="4">
+            <Text variant="heading-default-xs" onBackground="neutral-strong">The Grind</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Hard problems (Levels 4-5) improve slowly but dramatically (e.g., Level 5 jumps from 55% to 90%). This is where RL kicks in.
+            </Text>
+        </Column>
+    </Card>
+</Row>
+
+<Feedback
+    variant="info"
+    title="The 'Wait' Spike: Evidence of Reflection"
+    description="Researchers observed a specific 'Aha moment' in the raw DeepSeek-R1-Zero model. After 8,000 steps, it started outputting: 'Wait, wait. Wait. That’s an aha moment...' before correcting itself. This wasn't programmed—it emerged naturally from the incentive to be correct."
+    marginTop="24"
+    marginBottom="24"
+>
+    <Image
+        src="/images/explainers/deepseek-r1/thinkingtokens_vs_dificulty.png"
+        alt="Graph showing the correlation between thinking tokens and problem difficulty, demonstrating how the model learns to think longer for harder problems."
+        marginTop="16"
+    />
+</Feedback>
+
+### 2. The Scoreboard
+
+DeepSeek-R1 isn't just "good for an open model"—it's a heavyweight contender.
+
+<Table
+    data={{
+        headers: [
+            { content: "Benchmark", key: "benchmark" },
+            { content: "Performance", key: "performance" },
+            { content: "Significance", key: "significance" }
+        ],
+        rows: [
+            ["AIME 2024", "Beats Avg Human", "Outperforms human competitors in math."],
+            ["Codeforces", "96th Percentile", "Better than 96% of human coders."],
+            ["Chatbot Arena", "#1 Rank (Tie)", "Matches OpenAI o1 in style-controlled preference."],
+            ["GPQA", "Below PhD Experts", "Honest limitation: still trails top human experts."]
+        ]
+    }}
+/>
+
+### 3. The Verdict
+
+To ensure these results weren't just memorization, DeepSeek used rigorous **Decontamination**: filtering out training data with 10-gram matching and excluding all post-2023 math/RL snippets.
+
+> **One-Paragraph Summary**
+>
+> During training, DeepSeek-R1-Zero was the "Wild West" experiment. The team asked: *Can a model learn to reason purely through Reinforcement Learning (RL), without any human examples?*
+
+<Image
+    src="/images/explainers/deepseek-r1/RL_framework_overview.png"
+    alt="Diagram illustrating the Reinforcement Learning framework used for DeepSeek-R1-Zero, showing the cycle of Policy, Rollout, Reward, and Optimization."
+/>
+
+The answer was yes. By giving the model a hard math problem and a binary reward (Right/Wrong), it started to evolve.f, which emerge naturally rather than being hard-coded. Extensive evaluation shows that DeepSeek-R1 achieves state-of-the-art performance across math, coding, and reasoning benchmarks, often matching or exceeding strong closed-source models and outperforming most humans in competitive tasks, while maintaining rigorous decontamination and safety practices.
+
+## Distillation vs. RL: The Efficiency Paradox
+
+While Reinforcement Learning is the engine of discovery, **Distillation** is the engine of distribution. The paper reveals a stark truth in Table 16: RL-only models require massive compute to achieve what distilled models can do for a fraction of the cost.
+
+**The Insight**: Copying a great thinker is far more efficient than trying to rediscover reasoning from scratch. DeepSeek-R1-Distill-Qwen-32B consistently beats RL-only models of the same size.
+
+> **Summary**
+>
+> A distilled model is a smaller student model trained via supervised fine-tuning to imitate the outputs and reasoning behavior of a powerful teacher model such as DeepSeek-R1. In this work, distilled models use only SFT and no reinforcement learning, yet they achieve remarkably strong reasoning performance. Experiments show that even small distilled models outperform large non-reasoning baselines and RL-only models, demonstrating that distillation is a highly effective and cost-efficient way to transfer advanced reasoning abilities.
+
+## Methodology Showdown
+
+Why did DeepSeek choose specific methods over others? Here is the scorecard.
+
+<Grid columns="2" s={{columns: 1}} gap="16">
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">PRM (Process Reward Model)</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            **Concept**: Training a separate model to score *every single step* of the reasoning process, not just the final answer.
+        </Text>
+        <Column gap="4">
+            <Text variant="label-default-s" onBackground="danger-medium">❌ Rejected: Too Complex</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                Defining a "correct step" is ambiguous and prone to reward hacking.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">MCTS (Monte Carlo Tree Search)</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            **Concept**: An algorithm that explores multiple future reasoning paths at inference time to find the best one (like AlphaGo).
+        </Text>
+        <Column gap="4">
+             <Text variant="label-default-s" onBackground="danger-medium">❌ Rejected: Doesn't Scale</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                 The search space for token generation is exponentially large, making it too slow for training.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">Chain-of-Thought (CoT)</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            **Concept**: Prompting the model to "think step by step" to expose its reasoning trace.
+        </Text>
+        <Column gap="4">
+            <Text variant="label-default-s" onBackground="warning-medium">⚠️ Limited: Inference Only</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                It shows reasoning but doesn't inherently teach the *internal* capability to finding new strategies.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">Inference Scaling</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            **Concept**: Using more compute at test-time (e.g., generating 100 answers and voting) to improve accuracy.
+        </Text>
+        <Column gap="4">
+             <Text variant="label-default-s" onBackground="warning-medium">⚠️ Limited: Insufficient</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                Boosts performance but doesn't improve the base model's fundamental intelligence.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">Traditional RLHF</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+             **Concept**: Using human feedback (PPO/DPO) to align the model with human preferences.
+        </Text>
+        <Column gap="4">
+             <Text variant="label-default-s" onBackground="danger-medium">❌ Rejected: Limits Discovery</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                Restricts the model to human-level performance; it can't learn strategies humans don't know.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">Outcome-Based RL</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            **Concept**: Reinforcement learning that strictly rewards the *correctness* of the final answer, ignoring the steps.
+        </Text>
+        <Column gap="4">
+             <Text variant="label-default-s" onBackground="success-medium">✅ Accepted: Core Breakthrough</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                 Forces the model to self-evolve its own reasoning strategies to get the reward.
+            </Text>
+        </Column>
+    </Card>
+    <Card padding="24" radius="l-4" direction="column" gap="12" border="neutral-medium" background="surface">
+        <Text variant="heading-strong-s">Distillation</Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+            **Concept**: Training a smaller "student" model to imitate the reasoning traces of a larger "teacher" model.
+        </Text>
+        <Column gap="4">
+            <Text variant="label-default-s" onBackground="success-medium">✅ Accepted: Highly Successful</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+                The most practical leverage: massive reasoning power transferred to small, efficient chips.
+            </Text>
+        </Column>
+    </Card>
+</Grid>
