@@ -53,7 +53,7 @@ export default function Home() {
           <Text variant="body-default-l" align="center" onBackground="neutral-weak">
             {home.subline}
           </Text>
-          <RevealFx paddingTop="12" delay={0.4} horizontal="center" paddingLeft="12">
+          <RevealFx paddingTop="12" delay={0.1} horizontal="center" paddingLeft="12">
             <Button
               id="about"
               data-border="rounded"

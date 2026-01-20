@@ -310,6 +310,14 @@ function createHR() {
   );
 }
 
+function ResponsiveTable(props: any) {
+  return (
+    <Column fillWidth overflowX="auto">
+      <Table {...props} />
+    </Column>
+  );
+}
+
 const components = {
   p: createParagraph as any,
   h1: createHeading("h1") as any,
@@ -333,7 +341,7 @@ const components = {
   InlineCode,
   Accordion,
   AccordionGroup,
-  Table,
+  Table: ResponsiveTable,
   Feedback,
   Button,
   Card,

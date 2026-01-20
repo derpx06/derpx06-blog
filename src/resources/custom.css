@@ -98,6 +98,33 @@ Generate at: https://once-ui.com/customize
   border-radius: 4px;
 }
 
+
+/* Global Overflow Protection */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure images don't overflow */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive Math Blocks */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 0.5em 0;
+}
+
+/* Force text wrapping to prevent long words/strings from breaking layout */
+p, span, div, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* Legacy support */
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scheme-neutral-600);
 }

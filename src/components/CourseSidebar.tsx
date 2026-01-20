@@ -38,18 +38,7 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
             }}
             zIndex={10}
             // Desktop: sticky positioning
-            l={{
-                position: "sticky",
-                top: "104",
-                alignSelf: "flex-start",
-                width: "16rem",
-                maxHeight: "calc(100vh - 128px)",
-                background: "surface",
-                border: "neutral-medium",
-                radius: "l",
-                padding: "16",
-                overflowY: "auto",
-            }}
+            className={`${mobileOpen ? "mobile-sidebar-open" : "mobile-sidebar-closed"} desktop-sidebar`}
             // Mobile: fixed overlay
             s={{
                 position: "fixed",
@@ -81,7 +70,6 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                 padding: "24",
                 overflowY: "auto",
             }}
-            className={mobileOpen ? "mobile-sidebar-open" : "mobile-sidebar-closed"}
         >
             <style jsx global>{`
                 .mobile-sidebar-closed {
@@ -96,6 +84,18 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                         transform: translateX(0);
                         opacity: 1;
                         pointer-events: auto;
+                    }
+                }
+                
+                @media (min-width: 1025px) {
+                    .desktop-sidebar {
+                        position: fixed !important;
+                        top: 104px;
+                        align-self: flex-start;
+                        width: 16rem;
+                        max-height: calc(100vh - 128px);
+                        padding: 16px;
+                        overflow-y: auto;
                     }
                 }
             `}</style>
