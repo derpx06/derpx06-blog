@@ -112,6 +112,46 @@ safe_model = model.with_fallbacks([claude_model])`,
     }]}
 />
 
+### Advanced: Retrying Custom Logic
+
+You can wrap legitimate Python functions in `RunnableLambda` to give them "Superpowers" like automatic retries.
+
+<CodeBlock
+    codes={[{
+        code: `from langchain_core.runnables import RunnableLambda
+import random
+
+def add_one(x: int) -> int:
+    return x + 1
+
+def buggy_double(y: int) -> int:
+    """Buggy code that will fail 70% of the time"""
+    if random.random() > 0.3:
+        print('This code failed, and will probably be retried!')
+        raise ValueError('Triggered buggy code')
+    return y * 2
+
+sequence = (
+    RunnableLambda(add_one) |
+    RunnableLambda(buggy_double).with_retry(
+        stop_after_attempt=10,
+        wait_exponential_jitter=False
+    )
+)
+
+print(sequence.input_schema.model_json_schema())
+print(sequence.output_schema.model_json_schema())
+print(sequence.invoke(2))`,
+        language: 'python',
+        label: 'custom_retry.py'
+    }]}
+/>
+
+**What's happening here?**
+*   **`RunnableLambda` Wrapper**: We turn a standard Python function (`buggy_double`) into a Runnable component.
+*   **Active Retry Policy**: The `.with_retry()` method attaches a policy that catches the `ValueError` and automatically retries execution up to 10 times.
+*   **Schema Inference**: Even heavily wrapped functions preserve their type information, as seen by the `input_schema` print statements.
+
 ---
 
 # 5. The "Pro" Suite: Dynamic Behavior
