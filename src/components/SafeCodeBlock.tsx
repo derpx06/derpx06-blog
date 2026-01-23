@@ -13,6 +13,33 @@ interface State {
     hasError: boolean;
     isExpanded: boolean;
 }
+if (typeof navigator !== "undefined" && !navigator.clipboard) {
+    (navigator as any).clipboard = {
+        writeText: async (text: string) => {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (!successful) {
+                    console.error('Fallback: Copying text command was unsuccessful');
+                }
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+        }
+    };
+}
 
 export class SafeCodeBlock extends Component<Props, State> {
     constructor(props: Props) {
@@ -33,12 +60,20 @@ export class SafeCodeBlock extends Component<Props, State> {
 
     toggleExpand = () => {
         this.setState(prevState => ({ isExpanded: !prevState.isExpanded }));
-    }
+    };
 
     render() {
         if (this.state.hasError) {
             return (
-                <pre style={{ padding: '1rem', background: '#ffebee', color: '#c62828', borderRadius: '4px', overflow: 'auto' }}>
+                <pre
+                    style={{
+                        padding: "1rem",
+                        background: "#ffebee",
+                        color: "#c62828",
+                        borderRadius: "4px",
+                        overflow: "auto"
+                    }}
+                >
                     <code>Error rendering code block. Check console for details.</code>
                 </pre>
             );
@@ -51,32 +86,32 @@ export class SafeCodeBlock extends Component<Props, State> {
         // Standard block (not collapsible)
         if (!minimized) {
             return (
-                <div style={{ marginBottom: 'var(--spacing-16)' }}>
+                <div style={{ marginBottom: "var(--spacing-16)" }}>
                     <CodeBlock {...restProps} />
                 </div>
             );
         }
 
-        // Collapsible block with Animation
+        // Collapsible block
         return (
-            <div style={{ marginBottom: 'var(--spacing-16)' }}>
+            <div style={{ marginBottom: "var(--spacing-16)" }}>
                 <div
                     onClick={this.toggleExpand}
                     style={{
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        padding: '12px 16px',
-                        borderRadius: 'var(--radius-l)',
-                        border: '1px solid var(--neutral-border-medium)',
-                        background: 'var(--background-surface)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: isExpanded ? '8px' : '0',
-                        transition: 'margin-bottom 0.3s ease' // Smooth margin transition
+                        cursor: "pointer",
+                        userSelect: "none",
+                        padding: "12px 16px",
+                        borderRadius: "var(--radius-l)",
+                        border: "1px solid var(--neutral-border-medium)",
+                        background: "var(--background-surface)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: isExpanded ? "8px" : "0",
+                        transition: "margin-bottom 0.3s ease"
                     }}
                 >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <Text variant="label-default-s">{label}</Text>
                         {!isExpanded && (
                             <Text variant="body-default-xs" onBackground="neutral-weak">
@@ -84,29 +119,24 @@ export class SafeCodeBlock extends Component<Props, State> {
                             </Text>
                         )}
                     </div>
-                    {/* Rotate the arrow icon instead of swapping it */}
-                    <div style={{
-                        transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.3s ease',
-                        display: 'flex',
-                        alignItems: 'center'
-                    }}>
+
+                    <div
+                        style={{
+                            transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                            transition: "transform 0.3s ease",
+                            display: "flex",
+                            alignItems: "center"
+                        }}
+                    >
                         <Icon name="chevronRight" size="s" />
                     </div>
                 </div>
 
-                {/* Grid Animation Wrapper */}
-                <div style={{
-                    display: 'grid',
-                    // If expanded 1fr, else 0fr. This animates height from 0 to auto.
-                    gridTemplateRows: isExpanded ? '1fr' : '0fr',
-                    transition: 'grid-template-rows 0.3s ease-out, opacity 0.3s ease',
-                    opacity: isExpanded ? 1 : 0
-                }}>
-                    <div style={{ overflow: 'hidden' }}>
+                {isExpanded && (
+                    <div style={{ animation: "fadeIn 0.25s ease-out" }}>
                         <CodeBlock {...restProps} />
                     </div>
-                </div>
+                )}
             </div>
         );
     }

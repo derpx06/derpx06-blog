@@ -220,71 +220,6 @@ print(result.content)`,
 This creates a summarizer chain. Change the prompt or add more steps!
 
 ---
-
-## A Real-World Example: Explanation vs Roast
-
-Here is a real chain that explains a concept, then roasts its own explanation, and finally compliments it.
-
-First, choose your LLM provider:
-
-<CodeBlock
-    codes={[
-        {
-            file: "src/app/learn/codes/lcel.ipynb",
-            cellIndex: 0,
-            language: "python",
-            label: "Ollama"
-        },
-        {
-            file: "src/app/learn/codes/lcel.ipynb",
-            cellIndex: 1,
-            language: "python",
-            label: "OpenAI"
-        },
-        {
-            file: "src/app/learn/codes/lcel.ipynb",
-            cellIndex: 2,
-            language: "python",
-            label: "Anthropic"
-        },
-        {
-            file: "src/app/learn/codes/lcel.ipynb",
-            cellIndex: 3,
-            language: "python",
-            label: "Google"
-        }
-    ]}
-    showOutput={true}
-    marginBottom="24"
-/>
-
-Now build the pipeline:
-
-<CodeBlock
-    codes={[
-        {
-            file: "src/app/learn/codes/lcel.ipynb",
-            cellIndex: 4,
-            language: "python",
-            label: "Pipeline",
-            showOutput: true
-        }
-    ]}
-    showOutput={true}
-    marginBottom="24"
-/>
-
-This pipeline demonstrates LCEL's power:
-
-- Takes a `topic` input
-- Uses the `explain` prompt to generate an explanation
-- Feeds that explanation into **both** a `roast` and `compliment` prompt **in parallel**
-- Returns all three results in a structured dictionary
-
-The pipeline runs **automatically** in parallel where possible, streaming results as they arrive.
-
----
-
 ## One Interface, Everywhere
 
 Every LCEL chain supports:
@@ -367,24 +302,67 @@ chain = prompt | model | StrOutputParser()`,
 Swap models, add retrieval, or combine chains.
 
 ---
+## A Real-World Example: Explanation vs Roast
 
-## Observability Comes for Free
+Here is a real chain that explains a concept, then roasts its own explanation, and finally compliments it.
 
-LCEL integrates with **LangSmith** for tracing and debugging automatically.
+First, choose your LLM provider:
 
-No manual setup needed.
+<CodeBlock
+    codes={[
+        {
+            file: "src/app/learn/codes/lcel.ipynb",
+            cellIndex: 0,
+            language: "python",
+            label: "Ollama"
+        },
+        {
+            file: "src/app/learn/codes/lcel.ipynb",
+            cellIndex: 1,
+            language: "python",
+            label: "OpenAI"
+        },
+        {
+            file: "src/app/learn/codes/lcel.ipynb",
+            cellIndex: 2,
+            language: "python",
+            label: "Anthropic"
+        },
+        {
+            file: "src/app/learn/codes/lcel.ipynb",
+            cellIndex: 3,
+            language: "python",
+            label: "Google"
+        }
+    ]}
+    showOutput={true}
+    marginBottom="24"
+/>
 
----
+Now build the pipeline:
 
-## Why LCEL Is More Than Syntax
+<CodeBlock
+    codes={[
+        {
+            file: "src/app/learn/codes/lcel.ipynb",
+            cellIndex: 4,
+            language: "python",
+            label: "Pipeline",
+            showOutput: true
+        }
+    ]}
+    showOutput={true}
+    marginBottom="24"
+/>
 
-LCEL provides:
+This pipeline demonstrates LCEL's power:
 
-* Consistent execution
-* Built-in concurrency and streaming
-* Production-ready behavior
+- Takes a `topic` input
+- Uses the `explain` prompt to generate an explanation
+- Feeds that explanation into **both** a `roast` and `compliment` prompt **in parallel**
+- Returns all three results in a structured dictionary
 
-It turns scripts into pipelines.
+The pipeline runs **automatically** in parallel where possible, streaming results as they arrive.
 
 ---
 

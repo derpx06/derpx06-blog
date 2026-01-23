@@ -182,7 +182,6 @@ export default async function CourseLesson({
                     maxWidth={16}
                     paddingLeft="16"
                     paddingRight="16"
-                    fitHeight
                     position="sticky"
                     top="80"
                     gap="16"

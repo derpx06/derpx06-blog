@@ -1,105 +1,245 @@
 ---
-title: "The Runnable Protocol: Invoke, Batch, and Stream"
-summary: "One chain, many execution styles. Understanding the universal interface of LangChain."
+title: "The Runnable Protocol: A Definitive Guide"
+summary: "Beyond the basics: State management, runtime routing, and the internals of the Runnable Interface."
 publishedAt: "2026-01-10"
 ---
 
-# The Runnable Protocol
+> [!TIP]
+> This guide focuses on the *technical interface*. For a conceptual understanding of chaining and LCEL syntax, read [The LCEL Mental Model](/learn/langchain/lcel-mental-model) first.
 
-## 1. The Problem: One Logic, Many Shapes
+# 1. The Engineering Challenge: Wrapper Hell
 
-You built a chatbot. It works great.
-But now you need to integrate it into a real webserver (FastAPI/Django).
+In standard Python, writing a script that pipes data from A to B is easy.
+`result = parser(model(prompt(input)))`
 
-**Requirement 1:** A user sends a message. You need to reply. (`invoke`)
-**Requirement 2:** A user uploads a CSV of 500 questions. You need to reply to all of them efficiently. (`batch`)
-**Requirement 3:** The frontend wants the text to "type out" like ChatGPT. (`stream`)
+But in **production AI applications**, you need more than just function calls. You encounter **"Wrapper Hell"**:
+1.  **Observability:** You need to log *every* step (inputs, outputs, latency).
+2.  **Streaming:** You need to stream tokens from a nested capability to the surface.
+3.  **Async:** You need APIs that support both sync (blocking) and async (non-blocking) execution.
+4.  **Retries:** You need to retry specific flaky steps, not the whole chain.
 
-In the old world, you would write three different functions:
-`def chat(msg): ...`
-`def chat_batch(msgs): ...`
-`def chat_stream(msg): ...`
+The **Runnable Protocol** solves this by mandating a standard contract. It separates **What** you want to do (the logic) from **How** you want to run it (Invoke, Stream, Batch, Log, Retry).
 
-This duplication is the root of most bugs.
+Think of it as the USB standard for AI components. If it fits the port, it works—loops, retries, and streaming included.
 
-## 2. The Runnable Solution
+---
 
-LangChain defines a standard interface called the **Runnable Protocol**. If an object is a "Runnable," it implements all three methods automatically.
+# 2. The Basic 3: Invoke, Batch, Stream
 
-You define the logic **ONCE**:
+Every object in LangChain—from Prompts to Retrievers to Models—implements these core entry points.
+
+<Table
+    data={{
+        headers: [
+            { content: "Method", key: "method" },
+            { content: "Description", key: "desc" },
+            { content: "Built-in Optimization", key: "opt" }
+        ],
+        rows: [
+            [<InlineCode>invoke</InlineCode>, "Transforms a single input into an output.", "-"],
+            [<InlineCode>batch</InlineCode>, "Runs a list of inputs in parallel.", "Uses ThreadPoolExecutor (or asyncio.gather for async)."],
+            [<InlineCode>stream</InlineCode>, "Yields output chunks.", "Auto-implements iterator protocol."]
+        ]
+    }}
+/>
 
 <CodeBlock
     codes={[{
-        code: `chain = prompt | model | parser`,
+        code: `model = ChatOpenAI()
+
+# 1. Invoke (Standard)
+model.invoke("Hi")
+
+# 2. Batch (Parallel)
+# Runs 3 calls simultaneously
+model.batch(["Hi", "Hello", "Hey"])
+
+# 3. Stream (Real-time)
+for chunk in model.stream("Tell me a story"):
+    print(chunk.content, end="|")`,
         language: 'python',
-        label: 'chain_def.py'
+        label: 'basics.py'
     }]}
 />
 
-And you get three behaviors for free.
+---
 
-## 3. Method 1: invoke() (The Singular Call)
+# 3. The "State Management" Section: `RunnableConfig`
 
-This is the standard, synchronous call.
-**Input:** Single input (dictionary or string).
-**Output:** Complete response.
+The "Engine Room" handles the graph, but how do we handle the *request*?
+
+Most people miss this. Every Runnable method accepts a second argument: `config`.
+This is the **Passport** of your request. It travels down the entire chain, even through nested custom functions.
+
+**Use Cases:**
+1.  **User Tracking:** Tag logs with `user_id`.
+2.  **Safety:** Set `recursion_limit` to prevent infinite agent loops.
+3.  **Metadata:** Pass session IDs to callbacks.
 
 <CodeBlock
     codes={[{
-        code: `response = chain.invoke({"topic": "bears"})
-print(response)
-# Output: "Why did the bear dissolved? It was polar."`,
+        code: `config = {
+    "configurable": {"user_id": "123", "conversation_id": "abc-999"},
+    "tags": ["beta-feature", "prod"],
+    "recursion_limit": 50
+}
+
+# The config travels through every step of 'chain'
+chain.invoke({"input": "Hello"}, config=config)`,
         language: 'python',
-        label: 'invoke_example.py'
+        label: 'config_demo.py'
     }]}
 />
 
-**Use Case:** Typical REST API endpoints, background jobs, testing.
+---
 
-## 4. Method 2: stream() (The User Experience)
+# 4. The "Safety" Suite: Reliability
 
-This returns an **Iterator** that yields chunks of the output as soon as they are available.
+Production chains fail. APIs timeout. Models hallucinate.
+The protocol handles this declaratively.
 
 <CodeBlock
     codes={[{
-        code: `for chunk in chain.stream({"topic": "bears"}):
-    print(chunk, end="|", flush=True)
+        code: `# 1. Retries
+# Retry this specific step 3 times on typical API errors
+robust_model = model.with_retry(stop_after_attempt=3)
 
-# Output: W|h|y| |d|i|d| |t|h|e|...`,
+# 2. Fallbacks
+# If GPT-4 fails (or context length error), fallback to Claude
+safe_model = model.with_fallbacks([claude_model])`,
         language: 'python',
-        label: 'stream_example.py'
+        label: 'safety.py'
     }]}
 />
 
-**Why this matters:**
-Start-up latency (Time to First Token) determines if your app feels "fast." waiting 5 seconds for a paragraph feels slow. Waiting 0.5s for the first word feels instant.
+---
 
-## 5. Method 3: batch() (The Scale)
+# 5. The "Pro" Suite: Dynamic Behavior
 
-This takes a **List** of inputs and returns a **List** of outputs.
+### A. Hot-Swappable Chains (`RunnableConfigurable`)
+Imagine a UI dropdown where the user selects their model. You don't want `if/else` statements everywhere. You want one chain that configures itself at runtime.
 
 <CodeBlock
     codes={[{
-        code: `inputs = [
-    {"topic": "bears"},
-    {"topic": "cats"},
-    {"topic": "dogs"}
-]
+        code: `from langchain_core.runnables import ConfigurableField
 
-results = chain.batch(inputs)
-# Output: ["Bear joke...", "Cat joke...", "Dog joke..."]`,
+# Define the "Default" but declare it as Swappable
+model = ChatOpenAI(model="gpt-3.5-turbo").configurable_alternatives(
+    ConfigurableField(id="llm"),
+    default_key="gpt3",
+    anthropic=ChatAnthropic(model="claude-3-opus"),
+    local=ChatOllama(model="llama3")
+)
+
+# Usage:
+chain.invoke("Hi", config={"configurable": {"llm": "anthropic"}})`,
         language: 'python',
-        label: 'batch_example.py'
+        label: 'configurable.py'
     }]}
 />
 
-**The Secret Power:**
-Under the hood, `batch` uses a `ThreadPoolExecutor`. It runs your calls in parallel (up to the limit of the connection pool).
-If you used a simple `for` loop, it would take 3x longer. `batch` gives you concurrency for free.
+### B. Type Safety (Pydantic)
+Runnables automatically generate schemas. You can enforce them using `.with_types()`.
 
-## 6. Summary
+<CodeBlock
+    codes={[{
+        code: `from pydantic import BaseModel
 
-The Runnable Protocol is the contract that makes LangChain components composable.
-It separates **What** you want to do (the Chain logic) from **How** you want to run it (Invoke, Stream, Batch).
+class MyInput(BaseModel):
+    query: str
 
-> **Key Intuition:** "One chain, many execution styles."
+class MyOutput(BaseModel):
+    answer: str
+
+# Now this chain will validate inputs and outputs against these schemas
+typed_chain = chain.with_types(input_type=MyInput, output_type=MyOutput)`,
+        language: 'python',
+        label: 'types.py'
+    }]}
+/>
+
+### C. Lifecycle Hooks
+Decouple your logging from your logic. Attach listeners directly to the runnable.
+
+<CodeBlock
+    codes={[{
+        code: `chain.with_listeners(
+    on_start=lambda run: print(f"Started run: {run.id}"),
+    on_end=lambda run: print(f"Finished. Latency: {run.end_time - run.start_time}")
+)`,
+        language: 'python',
+        label: 'hooks.py'
+    }]}
+/>
+
+### D. Runtime Binding (`.bind`)
+Pass constant arguments to a runnable at runtime (like partial application). This is commonly used to bind stop sequences or tool definitions to models.
+
+<CodeBlock
+    codes={[{
+        code: `# Bind a stop sequence to the model
+# It returns a NEW runnable with the argument fixed
+model_with_stop = model.bind(stop=["User:"])
+
+model_with_stop.invoke("Hi")`,
+        language: 'python',
+        label: 'bind.py'
+    }]}
+/>
+
+---
+
+# 6. The "Observability" Suite: Deep Debugging
+
+### `astream_events` (v2) vs `astream_log`
+
+Why the shift?
+*   `astream_log` streams JSON patches (diffs). It's efficient for machines but hard to parse.
+*   `astream_events` streams **Life Events**.
+
+It turns your chain into an **Event Loop**.
+
+**The Mental Model:**
+1.  **Event:** `on_retriever_start` -> UI shows "Searching knowledge base..."
+2.  **Event:** `on_retriever_end` -> UI shows "Found 3 docs."
+3.  **Event:** `on_chat_model_stream` -> UI starts typing tokens.
+
+<CodeBlock
+    codes={[{
+        code: `async for event in chain.astream_events("query", version="v2"):
+    kind = event["event"]
+    
+    if kind == "on_chat_model_stream":
+        print(event["data"]["chunk"].content, end="")
+    elif kind == "on_tool_start":
+        print(f"\\nTool: {event['name']} input: {event['data'].get('input')}")`,
+        language: 'python',
+        label: 'events.py'
+    }]}
+/>
+
+### Introspection (`.get_graph`)
+You can inspect exactly how your chain is built. This is useful for visualizing complex graphs.
+
+<CodeBlock
+    codes={[{
+        code: `graph = chain.get_graph()
+        
+# Print ASCII representation
+graph.print_ascii()
+
+# Get Pydantic Schema for Input
+print(chain.input_schema.schema_json())`,
+        language: 'python',
+        label: 'inspect.py'
+    }]}
+/>
+
+---
+
+# 7. Conclusion
+
+The Runnable Protocol is more than just syntactic sugar; it is an architectural pattern for **Production AI**.
+By adhering to this standard, you stop writing boilerplate for logging, streaming, and retries, and start focusing on the *cognitive architecture* of your application.
+
+**Remember:** One Chain, Many Execution Styles.
