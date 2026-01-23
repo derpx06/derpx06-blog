@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import styles from './Tooltip.module.scss';
-import { Flex } from '@once-ui-system/core';
 
 interface TooltipProps {
     content: string;

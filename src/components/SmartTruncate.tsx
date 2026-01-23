@@ -8,6 +8,7 @@ interface SmartTruncateProps {
     children: string;
     className?: string;
     as?: any;
+    lines?: number;
     [key: string]: any; // Allow passing through other props to the component
 }
 
@@ -15,6 +16,7 @@ export const SmartTruncate: React.FC<SmartTruncateProps> = ({
     children,
     as: Component = Text,
     className,
+    lines = 1,
     ...props
 }) => {
     const textRef = useRef<HTMLElement>(null);
@@ -43,24 +45,34 @@ export const SmartTruncate: React.FC<SmartTruncateProps> = ({
             observer.observe(element.parentElement);
         }
 
-        checkTruncation();
+        // Initial check
+        requestAnimationFrame(checkTruncation);
 
         return () => observer.disconnect();
-    }, [children]);
+    }, [children, lines]);
+
+    const style: React.CSSProperties = lines === 1 ? {
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        display: 'block',
+        width: '100%',
+        ...props.style
+    } : {
+        display: '-webkit-box',
+        WebkitLineClamp: lines,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+        width: '100%',
+        ...props.style
+    };
 
     const content = (
         <Component
             ref={textRef}
             className={className}
             {...props}
-            style={{
-                ...props.style,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: 'block',
-                width: '100%'
-            }}
+            style={style}
         >
             {children}
         </Component>

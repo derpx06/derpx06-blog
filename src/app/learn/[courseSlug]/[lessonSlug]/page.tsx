@@ -11,8 +11,8 @@ import {
     Row,
     Media,
     Button,
+    HeadingNav,
 } from "@once-ui-system/core";
-import { TableOfContents } from "@/components";
 import { baseURL, about, person } from "@/resources";
 import { formatDate } from "@/utils/formatDate";
 import { getPosts } from "@/utils/utils";
@@ -179,7 +179,7 @@ export default async function CourseLesson({
                     </Row>
                 </Column>
                 <Column
-                    maxWidth={12}
+                    maxWidth={16}
                     paddingLeft="16"
                     paddingRight="16"
                     fitHeight
@@ -188,8 +188,9 @@ export default async function CourseLesson({
                     gap="16"
                     m={{ hide: true }}
                     s={{ hide: true }}
+                    className="sticky-sidebar"
                 >
-                    <TableOfContents />
+                    <HeadingNav fitHeight />
                 </Column>
             </Row >
         </Column >

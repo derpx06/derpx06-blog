@@ -11,8 +11,8 @@ publishedAt: "2026-01-10"
 RAG evaluation usually comes down to checking the relationships between 3 nodes: **Query**, **Context (Docs)**, and **Answer**.
 
 We care about two main edges:
-1.  **Faithfulness:** Answer <-> Context
-2.  **Relevance:** Answer <-> Query
+1.  **Faithfulness:** Answer ↔ Context
+2.  **Relevance:** Answer ↔ Query
 
 ## 2. Faithfulness (Did we hallucinate?)
 
@@ -37,7 +37,7 @@ Ask an evaluator LLM: "Does the Answer resolve the intent of the Query?"
 ## 4. Context Relevance (Did we retrieve junk?)
 
 A third metric.
-Query <-> Context.
+Query ↔ Context.
 Did we retrieve 5 documents about "Pizza" when the user asked about "Burgers"?
 Low Context Relevance confuses the LLM and lowers Faithfulness.
 

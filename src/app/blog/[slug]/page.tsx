@@ -143,13 +143,14 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
         </Column>
       </Row>
       <Column
-        maxWidth={12}
+        maxWidth={16}
         paddingLeft="40"
         fitHeight
         position="sticky"
         top="80"
         gap="16"
         m={{ hide: true }}
+        className="sticky-sidebar"
       >
         <Row
           gap="12"

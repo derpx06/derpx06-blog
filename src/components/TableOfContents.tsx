@@ -73,7 +73,7 @@ export function TableOfContents() {
                                     borderLeft: isActive ? "2px solid var(--brand-solid-strong)" : "2px solid transparent",
                                     transition: "background 0.2s ease, border 0.2s ease",
                                     cursor: "pointer",
-                                    overflow: "hidden" // Fail-safe
+                                    // overflow: "hidden" removed to prevent checking ellipsis
                                 }}
                                 fillWidth
                                 minWidth={0}
@@ -82,11 +82,12 @@ export function TableOfContents() {
                                     as={Text}
                                     variant="label-default-s"
                                     onBackground={isActive ? "neutral-strong" : "neutral-medium"}
+                                    lines={1}
                                     style={{
                                         fontWeight: isActive ? 600 : 400,
                                         transition: "color 0.2s ease",
                                         display: "block",
-                                        maxWidth: "100%" // Explicit constraint
+                                        maxWidth: "100%"
                                     }}
                                 >
                                     {heading.text}

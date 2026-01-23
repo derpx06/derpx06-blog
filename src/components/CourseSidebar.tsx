@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Column, Text, SmartLink, Line, Row, IconButton } from "@once-ui-system/core";
 import { useEffect, useRef } from "react";
 import { Course } from "@/resources/courses";
+import { SmartTruncate } from "@/components/SmartTruncate";
 
 interface CourseSidebarProps {
     course: Course;
@@ -28,12 +29,15 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
             radius="l"
             border="neutral-medium"
             background="surface"
-            padding="16"
+            paddingLeft="16"
+            paddingRight="12"
+            paddingY="16"
             gap="8"
             style={{
-                width: "16rem",
+                width: "17rem",
                 maxHeight: "calc(100vh - 128px)",
                 overflowY: "auto",
+                overflowX: "hidden",
                 transition: "transform 0.3s ease-in-out, opacity 0.3s ease-in-out"
             }}
             zIndex={10}
@@ -54,10 +58,11 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                 radius: "none",
                 padding: "24",
                 overflowY: "auto",
+                overflowX: "hidden",
             }}
             m={{
                 position: "fixed",
-                top: "80",
+                top: "30",
                 bottom: "80",
                 left: "0",
                 width: "85%",
@@ -69,6 +74,7 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                 radius: "none",
                 padding: "24",
                 overflowY: "auto",
+                overflowX: "hidden",
             }}
         >
             <style jsx global>{`
@@ -90,12 +96,13 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                 @media (min-width: 1025px) {
                     .desktop-sidebar {
                         position: fixed !important;
-                        top: 104px;
+                        top: 60px;
                         align-self: flex-start;
-                        width: 16rem;
+                        width: 17rem;
                         max-height: calc(100vh - 128px);
                         padding: 16px;
                         overflow-y: auto;
+                        overflow-x: hidden;
                     }
                 }
             `}</style>
@@ -147,16 +154,18 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
                                             fillWidth
                                             paddingX="12"
                                             paddingY="8"
-                                            radius="m"
+                                            radius="l"
                                             background={isActive ? "surface" : "transparent"}
                                             border={isActive ? "neutral-alpha-medium" : "transparent"}
+                                            marginRight={isActive ? "4" : "0"}
                                         >
-                                            <Text
+                                            <SmartTruncate
                                                 variant="label-default-s"
                                                 onBackground={isActive ? "brand-medium" : "neutral-medium"}
+                                                lines={1}
                                             >
-                                                {index + 1}. {link.title}
-                                            </Text>
+                                                {`${index + 1}. ${link.title}`}
+                                            </SmartTruncate>
                                         </Column>
                                     </SmartLink>
                                 );

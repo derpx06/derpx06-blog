@@ -19,7 +19,7 @@ export function CourseContent({ children }: { children: React.ReactNode }) {
 
                 @media (min-width: 1025px) {
                     .course-content {
-                        padding-left: 280px !important;
+                        padding-left: 296px !important;
                         padding-right: 32px !important;
                     }
                 }

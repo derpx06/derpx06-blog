@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
-import { CustomMDX, ScrollToHash, TableOfContents } from "@/components";
+import { CustomMDX, ScrollToHash } from "@/components";
 import {
     Meta,
     Schema,
     Column,
     Heading,
+    HeadingNav,
     Icon,
     Row,
     Text,
@@ -141,13 +142,14 @@ export default async function ExplainerPost({ params }: { params: Promise<{ slug
                 </Column>
             </Row>
             <Column
-                maxWidth={12}
+                maxWidth={16}
                 paddingLeft="40"
                 fitHeight
                 position="sticky"
                 top="80"
                 gap="16"
                 m={{ hide: true }}
+                className="sticky-sidebar"
             >
                 <Row
                     gap="12"
@@ -158,7 +160,7 @@ export default async function ExplainerPost({ params }: { params: Promise<{ slug
                 >
 
                 </Row>
-                <TableOfContents />
+        <HeadingNav fitHeight />
             </Column>
         </Row>
     );
