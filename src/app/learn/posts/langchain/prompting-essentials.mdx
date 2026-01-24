@@ -39,8 +39,14 @@ Prompting is simply giving the model coordinates in this "Meaning Space" to narr
 
 ### C. The Context Window
 The model has a **First-In, First-Out** memory.
-> [!WARNING]
-> **Lost in the Middle:** Models pay most attention to the **System Prompt** (Start) and your **Latest Question** (End). Details buried in the middle are often ignored.
+<Feedback
+    variant="warning"
+    title="Lost in the Middle"
+    marginTop="16"
+    marginBottom="24"
+>
+    Models pay most attention to the **System Prompt** (Start) and your **Latest Question** (End). Details buried in the middle are often ignored.
+</Feedback>
 
 ### D. Positional Encoding
 Transformers process all tokens simultaneously (in parallel), not sequentially like us. To understand "order," they use **Positional Encoding**.

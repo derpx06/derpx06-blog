@@ -4,8 +4,13 @@ summary: "Beyond the basics: State management, runtime routing, and the internal
 publishedAt: "2026-01-10"
 ---
 
-> [!TIP]
-> This guide focuses on the *technical interface*. For a conceptual understanding of chaining and LCEL syntax, read [The LCEL Mental Model](/learn/langchain/lcel-mental-model) first.
+<Feedback
+    variant="info"
+    marginTop="16"
+    marginBottom="24"
+>
+    This guide focuses on the *technical interface*. For a conceptual understanding of chaining and LCEL syntax, read [The LCEL Mental Model](/learn/langchain-mastery/lcel-mental-model) first.
+</Feedback>
 
 # 1. The Engineering Challenge: Wrapper Hell
 
@@ -24,7 +29,63 @@ Think of it as the USB standard for AI components. If it fits the port, it works
 
 ---
 
-# 2. The Basic 3: Invoke, Batch, Stream
+# 2. Setup & Definitions
+
+First, let's define our chain logic once. We will use this same chain for all execution examples below.
+
+### Common Setup
+<CodeBlock
+    codes={[{
+        file: "src/app/learn/codes/runnables.ipynb",
+        cellIndex: 1,
+        language: "python",
+        label: "setup.py"
+    }]}
+    showOutput={true}
+/>
+
+### Choose Your Provider
+The protocol works idenitically across all providers.
+
+<CodeBlock
+    codes={[
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 2,
+            language: "python",
+            label: "Ollama"
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 3,
+            language: "python",
+            label: "OpenAI"
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 5,
+            language: "python",
+            label: "Anthropic"
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 4,
+            language: "python",
+            label: "Google"
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 6,
+            language: "python",
+            label: "Azure"
+        }
+    ]}
+    showOutput={true}
+/>
+
+---
+
+# 3. The Basic 3: Invoke, Batch, Stream
 
 Every object in LangChain—from Prompts to Retrievers to Models—implements these core entry points.
 
@@ -43,28 +104,78 @@ Every object in LangChain—from Prompts to Retrievers to Models—implements th
     }}
 />
 
+### 1. Invoke (The Singular Call)
+Standard synchronous call for a single input.
+
 <CodeBlock
-    codes={[{
-        code: `model = ChatOpenAI()
+    codes={[
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 7,
+            language: "python",
+            label: "Sync (invoke)",
+            showOutput: true
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 8,
+            language: "python",
+            label: "Async (ainvoke)",
+            showOutput: true
+        }
+    ]}
+    showOutput={true}
+/>
 
-# 1. Invoke (Standard)
-model.invoke("Hi")
+### 2. Batch (The Scale)
+Runs a list of inputs in parallel. Great for bulk processing.
 
-# 2. Batch (Parallel)
-# Runs 3 calls simultaneously
-model.batch(["Hi", "Hello", "Hey"])
+<CodeBlock
+    codes={[
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 9,
+            language: "python",
+            label: "Sync (batch)",
+            showOutput: true
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 10,
+            language: "python",
+            label: "Async (abatch)",
+            showOutput: true
+        }
+    ]}
+    showOutput={true}
+/>
 
-# 3. Stream (Real-time)
-for chunk in model.stream("Tell me a story"):
-    print(chunk.content, end="|")`,
-        language: 'python',
-        label: 'basics.py'
-    }]}
+### 3. Stream (The UX)
+Yields output chunks as soon as they are available. Critical for chat applications.
+
+<CodeBlock
+    codes={[
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 11,
+            language: "python",
+            label: "Sync (stream)",
+            showOutput: true
+        },
+        {
+            file: "src/app/learn/codes/runnables.ipynb",
+            cellIndex: 12,
+            language: "python",
+            label: "Async (astream)",
+            showOutput: true
+        }
+    ]}
+    showOutput={true}
 />
 
 ---
 
-# 3. The "State Management" Section: `RunnableConfig`
+# 4. The "State Management" Section: `RunnableConfig`
 
 The "Engine Room" handles the graph, but how do we handle the *request*?
 
@@ -85,7 +196,7 @@ This is the **Passport** of your request. It travels down the entire chain, even
 }
 
 # The config travels through every step of 'chain'
-chain.invoke({"input": "Hello"}, config=config)`,
+chain.invoke({"topic": "Hello"}, config=config)`,
         language: 'python',
         label: 'config_demo.py'
     }]}
@@ -93,7 +204,7 @@ chain.invoke({"input": "Hello"}, config=config)`,
 
 ---
 
-# 4. The "Safety" Suite: Reliability
+# 5. The "Safety" Suite: Reliability
 
 Production chains fail. APIs timeout. Models hallucinate.
 The protocol handles this declaratively.
@@ -112,49 +223,23 @@ safe_model = model.with_fallbacks([claude_model])`,
     }]}
 />
 
-### Advanced: Retrying Custom Logic
-
-You can wrap legitimate Python functions in `RunnableLambda` to give them "Superpowers" like automatic retries.
+### Advanced: Custom Logic with Retries
+You can even add retries to your own custom functions by wrapping them in `RunnableLambda`.
 
 <CodeBlock
     codes={[{
-        code: `from langchain_core.runnables import RunnableLambda
-import random
-
-def add_one(x: int) -> int:
-    return x + 1
-
-def buggy_double(y: int) -> int:
-    """Buggy code that will fail 70% of the time"""
-    if random.random() > 0.3:
-        print('This code failed, and will probably be retried!')
-        raise ValueError('Triggered buggy code')
-    return y * 2
-
-sequence = (
-    RunnableLambda(add_one) |
-    RunnableLambda(buggy_double).with_retry(
-        stop_after_attempt=10,
-        wait_exponential_jitter=False
-    )
-)
-
-print(sequence.input_schema.model_json_schema())
-print(sequence.output_schema.model_json_schema())
-print(sequence.invoke(2))`,
-        language: 'python',
-        label: 'custom_retry.py'
+        file: "src/app/learn/codes/runnables.ipynb",
+        cellIndex: 13,
+        language: "python",
+        label: "custom_retry.py",
+        showOutput: true
     }]}
+    showOutput={true}
 />
-
-**What's happening here?**
-*   **`RunnableLambda` Wrapper**: We turn a standard Python function (`buggy_double`) into a Runnable component.
-*   **Active Retry Policy**: The `.with_retry()` method attaches a policy that catches the `ValueError` and automatically retries execution up to 10 times.
-*   **Schema Inference**: Even heavily wrapped functions preserve their type information, as seen by the `input_schema` print statements.
 
 ---
 
-# 5. The "Pro" Suite: Dynamic Behavior
+# 6. The "Pro" Suite: Dynamic Behavior
 
 ### A. Hot-Swappable Chains (`RunnableConfigurable`)
 Imagine a UI dropdown where the user selects their model. You don't want `if/else` statements everywhere. You want one chain that configures itself at runtime.
@@ -229,7 +314,7 @@ model_with_stop.invoke("Hi")`,
 
 ---
 
-# 6. The "Observability" Suite: Deep Debugging
+# 7. The "Observability" Suite: Deep Debugging
 
 ### `astream_events` (v2) vs `astream_log`
 
@@ -277,7 +362,7 @@ print(chain.input_schema.schema_json())`,
 
 ---
 
-# 7. Conclusion
+# 8. Conclusion
 
 The Runnable Protocol is more than just syntactic sugar; it is an architectural pattern for **Production AI**.
 By adhering to this standard, you stop writing boilerplate for logging, streaming, and retries, and start focusing on the *cognitive architecture* of your application.

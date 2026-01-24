@@ -32,9 +32,14 @@ export function JupyterCodeBlock({ cells, marginBottom = "24" }: JupyterCodeBloc
                 <Row
                     gap="8"
                     marginBottom="12"
+                    fillWidth
                     style={{
                         borderBottom: "1px solid var(--neutral-border-medium)",
-                        paddingBottom: "8px"
+                        paddingBottom: "8px",
+                        overflowX: "auto",
+                        flexWrap: "nowrap",
+                        scrollbarWidth: "none", // Hide scrollbar for cleaner look
+                        msOverflowStyle: "none"
                     }}
                 >
                     {cells.map((cell, index) => (
@@ -50,7 +55,9 @@ export function JupyterCodeBlock({ cells, marginBottom = "24" }: JupyterCodeBloc
                                 cursor: "pointer",
                                 fontSize: "var(--label-default-s-size)",
                                 fontWeight: activeTab === index ? 600 : 400,
-                                transition: "all 0.2s ease"
+                                transition: "all 0.2s ease",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0
                             }}
                         >
                             {cell.label}
@@ -79,7 +86,9 @@ export function JupyterCodeBlock({ cells, marginBottom = "24" }: JupyterCodeBloc
                     radius="m"
                     border="neutral-alpha-medium"
                     style={{
-                        background: "var(--background-surface)",
+                        background: "var(--neutral-alpha-weak)",
+                        backdropFilter: "blur(12px)",
+                        WebkitBackdropFilter: "blur(12px)",
                         fontFamily: "var(--font-mono)",
                         fontSize: "var(--label-default-s-size)"
                     }}
@@ -92,17 +101,24 @@ export function JupyterCodeBlock({ cells, marginBottom = "24" }: JupyterCodeBloc
                     >
                         Output
                     </Text>
-                    <pre
+                    <div
                         style={{
-                            margin: 0,
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                            color: "var(--neutral-on-background-medium)",
-                            lineHeight: "1.6"
+                            maxHeight: "24rem", // Approx 15 lines
+                            overflowY: "auto",
                         }}
                     >
-                        {activeCell.output}
-                    </pre>
+                        <pre
+                            style={{
+                                margin: 0,
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                color: "var(--neutral-on-background-medium)",
+                                lineHeight: "1.6"
+                            }}
+                        >
+                            {activeCell.output}
+                        </pre>
+                    </div>
                 </Column>
             )}
         </div>

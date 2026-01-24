@@ -78,6 +78,7 @@ export const Header = () => {
         position="fixed"
         height="80"
         zIndex={9}
+        pointerEvents="none"
         className={`${styles.desktopFade} ${isHidden ? styles.hidden : ''}`}
       />
 
@@ -91,6 +92,7 @@ export const Header = () => {
         to="top"
         height="80"
         zIndex={9}
+        pointerEvents="none"
         className={`${styles.mobileFade} ${isHidden ? styles.hidden : ''}`}
       />
 

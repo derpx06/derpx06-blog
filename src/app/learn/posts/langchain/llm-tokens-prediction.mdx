@@ -191,8 +191,14 @@ To fix this, we introduce **Temperature**:
 - **Low Temperature (0.1)**: The model is conservative and factual. It sticks to the most likely path.
 - **High Temperature (0.8+)**: The model takes risks, occasionally picking the 2nd or 3rd most likely word. This makes the output feel more "creative" or diverse, but increases the risk of going off-track.
 
-> [!WARNING]
-> **The compounding risk:** The model is not "planning" the end of the sentence when it writes the beginning. It is laying down dynamic track in front of a moving train. If it makes a slight error in token #5, that error becomes the ground truth for calculating token #6, leading to compounding hallucination.
+<Feedback
+    variant="warning"
+    title="The compounding risk"
+    marginTop="16"
+    marginBottom="24"
+>
+    The model is not "planning" the end of the sentence when it writes the beginning. It is laying down dynamic track in front of a moving train. If it makes a slight error in token #5, that error becomes the ground truth for calculating token #6, leading to compounding hallucination.
+</Feedback>
 
 <br />
 
@@ -234,8 +240,11 @@ For developers and system architects, understanding the "physics" of this system
     </Column>
 </Row>
 
-> [!TIP]
-> **The Takeaway:**
-> Transformer architecture isn't just academic trivia. It defines the constraints of your system. The **Context Window** is limited by KV Cache memory; **Latency** is limited by serial decoding; and **Intelligence** is limited by the quality of the embeddings and attention heads.
+<Feedback
+    variant="info"
+    title="The Takeaway"
+    marginTop="16"
+    marginBottom="24"
 >
-> Once you understand these constraints, the behavior of the system stops feeling like magic and starts looking like engineering.
+    Transformer architecture isn't just academic trivia. It defines the constraints of your system. The **Context Window** is limited by KV Cache memory; **Latency** is limited by serial decoding; and **Intelligence** is limited by the quality of the embeddings and attention heads. Once you understand these constraints, the behavior of the system stops feeling like magic and starts looking like engineering.
+</Feedback>

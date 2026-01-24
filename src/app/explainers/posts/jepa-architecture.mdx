@@ -131,8 +131,23 @@ The training uses an **InfoNCE Loss** function.
 
 This prevents "Representation Collapse," where the model just outputs the same generic "blur" for everything to play it safe.
 
-> [!NOTE]
-> **The Magic Trick**: The model isn't trained to say "The dog is running." It's trained to output a set of numbers that *mean* "The dog is running." It verifies this by checking against the Y-Encoder.
+<Feedback
+    variant="info"
+    title="The Magic Trick"
+    marginTop="24"
+    marginBottom="24"
+>
+    The model isn't trained to say 'The dog is running.' It's trained to output a set of numbers that *mean* 'The dog is running.' It verifies this by checking against the Y-Encoder.
+</Feedback>
+
+<Row fillWidth horizontal="center" padding="0" radius="l" border="neutral-medium" style={{ backgroundColor: 'black', overflow: 'hidden' }} marginBottom="24" marginTop="24">
+    <Media
+        src="/images/explainers/jepa/AQPmHg5mIjT4E-RBW_gUdz1BDuTgb-DRc8pL1J6goHyM7zveHp3S1hkW2i5o1v-Y6eGV9n_hMP4qs3Eehd4hc7hn.mp4"
+        alt="Visual demonstration of the JEPA masking and prediction process."
+        radius="none"
+        enlarge
+    />
+</Row>
 
 ---
 

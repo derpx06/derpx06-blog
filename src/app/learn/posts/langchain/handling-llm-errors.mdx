@@ -12,8 +12,13 @@ LLM APIs are different. They are **probabilistic** and **resource-constrained** 
 *   **Probabilistic:** The model might refuse a request today that it accepted yesterday because the "safety filter" rolled a different probability on your input.
 *   **Resource Intensity:** Generating text requires massive GPU memory and compute. Providers like OpenAI and Anthropic aggressively throttle traffic to keep their systems stable.
 
-> [!NOTE]
-> In production, errors are not exceptions; they are **normal operating conditions**. A robust LLM application is not one that avoids errors, but one that handles them gracefully without crashing the user experience.
+<Feedback
+    variant="info"
+    marginTop="16"
+    marginBottom="24"
+>
+    In production, errors are not exceptions; they are **normal operating conditions**. A robust LLM application is not one that avoids errors, but one that handles them gracefully without crashing the user experience.
+</Feedback>
 
 <br />
 
@@ -74,9 +79,14 @@ Every model has a strict **Context Window**—the maximum amount of text (tokens
 
 This is a **hard limit**. You cannot "buy" more context for a specific request. If you send 129k tokens to a 128k model, the API will throw a `400 Bad Request` or simply truncate (cut off) the end of your text silently.
 
-> [!WARNING]
-> **Why "Just Add More Text" Fails:**
-> Even if you fit inside the limit, filling the context window to the brim often degrades performance. The "Lost in the Middle" phenomenon means models struggle to find details buried in the center of a massive prompt.
+<Feedback
+    variant="warning"
+    title='Why "Just Add More Text" Fails'
+    marginTop="16"
+    marginBottom="24"
+>
+    Even if you fit inside the limit, filling the context window to the brim often degrades performance. The "Lost in the Middle" phenomenon means models struggle to find details buried in the center of a massive prompt.
+</Feedback>
 
 <br />
 
@@ -136,8 +146,13 @@ Since you cannot eliminate errors, you must design for them.
     }}
 />
 
-> [!TIP]
-> **Reliability comes from system design, not better prompts.** No amount of "Please be careful" in a prompt will fix a 502 Bad Gateway error.
+<Feedback
+    variant="info"
+    marginTop="16"
+    marginBottom="24"
+>
+    **Reliability comes from system design, not better prompts.** No amount of "Please be careful" in a prompt will fix a 502 Bad Gateway error.
+</Feedback>
 
 <br />
 

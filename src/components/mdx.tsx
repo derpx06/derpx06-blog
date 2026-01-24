@@ -244,7 +244,11 @@ function ServerCodeBlock(props: any) {
               }
             } else {
               // Extract Source Code
-              const indices = codeItem.cellIndices || [];
+              let indices = codeItem.cellIndices || [];
+              if (codeItem.cellIndex !== undefined && indices.length === 0) {
+                indices = [codeItem.cellIndex];
+              }
+
               // Concatenate source from all specified cells
               content = indices.map((index: number) => {
                 const cell = cells[index];
@@ -318,6 +322,24 @@ function ResponsiveTable(props: any) {
   );
 }
 
+function CustomFeedback({ children, ...props }: any) {
+  return (
+    <Feedback
+      {...props}
+      style={{
+        backdropFilter: "blur(24px)",
+        background: "rgba(125, 125, 125, 0.08)", // Grey tint, very transparent
+        border: "1px solid var(--neutral-alpha-medium)",
+        ...props.style,
+      }}
+    >
+      <Column fillWidth style={{ marginTop: "-6px" }}>
+        {children}
+      </Column>
+    </Feedback>
+  );
+}
+
 const components = {
   p: createParagraph as any,
   h1: createHeading("h1") as any,
@@ -342,7 +364,7 @@ const components = {
   Accordion,
   AccordionGroup,
   Table: ResponsiveTable,
-  Feedback,
+  Feedback: CustomFeedback,
   Button,
   Card,
   Grid,
