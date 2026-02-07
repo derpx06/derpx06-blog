@@ -87,9 +87,7 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        Manas is a Software Engineer based in India, passionate about solving meaningful problems.
-        He uses React Native and Next.js as tools to bridge the gap between complex requirements
-        and elegant solutions.
+        I am a Software Engineer based in India with a strong passion for Linux, programming, and system-level thinking. I enjoy building practical software solutions that simplify complex problems, and I focus on writing clean, efficient, and well-structured code. I am highly curious, self-driven, and always eager to learn by experimenting and building real projects.
       </>
     ),
   },
@@ -179,34 +177,6 @@ const about: About = {
             height: 12,
           }
 
-        ],
-      },
-      {
-        title: "Next.js",
-        description: (
-          <>Building next gen apps with Next.js + Once UI + Supabase.</>
-        ),
-        tags: [
-          {
-            name: "JavaScript",
-            icon: "javascript",
-          },
-          {
-            name: "Next.js",
-            icon: "nextjs",
-          },
-          {
-            name: "Supabase",
-            icon: "supabase",
-          },
-        ],
-        images: [
-          {
-            src: "/images/projects/project-01/cover-04.jpg",
-            alt: "Project image",
-            width: 16,
-            height: 9,
-          },
         ],
       },
     ],
