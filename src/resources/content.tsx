@@ -137,19 +137,18 @@ const about: About = {
       {
         title: "App Development",
         description: (
-          <>I can build full fledged apps</>
+          <>Building cross-platform mobile applications with modern frameworks.</>
         ),
         tags: [
           {
             name: "React Native",
-            icon: "javascript",
+            icon: "react",
           },
           {
-            name: "kotlin",
-            icon: "supabase"
-          }
+            name: "Kotlin Compose",
+            icon: "kotlin",
+          },
         ],
-        // optional: leave the array empty if you don't want to display images
         images: [
           {
             src: "/images/projects/description-images/ChatBlaze.jpg",
@@ -175,8 +174,89 @@ const about: About = {
             width: 5,
             height: 12,
           }
-
         ],
+      },
+      {
+        title: "AI & Machine Learning",
+        description: (
+          <>Developing intelligent systems using state-of-the-art models and frameworks.</>
+        ),
+        tags: [
+          {
+            name: "TensorFlow",
+            icon: "tensorflow",
+          },
+          {
+            name: "PyTorch",
+            icon: "pytorch",
+          },
+          {
+            name: "LangChain",
+            icon: "python",
+          },
+          {
+            name: "LangGraph",
+            icon: "python",
+          },
+          {
+            name: "LangSmith",
+            icon: "python",
+          },
+          {
+            name: "LlamaIndex",
+            icon: "python",
+          },
+          {
+            name: "SmolAgents",
+            icon: "python",
+          },
+          {
+            name: "CrewAI",
+            icon: "python",
+          },
+        ],
+        images: [],
+      },
+      {
+        title: "Backend & Systems",
+        description: (
+          <>Robust backend architectures and system-level engineering.</>
+        ),
+        tags: [
+          {
+            name: "Node.js",
+            icon: "node",
+          },
+          {
+            name: "Express.js",
+            icon: "express",
+          },
+          {
+            name: "Java Spring Boot",
+            icon: "springboot",
+          },
+          {
+            name: "FastAPI",
+            icon: "fastapi",
+          },
+          {
+            name: "MongoDB",
+            icon: "mongodb",
+          },
+          {
+            name: "Qdrant",
+            icon: "python",
+          },
+          {
+            name: "Linux",
+            icon: "linux",
+          },
+          {
+            name: "Git",
+            icon: "git",
+          },
+        ],
+        images: [],
       },
     ],
   },

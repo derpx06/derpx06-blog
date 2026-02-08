@@ -24,7 +24,7 @@ export const courses: Course[] = [
         title: "LangChain Mastery",
         description: "Master building LLM applications with LangChain, from basics to advanced agents and RAG.",
         slug: "langchain-mastery",
-        image: "/images/projects/project-01/cover-04.jpg",
+        image: "/images/projects/project-01/cover-04.png",
         topics: [
             {
                 title: "0. Intro & Setup",
@@ -162,7 +162,7 @@ export const courses: Course[] = [
         title: "Python Overview",
         description: "A high-level overview of the Python programming language.",
         slug: "python-overview",
-        image: "/images/projects/project-01/cover-04.jpg",
+        image: "/images/projects/project-01/cover-04.png",
         topics: [
             {
                 title: "1. Foundations",

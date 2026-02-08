@@ -136,7 +136,8 @@ export default function About() {
                 <Icon paddingLeft="12" name="document" onBackground="brand-weak" />
                 <Row paddingX="8">My Resume</Row>
                 <IconButton
-                  href={about.calendar.link}
+                  href="/resume/Manas Khairnar (1).pdf"
+                  target="_blank"
                   data-border="rounded"
                   variant="secondary"
                   icon="chevronRight"
