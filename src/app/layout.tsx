@@ -16,6 +16,7 @@ import {
 } from "@once-ui-system/core";
 import { Footer, Header, RouteGuard, Providers } from "@/components";
 import { ChatWidget } from "@/components/ChatWidget";
+import { Analytics } from "@vercel/analytics/next";
 import { baseURL, effects, fonts, style, dataStyle, home, display } from "@/resources";
 import React from "react";
 
@@ -198,6 +199,7 @@ export default async function RootLayout({
               <ChatWidget />
             </Flex>
           )}
+          <Analytics />
         </Column>
       </Providers>
     </Flex>
