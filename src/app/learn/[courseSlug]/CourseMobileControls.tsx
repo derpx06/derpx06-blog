@@ -47,7 +47,7 @@ export default function CourseMobileControls({ course, children }: CourseMobileC
                 vertical="center"
                 hide
                 s={{ hide: false, top: "0" }}
-                m={{ hide: false, top: "0", paddingLeft: "80px", height: "80" }}
+                m={{ hide: false, top: "0", style: { paddingLeft: "80px", height: "80px" } }}
                 style={{
                     zIndex: 30,
                     pointerEvents: "none",

@@ -46,35 +46,39 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
             // Mobile: fixed overlay
             s={{
                 position: "fixed",
-                top: "56",
-                bottom: "120",
-                left: "0",
-                width: "85%",
-                maxWidth: "320px",
-                maxHeight: "calc(100vh - 136px)",
-                zIndex: 40,
-                background: "page",
-                border: "neutral-medium",
-                radius: "none",
-                padding: "24",
                 overflowY: "auto",
                 overflowX: "hidden",
+                style: {
+                    top: "56px",
+                    left: "0",
+                    bottom: "120px",
+                    width: "85%",
+                    maxWidth: "320px",
+                    maxHeight: "calc(100vh - 136px)",
+                    zIndex: 40,
+                    background: "var(--page)",
+                    border: "1px solid var(--neutral-medium)",
+                    borderRadius: "0",
+                    padding: "24px"
+                }
             }}
             m={{
                 position: "fixed",
-                top: "30",
-                bottom: "80",
-                left: "0",
-                width: "85%",
-                maxWidth: "320px",
-                maxHeight: "calc(100vh - 160px)",
-                zIndex: 40,
-                background: "page",
-                border: "neutral-medium",
-                radius: "none",
-                padding: "24",
                 overflowY: "auto",
                 overflowX: "hidden",
+                style: {
+                    top: "30px",
+                    left: "0",
+                    bottom: "80px",
+                    width: "85%",
+                    maxWidth: "320px",
+                    maxHeight: "calc(100vh - 160px)",
+                    zIndex: 40,
+                    background: "var(--page)",
+                    border: "1px solid var(--neutral-medium)",
+                    borderRadius: "0",
+                    padding: "24px"
+                }
             }}
         >
             <style jsx global>{`
