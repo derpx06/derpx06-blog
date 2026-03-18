@@ -110,7 +110,7 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
               </Text>
             </Row>
           </Row>
-          {post.metadata.image && (
+          {post.metadata.image && require("fs").existsSync(require("path").join(process.cwd(), "public", post.metadata.image)) && (
             <Media
               src={post.metadata.image}
               alt={post.metadata.title}

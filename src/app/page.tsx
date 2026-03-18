@@ -5,19 +5,17 @@ import {
   Avatar,
   RevealFx,
   Column,
-  Badge,
   Row,
   Schema,
   Meta,
-  Line,
   Grid,
 } from "@once-ui-system/core";
 import { home, about, person, baseURL, routes } from "@/resources";
 import { Mailchimp, SeeAllButton } from "@/components";
-import { Projects } from "@/components/work/Projects";
 import { Posts } from "@/components/blog/Posts";
 import Post from "@/components/blog/Post";
 import { courses } from "@/resources/courses";
+import { CanvasTextDemo } from "@/components/ui/canvas-text-demo";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -29,9 +27,39 @@ export async function generateMetadata() {
   });
 }
 
+type SectionProps = {
+  title: string;
+  href: string;
+  children: React.ReactNode;
+};
+
+function HomeSection({ title, href, children }: SectionProps) {
+  return (
+    <RevealFx translateY="8" fillWidth>
+      <Column
+        fillWidth
+        background="surface"
+        border="neutral-alpha-weak"
+        radius="l"
+        paddingX="20"
+        paddingY="20"
+        gap="20"
+      >
+        <Row fillWidth horizontal="between" vertical="center" paddingX="4">
+          <Heading as="h2" variant="display-strong-xs" wrap="balance">
+            {title}
+          </Heading>
+          <SeeAllButton href={href} />
+        </Row>
+        <Column fillWidth>{children}</Column>
+      </Column>
+    </RevealFx>
+  );
+}
+
 export default function Home() {
   return (
-    <Column maxWidth="m" gap="xl" paddingY="12" horizontal="center">
+    <Column maxWidth="m" gap="xl" paddingY="16" horizontal="center">
       <Schema
         as="webPage"
         baseURL={baseURL}
@@ -45,15 +73,24 @@ export default function Home() {
           image: `${baseURL}${person.avatar}`,
         }}
       />
-      <Column fillWidth horizontal="center" gap="m">
-        <Column maxWidth="s" horizontal="center" align="center">
-          <Heading variant="display-strong-l" wrap="balance" align="center">
-            {home.headline}
-          </Heading>
-          <Text variant="body-default-l" align="center" onBackground="neutral-weak">
+     
+      <RevealFx translateY="8" fillWidth>
+        <Column
+          fillWidth
+          horizontal="center"
+          align="center"
+          gap="12"
+          paddingY="20"
+          paddingX="8"
+        >
+          <Text variant="label-default-m" onBackground="brand-weak">
+            Software Development • AI Engineering • Mobile Apps
+          </Text>
+          <CanvasTextDemo />
+          <Text variant="body-default-l" align="center" onBackground="neutral-weak" style={{ maxWidth: "56ch" }}>
             {home.subline}
           </Text>
-          <RevealFx paddingTop="12" delay={0.1} horizontal="center" paddingLeft="12">
+          <Row gap="12" s={{ direction: "column" }}>
             <Button
               id="about"
               data-border="rounded"
@@ -75,23 +112,18 @@ export default function Home() {
                 {about.title}
               </Row>
             </Button>
-          </RevealFx>
+            {routes["/learn"] && (
+              <Button href="/learn" variant="primary" size="m" arrowIcon>
+                Start Learning
+              </Button>
+            )}
+          </Row>
         </Column>
-      </Column>
+      </RevealFx>
 
       {routes["/learn"] && (
-        <Column fillWidth gap="24" marginBottom="l">
-          <Row fillWidth paddingRight="64">
-            <Line maxWidth={48} />
-          </Row>
-          <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
-            <Row flex={1} paddingLeft="l" paddingRight="l" paddingTop="24" horizontal="between" vertical="center">
-              <Heading as="h2" variant="display-strong-xs" wrap="balance">
-                Latest Courses
-              </Heading>
-              <SeeAllButton href="/learn" />
-            </Row>
-            <Row flex={3} paddingX="20">
+        <HomeSection title="Latest Courses" href="/learn">
+          <Row flex={3} paddingX="8">
               <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
                 {courses.slice(0, 4).map((course) => (
                   <Post
@@ -112,60 +144,35 @@ export default function Home() {
                   />
                 ))}
               </Grid>
-            </Row>
-          </Column>
-        </Column>
+          </Row>
+        </HomeSection>
       )}
       {routes["/explainers"] && (
-        <Column fillWidth gap="24" marginBottom="l">
-          <Row fillWidth paddingRight="64">
-            <Line maxWidth={48} />
-          </Row>
-          <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
-            <Row flex={1} paddingLeft="l" paddingRight="l" paddingTop="24" horizontal="between" vertical="center">
-              <Heading as="h2" variant="display-strong-xs" wrap="balance">
-                Latest Explainers
-              </Heading>
-              <SeeAllButton href="/explainers" />
-            </Row>
-            <Row flex={3} paddingX="20">
+        <HomeSection title="Latest Explainers" href="/explainers">
+          <Row flex={3} paddingX="8">
               <Posts
                 range={[1, 4]}
                 columns="2"
                 thumbnail
                 direction="column"
+                glowing
                 source={["src", "app", "explainers", "posts"]}
                 pathPrefix="explainers"
               />
-            </Row>
-          </Column>
-        </Column>
+          </Row>
+        </HomeSection>
       )}
       {routes["/blog"] && (
-        <Column fillWidth gap="24" marginBottom="l">
-          <Row fillWidth paddingRight="64">
-            <Line maxWidth={48} />
-          </Row>
-          <Column fillWidth gap="24" marginTop="40" s={{ direction: "column" }}>
-            <Row flex={1} paddingLeft="l" paddingRight="l" paddingTop="24" horizontal="between" vertical="center">
-              <Heading as="h2" variant="display-strong-xs" wrap="balance">
-                Latest from the blog
-              </Heading>
-              <SeeAllButton href="/blog" />
-            </Row>
-            <Row flex={3} paddingX="20">
+        <HomeSection title="Latest From The Blog" href="/blog">
+          <Row flex={3} paddingX="8">
               <Posts range={[1, 6]} columns="3" thumbnail direction="column" />
-            </Row>
-          </Column>
-          <Row fillWidth paddingLeft="64" horizontal="end">
-            <Line maxWidth={48} />
           </Row>
-        </Column>
+        </HomeSection>
       )}
-      {/* <RevealFx translateY="16" delay={0.6}>
-        <Projects range={[1, 1]} />
-      </RevealFx> */}
+
       <Mailchimp />
+      
     </Column>
+    
   );
 }

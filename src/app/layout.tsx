@@ -20,6 +20,10 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { Analytics } from "@vercel/analytics/next";
 import { baseURL, effects, fonts, style, dataStyle, home, display } from "@/resources";
 import React from "react";
+import { Geist } from "next/font/google";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
 
 // @ts-ignore
 export async function generateMetadata() {

@@ -133,7 +133,7 @@ export default async function CourseLesson({
                         </Text>
                     </Row>
 
-                    {primaryPost.metadata.image && (
+                    {primaryPost.metadata.image && require("fs").existsSync(require("path").join(process.cwd(), "public", primaryPost.metadata.image)) && (
                         <Media
                             src={primaryPost.metadata.image}
                             alt={link.title}

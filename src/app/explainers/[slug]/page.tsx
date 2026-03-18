@@ -101,7 +101,7 @@ export default async function ExplainerPost({ params }: { params: Promise<{ slug
                             </Text>
                         </Row>
                     </Row>
-                    {post.metadata.image && (
+                    {post.metadata.image && require("fs").existsSync(require("path").join(process.cwd(), "public", post.metadata.image)) && (
                         <Media
                             src={post.metadata.image}
                             alt={post.metadata.title}
@@ -160,7 +160,7 @@ export default async function ExplainerPost({ params }: { params: Promise<{ slug
                 >
 
                 </Row>
-        <HeadingNav fitHeight />
+                <HeadingNav fitHeight />
             </Column>
         </Row>
     );

@@ -13,6 +13,33 @@ interface State {
     hasError: boolean;
     isExpanded: boolean;
 }
+
+function toCodeString(value: unknown): string {
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    if (value && typeof value === "object" && "content" in (value as Record<string, unknown>)) {
+        const content = (value as { content?: unknown }).content;
+        return typeof content === "string" ? content : "";
+    }
+    return "";
+}
+
+function normalizeCodes(codes: any): Array<{ code: string; language: string; label: string }> {
+    if (!Array.isArray(codes) || codes.length === 0) {
+        return [{ code: "", language: "text", label: "Code" }];
+    }
+
+    return codes.map((item: any) => {
+        const language = typeof item?.language === "string" && item.language.length > 0 ? item.language : "text";
+        const label = typeof item?.label === "string" && item.label.length > 0 ? item.label : "Code";
+        return {
+            code: toCodeString(item?.code),
+            language,
+            label,
+        };
+    });
+}
+
 if (typeof navigator !== "undefined" && !navigator.clipboard) {
     (navigator as any).clipboard = {
         writeText: async (text: string) => {
@@ -79,15 +106,16 @@ export class SafeCodeBlock extends Component<Props, State> {
             );
         }
 
-        const { minimized, ...restProps } = this.props;
+        const { minimized, codes, ...restProps } = this.props;
         const { isExpanded } = this.state;
-        const label = restProps.codes?.[0]?.label || "Code";
+        const safeCodes = normalizeCodes(codes);
+        const label = safeCodes[0]?.label || "Code";
 
         // Standard block (not collapsible)
         if (!minimized) {
             return (
                 <div style={{ marginBottom: "var(--spacing-16)" }}>
-                    <CodeBlock {...restProps} />
+                    <CodeBlock {...restProps} codes={safeCodes} />
                 </div>
             );
         }
@@ -134,7 +162,7 @@ export class SafeCodeBlock extends Component<Props, State> {
 
                 {isExpanded && (
                     <div style={{ animation: "fadeIn 0.25s ease-out" }}>
-                        <CodeBlock {...restProps} />
+                        <CodeBlock {...restProps} codes={safeCodes} />
                     </div>
                 )}
             </div>

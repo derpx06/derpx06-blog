@@ -5,20 +5,19 @@ import { HeadingLink } from "@/components/HeadingLink";
 import { SafeCodeBlock } from "@/components/SafeCodeBlock";
 import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
 import { Timeline } from "@/components/Timeline";
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-
+import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
+import rehypeKatex from "rehype-katex";
 
 import {
   Heading,
   Text,
   InlineCode,
-  CodeBlock,
   TextProps,
   MediaProps,
   Accordion,
   AccordionGroup,
-  Table,
+  Table as OnceTable,
   Feedback,
   Button,
   Card,
@@ -36,6 +35,11 @@ import {
 type CustomLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
   children: ReactNode;
+};
+
+type TableData = {
+  headers: Array<{ content: ReactNode; key: string }>;
+  rows: ReactNode[][];
 };
 
 function CustomLink({ href, children, ...props }: CustomLinkProps) {
@@ -83,22 +87,44 @@ export function createImage({ alt, src, ...props }: MediaProps & { src: string }
   );
 }
 
-
 function extractText(node: any): string {
-  if (typeof node === 'string') return node;
-  if (typeof node === 'number') return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (typeof node === "string") return node;
+  if (typeof node === "number" || typeof node === "boolean") return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (React.isValidElement(node)) return extractText((node as React.ReactElement<any>).props?.children);
+  if (node && typeof node === "object") {
+    if (typeof node.value === "string") return node.value;
+    if (typeof node.raw === "string") return node.raw;
+    if (typeof node.code === "string") return node.code;
+    if (node.children) return extractText(node.children);
+  }
   if (node?.props?.children) return extractText(node.props.children);
-  return '';
+  return "";
+}
+
+function isNumericKey(value: string): boolean {
+  return /^[0-9]+$/.test(value);
+}
+
+function asArrayLikeObject(input: any): any[] | null {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+
+  const keys = Object.keys(input);
+  if (keys.length === 0) return null;
+  if (!keys.every(isNumericKey)) return null;
+
+  return keys
+    .sort((a, b) => Number(a) - Number(b))
+    .map((key) => input[key]);
 }
 
 function slugify(input: any): string {
   const str = extractText(input);
-  const strWithAnd = str.replace(/&/g, " and "); // Replace & with 'and'
+  const strWithAnd = str.replace(/&/g, " and ");
   return transliterate(strWithAnd, {
     lowercase: true,
-    separator: "-", // Replace spaces with -
-  }).replace(/\-\-+/g, "-"); // Replace multiple - with single -
+    separator: "-",
+  }).replace(/\-\-+/g, "-");
 }
 
 function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
@@ -138,46 +164,103 @@ function createInlineCode({ children }: { children: ReactNode }) {
   return <InlineCode>{children}</InlineCode>;
 }
 
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
+
+function normalizeCodeItem(codeItem: any) {
+  const codeCandidate = codeItem?.code ?? codeItem?.value ?? codeItem?.raw ?? codeItem?.children;
+  const normalizedCode = codeCandidate !== undefined ? extractText(codeCandidate) : "";
+  const language = typeof codeItem?.language === "string" && codeItem.language.trim().length > 0
+    ? codeItem.language
+    : "text";
+  const fallbackLabel = language ? language.charAt(0).toUpperCase() + language.slice(1) : "Code";
+  const label = typeof codeItem?.label === "string" && codeItem.label.trim().length > 0
+    ? codeItem.label
+    : fallbackLabel;
+
+  return {
+    ...codeItem,
+    code: normalizedCode,
+    language,
+    label,
+  };
+}
+
+function normalizeCodesInput(input: any) {
+  if (Array.isArray(input)) {
+    return input.map((item) => normalizeCodeItem(item));
+  }
+
+  const arrayLike = asArrayLikeObject(input);
+  if (arrayLike) {
+    return arrayLike.map((item) => normalizeCodeItem(item));
+  }
+
+  if (input && typeof input === "object") {
+    if (Array.isArray(input.codes)) {
+      return input.codes.map((item: any) => normalizeCodeItem(item));
+    }
+    return [normalizeCodeItem(input)];
+  }
+
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    if (!trimmed) return undefined;
+
+    if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return normalizeCodesInput(parsed);
+      } catch {
+        // Keep as plain code when parsing fails.
+      }
+    }
+
+    return [normalizeCodeItem({ code: trimmed, language: "text", label: "Code" })];
+  }
+
+  return undefined;
+}
+
+function toSafeNotebookCode(input: any): string {
+  if (Array.isArray(input)) return input.map((item) => extractText(item)).join("");
+  return extractText(input);
+}
 
 function ServerCodeBlock(props: any) {
   const { codes, showOutput, ...rest } = props;
+  let processedCodes = normalizeCodesInput(codes);
 
-  // If showOutput is true and we have Jupyter notebook cells, use JupyterCodeBlock
-  if (showOutput && Array.isArray(codes)) {
-    const jupyterCells = codes.map((codeItem: any) => {
-      if (codeItem.file && codeItem.file.endsWith('.ipynb')) {
+  if (showOutput && Array.isArray(processedCodes)) {
+    const jupyterCells = processedCodes.map((codeItem: any) => {
+      if (codeItem.file && codeItem.file.endsWith(".ipynb")) {
         try {
           const filePath = path.join(process.cwd(), codeItem.file);
-          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          const fileContent = fs.readFileSync(filePath, "utf-8");
           const notebook = JSON.parse(fileContent);
           const cells = notebook.cells;
 
-          // Use single cellIndex instead of cellIndices array
           const cellIndex = codeItem.cellIndex !== undefined ? codeItem.cellIndex : 0;
           const cell = cells[cellIndex];
 
           if (!cell) {
             return {
               code: `Error: Cell ${cellIndex} not found`,
-              label: codeItem.label || 'Code',
-              language: 'text',
-              showOutput: false
+              label: codeItem.label || "Code",
+              language: "text",
+              showOutput: false,
             };
           }
 
-          // Extract code from the single cell
-          const code = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+          const code = toSafeNotebookCode(cell.source);
 
-          // Extract output from the cell if it exists
           let output = "";
           if (cell.outputs && cell.outputs.length > 0) {
             cell.outputs.forEach((outputItem: any) => {
               if (outputItem.text) {
-                output += Array.isArray(outputItem.text) ? outputItem.text.join('') : outputItem.text;
-              } else if (outputItem.data && outputItem.data['text/plain']) {
-                output += Array.isArray(outputItem.data['text/plain']) ? outputItem.data['text/plain'].join('') : outputItem.data['text/plain'];
+                output += toSafeNotebookCode(outputItem.text);
+              } else if (outputItem.data && outputItem.data["text/plain"]) {
+                output += toSafeNotebookCode(outputItem.data["text/plain"]);
               }
             });
           }
@@ -185,110 +268,119 @@ function ServerCodeBlock(props: any) {
           return {
             code,
             output: output || undefined,
-            label: codeItem.label || 'Code',
-            language: codeItem.language || 'python',
-            showOutput: codeItem.showOutput === true  // Default to false
+            label: codeItem.label || "Code",
+            language: codeItem.language || "python",
+            showOutput: codeItem.showOutput === true,
           };
         } catch (error) {
           console.error(`Error reading notebook file: ${codeItem.file}`, error);
           return {
             code: `Error: Could not read file ${codeItem.file}`,
-            label: codeItem.label || 'Code',
-            language: 'text',
-            showOutput: false
+            label: codeItem.label || "Code",
+            language: "text",
+            showOutput: false,
           };
         }
       }
+
       return {
-        code: codeItem.code || '',
+        code: extractText(codeItem.code),
         output: codeItem.output,
-        label: codeItem.label || 'Code',
-        language: codeItem.language || 'text',
-        showOutput: codeItem.showOutput === true
+        label: codeItem.label || "Code",
+        language: codeItem.language || "text",
+        showOutput: codeItem.showOutput === true,
       };
     });
 
     return <JupyterCodeBlock cells={jupyterCells} marginBottom={rest.marginBottom} />;
   }
 
-  // Original processing for regular CodeBlock
-  let processedCodes = codes;
-
-  if (Array.isArray(codes)) {
-    processedCodes = codes.map((codeItem: any) => {
+  if (Array.isArray(processedCodes)) {
+    processedCodes = processedCodes.map((codeItem: any) => {
       if (codeItem.file) {
         try {
           const filePath = path.join(process.cwd(), codeItem.file);
-          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          const fileContent = fs.readFileSync(filePath, "utf-8");
 
-          // Handle Jupyter Notebooks
-          if (codeItem.file.endsWith('.ipynb')) {
+          if (codeItem.file.endsWith(".ipynb")) {
             const notebook = JSON.parse(fileContent);
             const cells = notebook.cells;
             let content = "";
 
-            // Extract output from the LAST specified cell if displayOutput is true
             if (codeItem.displayOutput) {
               const cellIndex = codeItem.cellIndices ? codeItem.cellIndices[codeItem.cellIndices.length - 1] : 0;
               const cell = cells[cellIndex];
               if (cell && cell.outputs) {
-                // Prioritize 'text' field which might be an array or string
-                // Standard nbformat: outputs[i].text or outputs[i].data['text/plain']
                 cell.outputs.forEach((output: any) => {
                   if (output.text) {
-                    content += Array.isArray(output.text) ? output.text.join('') : output.text;
-                  } else if (output.data && output.data['text/plain']) {
-                    content += Array.isArray(output.data['text/plain']) ? output.data['text/plain'].join('') : output.data['text/plain'];
+                    content += toSafeNotebookCode(output.text);
+                  } else if (output.data && output.data["text/plain"]) {
+                    content += toSafeNotebookCode(output.data["text/plain"]);
                   }
                 });
               }
             } else {
-              // Extract Source Code
               let indices = codeItem.cellIndices || [];
               if (codeItem.cellIndex !== undefined && indices.length === 0) {
                 indices = [codeItem.cellIndex];
               }
 
-              // Concatenate source from all specified cells
-              content = indices.map((index: number) => {
-                const cell = cells[index];
-                if (!cell || !cell.source) return "";
-                const source = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
-                return source;
-              }).join('\n\n');
+              content = indices
+                .map((index: number) => {
+                  const cell = cells[index];
+                  if (!cell || !cell.source) return "";
+                  return toSafeNotebookCode(cell.source);
+                })
+                .join("\n\n");
             }
 
-            return {
+            return normalizeCodeItem({
               ...codeItem,
-              code: content
-            };
+              code: content,
+            });
           }
 
-          // Handle other files (text/py/etc)
-          return {
+          return normalizeCodeItem({
             ...codeItem,
-            code: fileContent
-          };
+            code: fileContent,
+          });
         } catch (error) {
           console.error(`Error reading file: ${codeItem.file}`, error);
-          return {
+          return normalizeCodeItem({
             ...codeItem,
-            code: `Error: Could not read file ${codeItem.file}`
-          };
+            code: `Error: Could not read file ${codeItem.file}`,
+          });
         }
       }
-      return codeItem;
+
+      return normalizeCodeItem(codeItem);
     });
   }
 
-  // Handle standard Markdown usage (children + className)
   if (!processedCodes && rest.children) {
-    const language = rest.className ? rest.className.replace('language-', '') : 'text';
-    processedCodes = [{
-      code: rest.children.toString(),
-      language: language,
-      label: language.charAt(0).toUpperCase() + language.slice(1)
-    }];
+    let language = "text";
+    let codeString = "";
+
+    if (React.isValidElement(rest.children)) {
+      codeString = extractText(rest.children);
+      const childProps = (rest.children as React.ReactElement).props as any;
+      if (childProps && childProps.className) {
+        language = childProps.className.replace("language-", "");
+      }
+    } else {
+      codeString = extractText(rest.children);
+    }
+
+    if (rest.className && rest.className.includes("language-")) {
+      language = rest.className.replace("language-", "");
+    }
+
+    processedCodes = [
+      normalizeCodeItem({
+        code: codeString,
+        language,
+      }),
+    ];
   }
 
   return <SafeCodeBlock codes={processedCodes} {...rest} />;
@@ -314,12 +406,49 @@ function createHR() {
   );
 }
 
-function ResponsiveTable(props: any) {
+function normalizeTableData(data: any, props: any): TableData | null {
+  if (data && Array.isArray(data.headers) && Array.isArray(data.rows)) {
+    return data as TableData;
+  }
+
+  if (Array.isArray(props?.headers) && Array.isArray(props?.rows)) {
+    return {
+      headers: props.headers,
+      rows: props.rows,
+    };
+  }
+
+  return null;
+}
+
+function MarkdownTable({ children }: { children?: ReactNode }) {
   return (
-    <Column fillWidth overflowX="auto">
-      <Table {...props} />
+    <Column fillWidth overflowX="auto" marginBottom="16">
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        {children}
+      </table>
     </Column>
   );
+}
+
+function ResponsiveTable(props: any) {
+  const { data, headers, rows, children, ...rest } = props;
+  const normalizedData = normalizeTableData(data, { headers, rows });
+
+  if (normalizedData) {
+    return (
+      <Column fillWidth overflowX="auto">
+        <OnceTable data={normalizedData} {...rest} />
+      </Column>
+    );
+  }
+
+  if (children) {
+    return <MarkdownTable>{children}</MarkdownTable>;
+  }
+
+  console.warn("Table render skipped: expected either data.headers+data.rows, headers+rows, or markdown table children.");
+  return null;
 }
 
 function CustomFeedback({ children, ...props }: any) {
@@ -328,7 +457,7 @@ function CustomFeedback({ children, ...props }: any) {
       {...props}
       style={{
         backdropFilter: "blur(24px)",
-        background: "rgba(125, 125, 125, 0.08)", // Grey tint, very transparent
+        background: "rgba(125, 125, 125, 0.08)",
         border: "1px solid var(--neutral-alpha-medium)",
         ...props.style,
       }}
@@ -357,6 +486,7 @@ const components = {
   ul: createList as any,
   li: createListItem as any,
   hr: createHR as any,
+  table: MarkdownTable as any,
   Heading,
   Text,
   CodeBlock: ServerCodeBlock,
@@ -376,7 +506,6 @@ const components = {
   Timeline,
 };
 
-
 type CustomMDXProps = MDXRemoteProps & {
   components?: typeof components;
 };
@@ -387,8 +516,10 @@ export function CustomMDX(props: CustomMDXProps) {
       {...props}
       components={{ ...components, ...(props.components || {}) }}
       options={{
+        blockJS: false,
+        blockDangerousJS: true,
         mdxOptions: {
-          remarkPlugins: [remarkMath],
+          remarkPlugins: [remarkGfm, remarkMath],
           rehypePlugins: [rehypeKatex],
         },
       }}

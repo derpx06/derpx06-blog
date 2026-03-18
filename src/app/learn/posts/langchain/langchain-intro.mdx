@@ -18,6 +18,11 @@ While models like GPT-4 are "brains," they are disconnected from the world. They
 
 It is the industry standard for building context-aware, reasoning AI agents.
 
+<Feedback variant="info" marginTop="16" marginBottom="24">
+    **Think of LangChain as orchestration, not intelligence.**  
+    The model is the brain, but LangChain gives it memory, tools, and structure.
+</Feedback>
+
 ## Why Raw LLMs Fall Short
 
 LLMs are brilliant. They know everything about quantum physics and 14th-century poetry.
@@ -117,42 +122,68 @@ qa.run("Summarize the meeting notes")`,
 
 LangChain provides the modules to build end-to-end applications.
 
-<Grid columns="2" s={{columns: 1}} gap="32" marginBottom="32">
-    <Column gap="8">
-        <Row gap="8" vertical="center">
-            <Icon name="refresh" size="s"/>
-            <Text variant="heading-strong-s">Model I/O</Text>
-        </Row>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-            Switch between models (OpenAI, Anthropic, Llama) by changing a single line of code.
-        </Text>
-    </Column>
-    <Column gap="8">
-        <Row gap="8" vertical="center">
-            <Icon name="gitBranch" size="s"/>
-            <Text variant="heading-strong-s">Chains</Text>
-        </Row>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-            Link multiple processing steps together (e.g., Retrieve -> Summarize -> Email).
-        </Text>
-    </Column>
-    <Column gap="8">
-        <Row gap="8" vertical="center">
-            <Icon name="document" size="s"/>
-            <Text variant="heading-strong-s">Memory</Text>
-        </Row>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-            Add context to stateless LLMs so they remember chat history.
-        </Text>
-    </Column>
-    <Column gap="8">
-        <Row gap="8" vertical="center">
-            <Icon name="sparkle" size="s"/>
-            <Text variant="heading-strong-s">Agents</Text>
-        </Row>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-            Turn LLMs into reasoning engines that can use tools (Calculator, Search, API) to solve problems.
-        </Text>
-    </Column>
+<Grid columns="2" s={{columns: 1}} gap="16" marginBottom="32">
+    <Card padding="20" radius="l" border="neutral-medium" background="surface">
+        <Column gap="10">
+            <Row gap="10" vertical="center">
+                <Icon name="refresh" size="s"/>
+                <Text variant="heading-strong-s">Model I/O</Text>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Switch between models (OpenAI, Anthropic, Llama) by changing a single line of code.
+            </Text>
+            <Text variant="label-default-xs" onBackground="brand-weak">
+                Swap model providers in minutes.
+            </Text>
+        </Column>
+    </Card>
+
+    <Card padding="20" radius="l" border="neutral-medium" background="surface">
+        <Column gap="10">
+            <Row gap="10" vertical="center">
+                <Icon name="gitBranch" size="s"/>
+                <Text variant="heading-strong-s">Chains</Text>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Link multiple processing steps together (e.g., Retrieve -> Summarize -> Email).
+            </Text>
+            <Text variant="label-default-xs" onBackground="brand-weak">
+                Build repeatable workflows, not single prompts.
+            </Text>
+        </Column>
+    </Card>
+
+    <Card padding="20" radius="l" border="neutral-medium" background="surface">
+        <Column gap="10">
+            <Row gap="10" vertical="center">
+                <Icon name="document" size="s"/>
+                <Text variant="heading-strong-s">Memory</Text>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Add context to stateless LLMs so they remember chat history.
+            </Text>
+            <Text variant="label-default-xs" onBackground="brand-weak">
+                Keep conversations coherent across turns.
+            </Text>
+        </Column>
+    </Card>
+
+    <Card padding="20" radius="l" border="neutral-medium" background="surface">
+        <Column gap="10">
+            <Row gap="10" vertical="center">
+                <Icon name="sparkle" size="s"/>
+                <Text variant="heading-strong-s">Agents</Text>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+                Turn LLMs into reasoning engines that can use tools (Calculator, Search, API) to solve problems.
+            </Text>
+            <Text variant="label-default-xs" onBackground="brand-weak">
+                Move from answering to acting.
+            </Text>
+        </Column>
+    </Card>
 </Grid>
 
+<Feedback variant="neutral" marginBottom="8">
+    Start simple: use `Model I/O + Chains` first, then add `Memory` and `Agents` when needed.
+</Feedback>

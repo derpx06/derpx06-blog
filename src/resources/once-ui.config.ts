@@ -116,16 +116,16 @@ const dataStyle: DataStyleConfig = {
 
 const effects: EffectsConfig = {
   mask: {
-    cursor: true,
-    x: 0,
+    cursor: false,
+    x: 50,
     y: 0,
-    radius: 30,
+    radius: 50,
   },
   gradient: {
     display: true,
     opacity: 20,
     x: 50,
-    y: 60,
+    y: 0,
     width: 100,
     height: 50,
     tilt: 0,
@@ -133,13 +133,13 @@ const effects: EffectsConfig = {
     colorEnd: "page-background",
   },
   dots: {
-    display: true,
+    display: false,
     opacity: 40,
     size: "2",
     color: "brand-background-strong",
   },
   grid: {
-    display: false,
+    display: true,
     opacity: 100,
     color: "neutral-alpha-medium",
     width: "0.25rem",

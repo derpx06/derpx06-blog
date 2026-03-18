@@ -10,6 +10,7 @@ interface PostsProps {
   exclude?: string[];
   pathPrefix?: string;
   source?: string[];
+  glowing?: boolean;
 }
 
 export function Posts({
@@ -20,6 +21,7 @@ export function Posts({
   direction,
   source = ["src", "app", "blog", "posts"],
   pathPrefix = "blog",
+  glowing = false,
 }: PostsProps) {
   let allBlogs = getPosts(source);
 
@@ -47,6 +49,7 @@ export function Posts({
               thumbnail={thumbnail}
               direction={direction}
               pathPrefix={pathPrefix}
+              glowing={glowing}
             />
           ))}
         </Grid>

@@ -118,7 +118,7 @@ export default async function Project({
           </Text>
         </Row>
       </Row>
-      {post.metadata.images.length > 0 && (
+      {post.metadata.images.length > 0 && require("fs").existsSync(require("path").join(process.cwd(), "public", post.metadata.images[0])) && (
         <Media priority aspectRatio="16 / 9" radius="m" alt="image" src={post.metadata.images[0]} />
       )}
       <Column style={{ margin: "auto" }} as="article" maxWidth="xs">

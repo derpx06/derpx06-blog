@@ -5,6 +5,9 @@ import { Button, Heading, Input, Text, Background, Column, Row } from "@once-ui-
 import confetti from "canvas-confetti";
 import { opacity, SpacingToken } from "@once-ui-system/core";
 import { useState } from "react";
+import { EvervaultCard } from "./ui/evervault-card";
+import { Meteors } from "./ui/meteors";
+import { DottedGlowBackground } from "./ui/dotted-glow-background";
 
 function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
   let timeout: ReturnType<typeof setTimeout>;
@@ -62,7 +65,8 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
       background="surface"
       border="neutral-alpha-weak"
       {...flex}
-    >
+    >    
+
       <Background
         top="0"
         position="absolute"
@@ -104,6 +108,20 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
           angle: mailchimp.effects.lines.angle,
           color: mailchimp.effects.lines.color,
         }}
+      />
+        <DottedGlowBackground
+        className="pointer-events-none mask-radial-to-90% mask-radial-at-center"
+        opacity={1}
+        gap={10}
+        radius={1.6}
+        colorLightVar="--color-neutral-500"
+        glowColorLightVar="--color-neutral-600"
+        colorDarkVar="--color-neutral-500"
+        glowColorDarkVar="--color-sky-800"
+        backgroundOpacity={0}
+        speedMin={0.3}
+        speedMax={1.6}
+        speedScale={1}
       />
       <Column maxWidth="xs" horizontal="center">
         <Heading marginBottom="s" variant="display-strong-xs">
@@ -207,6 +225,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
           </div>
         </Row>
       </form>
-    </Column>
+             <Meteors number={30} />
+ </Column>
   );
 };
