@@ -392,7 +392,12 @@ function createList({ children }: { children: ReactNode }) {
 
 function createListItem({ children }: { children: ReactNode }) {
   return (
-    <ListItem marginTop="4" marginBottom="8" style={{ lineHeight: "175%" }}>
+    <ListItem
+      marginTop="4"
+      marginBottom="8"
+      onBackground="neutral-medium"
+      style={{ lineHeight: "175%" }}
+    >
       {children}
     </ListItem>
   );

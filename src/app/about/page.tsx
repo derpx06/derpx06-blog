@@ -211,7 +211,7 @@ export default function About() {
                 {about.work.experiences.map((experience, index) => (
                   <Column key={`${experience.company}-${experience.role}-${index}`} fillWidth>
                     <Row fillWidth horizontal="between" vertical="end" marginBottom="4">
-                      <Text id={experience.company} variant="heading-strong-l">
+                      <Text id={experience.company} variant="heading-strong-l" onBackground="neutral-strong">
                         {experience.company}
                       </Text>
                       <Text variant="heading-default-xs" onBackground="neutral-weak">
@@ -227,6 +227,7 @@ export default function About() {
                           <Text
                             as="li"
                             variant="body-default-m"
+                            onBackground="neutral-medium"
                             key={`${experience.company}-${index}`}
                           >
                             {achievement}
@@ -269,7 +270,7 @@ export default function About() {
               <Column fillWidth gap="l" marginBottom="40">
                 {about.studies.institutions.map((institution, index) => (
                   <Column key={`${institution.name}-${index}`} fillWidth gap="4">
-                    <Text id={institution.name} variant="heading-strong-l">
+                    <Text id={institution.name} variant="heading-strong-l" onBackground="neutral-strong">
                       {institution.name}
                     </Text>
                     <Text variant="heading-default-xs" onBackground="neutral-weak">
@@ -294,7 +295,7 @@ export default function About() {
               <Column fillWidth gap="l">
                 {about.technical.skills.map((skill, index) => (
                   <Column key={`${skill}-${index}`} fillWidth gap="4">
-                    <Text id={skill.title} variant="heading-strong-l">
+                    <Text id={skill.title} variant="heading-strong-l" onBackground="neutral-strong">
                       {skill.title}
                     </Text>
                     <Text variant="body-default-m" onBackground="neutral-weak">
