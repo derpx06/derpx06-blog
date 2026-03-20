@@ -10,6 +10,7 @@ export {
   gallery,
   learn,
   explainers,
+  heroWords,
 } from "./content";
 
 export {

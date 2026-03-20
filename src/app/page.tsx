@@ -16,6 +16,8 @@ import { Posts } from "@/components/blog/Posts";
 import Post from "@/components/blog/Post";
 import { courses } from "@/resources/courses";
 import { CanvasTextDemo } from "@/components/ui/canvas-text-demo";
+import { HeroTyping } from "@/components/ui/hero-typing";
+import { TypingAnimation } from "@/components/ui/typing-animation";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -73,7 +75,7 @@ export default function Home() {
           image: `${baseURL}${person.avatar}`,
         }}
       />
-     
+
       <RevealFx translateY="8" fillWidth>
         <Column
           fillWidth
@@ -87,9 +89,12 @@ export default function Home() {
             Software Development • AI Engineering • Mobile Apps
           </Text>
           <CanvasTextDemo />
-          <Text variant="body-default-l" align="center" onBackground="neutral-weak" style={{ maxWidth: "56ch" }}>
-            {home.subline}
-          </Text>
+          {/* <Text variant="body-default-l" align="center" onBackground="neutral-weak" style={{ maxWidth: "56ch" }}>
+            <TypingAnimation delay={800} startOnView={true}>
+              {home.subline as string}
+            </TypingAnimation>
+          </Text> */}
+          <HeroTyping className="text-4xl font-bold" />
           <Row gap="12" s={{ direction: "column" }}>
             <Button
               id="about"
@@ -114,7 +119,7 @@ export default function Home() {
             </Button>
             {routes["/learn"] && (
               <Button href="/learn" variant="primary" size="m" arrowIcon>
-                Start Learning
+                Explore
               </Button>
             )}
           </Row>
@@ -124,55 +129,55 @@ export default function Home() {
       {routes["/learn"] && (
         <HomeSection title="Latest Courses" href="/learn">
           <Row flex={3} paddingX="8">
-              <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
-                {courses.slice(0, 4).map((course) => (
-                  <Post
-                    key={course.id}
-                    post={{
-                      slug: course.slug,
-                      metadata: {
-                        title: course.title,
-                        summary: course.description,
-                        image: course.image,
-                        publishedAt: "2024-01-01",
-                      },
-                      content: "",
-                    }}
-                    thumbnail
-                    pathPrefix="learn"
-                    direction="column"
-                  />
-                ))}
-              </Grid>
+            <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
+              {courses.slice(0, 4).map((course) => (
+                <Post
+                  key={course.id}
+                  post={{
+                    slug: course.slug,
+                    metadata: {
+                      title: course.title,
+                      summary: course.description,
+                      image: course.image,
+                      publishedAt: "2024-01-01",
+                    },
+                    content: "",
+                  }}
+                  thumbnail
+                  pathPrefix="learn"
+                  direction="column"
+                />
+              ))}
+            </Grid>
           </Row>
         </HomeSection>
       )}
       {routes["/explainers"] && (
         <HomeSection title="Latest Explainers" href="/explainers">
           <Row flex={3} paddingX="8">
-              <Posts
-                range={[1, 4]}
-                columns="2"
-                thumbnail
-                direction="column"
-                glowing
-                source={["src", "app", "explainers", "posts"]}
-                pathPrefix="explainers"
-              />
+            <Posts
+              range={[1, 4]}
+              columns="2"
+              thumbnail
+              direction="column"
+              glowing
+              source={["src", "app", "explainers", "posts"]}
+              pathPrefix="explainers"
+            />
           </Row>
         </HomeSection>
       )}
       {routes["/blog"] && (
         <HomeSection title="Latest From The Blog" href="/blog">
           <Row flex={3} paddingX="8">
-              <Posts range={[1, 6]} columns="3" thumbnail direction="column" />
+            <Posts range={[1, 6]} columns="3" thumbnail direction="column" />
           </Row>
         </HomeSection>
       )}
 
       <Mailchimp />
-      
+
     </Column>
-    
+
   );
 }

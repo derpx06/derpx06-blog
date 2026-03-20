@@ -59,11 +59,7 @@ const home: Home = {
     ),
     href: "/work/building-once-ui-a-customizable-design-system",
   },
-  subline: (
-    <>
-      I'm Manas. I like to solve problems, creating solutions that are both effective and intuitive.
-    </>
-  ),
+  subline: "I want to share magic",
 };
 
 const about: About = {
@@ -346,4 +342,23 @@ const gallery: Gallery = {
   ],
 };
 
-export { person, social, newsletter, home, about, blog, work, gallery, learn, explainers };
+const heroWords = [
+  { w: "Share Magic", tag: "software that matters" },
+  { w: "Build", tag: "software that matters" },
+  { w: "Ship", tag: "fast, iteratively, boldly" },
+  { w: "Architect", tag: "systems that last" },
+  { w: "Innovate", tag: "at the edge of what's possible" },
+  { w: "Engineer", tag: "with intention" },
+  { w: "Create", tag: "things I'm proud of" },
+  { w: "Deploy", tag: "ideas into reality" },
+  { w: "Design", tag: "for the humans behind the screen" },
+  { w: "Automate", tag: "the boring stuff" },
+  { w: "Scale", tag: "without losing the soul" },
+  { w: "Dream", tag: "beyond the obvious" },
+  { w: "Listen", tag: "before I write a line of code" },
+  { w: "Wonder", tag: "about everything" },
+  { w: "Empathize", tag: "with every user" },
+  { w: "Grow", tag: "every single day" },
+];
+
+export { person, social, newsletter, home, about, blog, work, gallery, learn, explainers, heroWords };
