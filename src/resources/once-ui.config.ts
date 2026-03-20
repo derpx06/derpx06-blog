@@ -159,7 +159,7 @@ const mailchimp: MailchimpConfig = {
   action: "https://url/subscribe/post?parameters",
   effects: {
     mask: {
-      cursor: true,
+      cursor: false,
       x: 50,
       y: 0,
       radius: 100,
@@ -176,13 +176,13 @@ const mailchimp: MailchimpConfig = {
       colorEnd: "static-transparent",
     },
     dots: {
-      display: true,
+      display: false,
       opacity: 10,
       size: "1",
       color: "brand-on-background-weak",
     },
     grid: {
-      display: false,
+      display: true,
       opacity: 50,
       color: "neutral-alpha-medium",
       width: "0.25rem",
