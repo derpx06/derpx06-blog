@@ -3,3 +3,6 @@
 /.next
 /.idea
 .env
+/.agent
+/.agents
+/.codex

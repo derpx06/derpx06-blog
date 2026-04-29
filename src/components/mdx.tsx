@@ -509,6 +509,7 @@ const components = {
   Media,
   SmartLink,
   Timeline,
+  Line,
 };
 
 type CustomMDXProps = MDXRemoteProps & {

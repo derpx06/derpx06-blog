@@ -198,6 +198,52 @@ Generate at: https://once-ui.com/customize
   box-shadow: 0 0 24px rgba(255, 176, 24, 0.22);
 }
 
+.home-page-shell {
+  position: relative;
+}
+
+.home-page-shell::before {
+  content: "";
+  position: absolute;
+  inset: -40px -20px auto -20px;
+  height: 260px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(73, 126, 255, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(81, 200, 155, 0.15), transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-hero-panel,
+.home-section-card {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 10px 32px rgba(11, 24, 29, 0.08);
+}
+
+.home-section-card {
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.home-section-card:hover {
+  border-color: var(--scheme-brand-600-30);
+  box-shadow: 0 14px 40px rgba(11, 24, 29, 0.12);
+}
+
+.home-chip {
+  border: 1px solid var(--scheme-neutral-600-30);
+  background: color-mix(in srgb, var(--page-background) 88%, white 12%);
+  border-radius: 999px;
+  padding: 0.32rem 0.72rem;
+  color: var(--neutral-on-background-medium);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-section-card {
+    transition: none;
+  }
+}
+
 [data-theme="dark"] {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
