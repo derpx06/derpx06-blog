@@ -1,0 +1,46 @@
+---
+title: "Finetuning Roadmap: What to Tune and Why"
+publishedAt: "2026-05-02"
+summary: "A practical map of the finetuning stack: SFT, instruction tuning, preference alignment, and evaluation strategy."
+image: "/images/learn/finetuning-llm-cover.svg"
+---
+
+## Why finetune at all?
+
+Base models are broad, but products are specific. Finetuning narrows behavior toward your domain, tone, constraints, and task format.
+
+Use finetuning when you need:
+
+1. Higher reliability on repeated tasks.
+2. Consistent structure in outputs.
+3. Better performance on domain language (legal, medical, support, codebase-specific).
+
+## The modern finetuning stack
+
+Most teams do not jump straight to RL. They move through a staged pipeline:
+
+1. Supervised Fine-Tuning (SFT): teach desired behavior from examples.
+2. Preference Alignment (DPO or similar): improve quality between good vs better responses.
+3. Safety + regression evaluation: verify gains without breaking core capabilities.
+
+```text
+Base Model -> SFT -> Preference Alignment -> Safety + Regression Checks -> Deploy
+```
+
+## When to choose LoRA vs full finetuning
+
+- LoRA: lower GPU memory, faster experiments, easier iteration.
+- Full finetuning: expensive but can unlock bigger shifts for large data and large budgets.
+
+Rule of thumb: start with LoRA, prove value, then decide if full finetuning is worth cost.
+
+## Success criteria before training
+
+Define measurable goals first:
+
+1. Task-level metric: accuracy, pass rate, rubric score.
+2. Format metric: JSON validity, schema adherence.
+3. Safety metric: refusal quality and policy compliance.
+4. Latency and cost budget per request.
+
+Without this, teams often "improve" one benchmark while harming production quality.
