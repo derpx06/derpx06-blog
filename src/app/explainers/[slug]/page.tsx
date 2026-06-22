@@ -42,13 +42,37 @@ export async function generateMetadata({
 
     if (!post) return {};
 
-    return Meta.generate({
+    const image = post.metadata.image || `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`;
+    const path = `${explainers.path}/${post.slug}`;
+    const canonicalUrl = `${baseURL}${path}`;
+
+    const baseMeta = Meta.generate({
         title: post.metadata.title,
         description: post.metadata.summary,
         baseURL: baseURL,
-        image: post.metadata.image || `/api/og/generate?title=${post.metadata.title}`,
-        path: `${explainers.path}/${post.slug}`,
+        image,
+        path,
     });
+
+    return {
+        ...baseMeta,
+        alternates: {
+            canonical: canonicalUrl,
+        },
+        openGraph: {
+            type: "article",
+            title: post.metadata.title,
+            description: post.metadata.summary,
+            url: canonicalUrl,
+            images: [image],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: post.metadata.title,
+            description: post.metadata.summary,
+            images: [image],
+        },
+    };
 }
 
 export default async function ExplainerPost({ params }: { params: Promise<{ slug: string }> }) {
@@ -91,7 +115,7 @@ export default async function ExplainerPost({ params }: { params: Promise<{ slug
                         <Text variant="body-default-xs" onBackground="neutral-weak" marginBottom="12">
                             {post.metadata.publishedAt && formatDate(post.metadata.publishedAt)}
                         </Text>
-                        <Heading variant="display-strong-m">{post.metadata.title}</Heading>
+                        <Heading as="h1" variant="display-strong-m">{post.metadata.title}</Heading>
                     </Column>
                     <Row marginBottom="32" horizontal="center">
                         <Row gap="16" vertical="center">

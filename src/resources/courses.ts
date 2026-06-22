@@ -20,6 +20,45 @@ export interface Course {
 
 export const courses: Course[] = [
     {
+        id: "finetuning-an-llm",
+        title: "Finetuning an LLM",
+        description: "A practical, production-first course on SFT, LoRA, DPO, data curation, evaluation, and safe rollout.",
+        slug: "finetuning-an-llm",
+        image: "/images/learn/finetuning-llm-cover.svg",
+        topics: [
+            {
+                title: "1. Strategy & Roadmap",
+                links: [
+                    {
+                        title: "Finetuning Roadmap: What to Tune and Why",
+                        slug: "finetuning-roadmap",
+                        postSlugs: ["finetuning-roadmap"]
+                    }
+                ]
+            },
+            {
+                title: "2. Data Curation",
+                links: [
+                    {
+                        title: "Dataset Design for Finetuning",
+                        slug: "dataset-design-for-finetuning",
+                        postSlugs: ["dataset-design-for-finetuning"]
+                    }
+                ]
+            },
+            {
+                title: "3. Training & Launch",
+                links: [
+                    {
+                        title: "Training, Evaluation, and Deployment",
+                        slug: "training-evaluation-and-deployment",
+                        postSlugs: ["training-evaluation-and-deployment"]
+                    }
+                ]
+            }
+        ]
+    },
+    {
         id: "langchain-mastery",
         title: "LangChain Mastery",
         description: "Master building LLM applications with LangChain, from basics to advanced agents and RAG.",

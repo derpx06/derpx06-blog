@@ -13,7 +13,9 @@ import {
   ToggleButton,
   Input,
   IconButton,
+  Button,
 } from "@once-ui-system/core";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 import {
   routes,
@@ -306,6 +308,11 @@ export const Header = () => {
             )}
 
             {display.time && <TimeDisplay timeZone={person.timeZone} />}
+            {/* Auth controls */}
+            <div>
+              {/* show session-aware button */}
+              <AuthControls />
+            </div>
           </Flex>
         </Flex>
       </Row >
@@ -376,3 +383,24 @@ export const Header = () => {
     </>
   );
 };
+
+function AuthControls() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <Button size="s" variant="tertiary">Loading...</Button>;
+  }
+
+  if (!session) {
+    return <Button size="s" variant="secondary" onClick={() => signIn("google")}>Sign in</Button>;
+  }
+
+  return (
+      <Row vertical="center" gap="8">
+      <Avatar src={session.user?.image || person.avatar} size="s" />
+      <Button size="s" variant="tertiary" onClick={() => signOut()}>
+        Sign out
+      </Button>
+    </Row>
+  );
+}

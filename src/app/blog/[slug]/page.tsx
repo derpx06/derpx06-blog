@@ -16,14 +16,15 @@ import {
 } from "@once-ui-system/core";
 import { baseURL, about, blog, person } from "@/resources";
 import { formatDate } from "@/utils/formatDate";
-import { getPosts } from "@/utils/utils";
+import { getPosts, getPostsHybrid } from "@/utils/utils";
 import { Metadata } from "next";
 import React from "react";
 import { Posts } from "@/components/blog/Posts";
 import { ShareSection } from "@/components/blog/ShareSection";
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const posts = getPosts(["src", "app", "blog", "posts"]);
+  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
+  const posts = useMongo === "1" || useMongo === "true" ? await getPostsHybrid(["src", "app", "blog", "posts"]) : getPosts(["src", "app", "blog", "posts"]);
   return posts.map((post) => ({
     slug: post.slug,
   }));
@@ -44,13 +45,37 @@ export async function generateMetadata({
 
   if (!post) return {};
 
-  return Meta.generate({
+  const image = post.metadata.image || `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`;
+  const path = `${blog.path}/${post.slug}`;
+  const canonicalUrl = `${baseURL}${path}`;
+
+  const baseMeta = Meta.generate({
     title: post.metadata.title,
     description: post.metadata.summary,
     baseURL: baseURL,
-    image: post.metadata.image || `/api/og/generate?title=${post.metadata.title}`,
-    path: `${blog.path}/${post.slug}`,
+    image,
+    path,
   });
+
+  return {
+    ...baseMeta,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      type: "article",
+      title: post.metadata.title,
+      description: post.metadata.summary,
+      url: canonicalUrl,
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.metadata.title,
+      description: post.metadata.summary,
+      images: [image],
+    },
+  };
 }
 
 export default async function Blog({ params }: { params: Promise<{ slug: string | string[] }> }) {
@@ -59,7 +84,14 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
     ? routeParams.slug.join("/")
     : routeParams.slug || "";
 
-  let post = getPosts(["src", "app", "blog", "posts"]).find((post) => post.slug === slugPath);
+  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
+  let post;
+  if (useMongo === "1" || useMongo === "true") {
+    const postsList = await getPostsHybrid(["src", "app", "blog", "posts"]);
+    post = postsList.find((p) => p.slug === slugPath);
+  } else {
+    post = getPosts(["src", "app", "blog", "posts"]).find((post) => post.slug === slugPath);
+  }
 
   if (!post) {
     notFound();
@@ -100,7 +132,7 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
             <Text variant="body-default-xs" onBackground="neutral-weak" marginBottom="12">
               {post.metadata.publishedAt && formatDate(post.metadata.publishedAt)}
             </Text>
-            <Heading variant="display-strong-m">{post.metadata.title}</Heading>
+            <Heading as="h1" variant="display-strong-m">{post.metadata.title}</Heading>
           </Column>
           <Row marginBottom="32" horizontal="center">
             <Row gap="16" vertical="center">

@@ -88,6 +88,7 @@ export default function Home() {
           <Text variant="label-default-m" onBackground="brand-weak">
             Software Development • AI Engineering • Mobile Apps
           </Text>
+          <h1 className="sr-only">{home.title}</h1>
           <CanvasTextDemo />
           {/* <Text variant="body-default-l" align="center" onBackground="neutral-weak" style={{ maxWidth: "56ch" }}>
             <TypingAnimation delay={800} startOnView={true}>

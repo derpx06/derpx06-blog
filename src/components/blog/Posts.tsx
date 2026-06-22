@@ -1,4 +1,4 @@
-import { getPosts } from "@/utils/utils";
+import { getPosts, getPostsHybrid } from "@/utils/utils";
 import { Grid } from "@once-ui-system/core";
 import Post from "./Post";
 
@@ -13,7 +13,7 @@ interface PostsProps {
   glowing?: boolean;
 }
 
-export function Posts({
+export async function Posts({
   range,
   columns = "1",
   thumbnail = false,
@@ -22,7 +22,8 @@ export function Posts({
   source = ["src", "app", "blog", "posts"],
   pathPrefix = "blog",
 }: PostsProps) {
-  let allBlogs = getPosts(source);
+  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
+  let allBlogs = useMongo === "1" || useMongo === "true" ? await getPostsHybrid(source) : getPosts(source);
 
   // Exclude by slug (exact match)
   if (exclude.length) {

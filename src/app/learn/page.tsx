@@ -31,7 +31,7 @@ export default function Learn() {
         }}
       />
       <Column fillWidth horizontal="center" align="center" marginBottom="l" maxWidth="s">
-        <Heading marginBottom="m" variant="heading-strong-xl" align="center">
+        <Heading as="h1" marginBottom="m" variant="heading-strong-xl" align="center">
           {learn.title}
         </Heading>
         <Text

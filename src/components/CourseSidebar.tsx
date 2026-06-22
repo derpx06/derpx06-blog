@@ -17,7 +17,7 @@ export function CourseSidebar({ course, mobileOpen = false, onClose }: CourseSid
     const pendingNavigationRef = useRef<string | null>(null);
 
     useEffect(() => {
-        if (pendingNavigationRef.current && pathname.includes(pendingNavigationRef.current)) {
+        if (pathname && pendingNavigationRef.current && pathname.includes(pendingNavigationRef.current)) {
             pendingNavigationRef.current = null;
             onClose?.();
         }

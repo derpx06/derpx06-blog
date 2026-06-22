@@ -19,6 +19,7 @@ import {
 } from "@once-ui-system/core";
 import { style, dataStyle } from "../resources";
 import { iconLibrary } from "../resources/icons";
+import { SessionProvider } from "next-auth/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -48,7 +49,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           }}
         >
           <ToastProvider>
-            <IconProvider icons={iconLibrary}>{children}</IconProvider>
+            <SessionProvider>
+              <IconProvider icons={iconLibrary}>{children}</IconProvider>
+            </SessionProvider>
           </ToastProvider>
         </DataThemeProvider>
       </ThemeProvider>

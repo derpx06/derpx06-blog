@@ -62,13 +62,39 @@ export async function generateMetadata({
 
     if (!post) return {};
 
-    return Meta.generate({
-        title: `${link.title} | ${course.title}`,
-        description: post.metadata.summary,
+    const title = `${link.title} | ${course.title}`;
+    const description = post.metadata.summary;
+    const image = post.metadata.image || `/api/og/generate?title=${encodeURIComponent(link.title)}`;
+    const path = `/learn/${courseSlug}/${lessonSlug}`;
+    const canonicalUrl = `${baseURL}${path}`;
+
+    const baseMeta = Meta.generate({
+        title,
+        description,
         baseURL: baseURL,
-        image: post.metadata.image || `/api/og/generate?title=${encodeURIComponent(link.title)}`,
-        path: `/learn/${courseSlug}/${lessonSlug}`,
+        image,
+        path,
     });
+
+    return {
+        ...baseMeta,
+        alternates: {
+            canonical: canonicalUrl,
+        },
+        openGraph: {
+            type: "article",
+            title,
+            description,
+            url: canonicalUrl,
+            images: [image],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: [image],
+        },
+    };
 }
 
 export default async function CourseLesson({
@@ -123,7 +149,7 @@ export default async function CourseLesson({
                         <Text variant="body-default-xs" onBackground="neutral-weak">
                             {course.title} • {primaryPost.metadata.publishedAt && formatDate(primaryPost.metadata.publishedAt)}
                         </Text>
-                        <Heading variant="display-strong-m">{link.title}</Heading>
+                        <Heading as="h1" variant="display-strong-m">{link.title}</Heading>
                     </Column>
 
                     <Row gap="16" vertical="center" marginBottom="24">
