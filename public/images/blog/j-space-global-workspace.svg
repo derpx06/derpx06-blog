@@ -1,0 +1,99 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="40" x2="1450" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#090A16"/>
+      <stop offset="0.52" stop-color="#17112D"/>
+      <stop offset="1" stop-color="#071A25"/>
+    </linearGradient>
+    <radialGradient id="violet" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(490 250) rotate(42) scale(510 430)">
+      <stop stop-color="#8B5CF6" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cyan" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1190 610) rotate(-145) scale(540 420)">
+      <stop stop-color="#22D3EE" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="580" y1="260" x2="1030" y2="690" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="40" fill="url(#bg)"/>
+  <rect width="1600" height="900" rx="40" fill="url(#violet)"/>
+  <rect width="1600" height="900" rx="40" fill="url(#cyan)"/>
+
+  <g opacity="0.16">
+    <path d="M0 150H1600M0 300H1600M0 450H1600M0 600H1600M0 750H1600" stroke="#C4B5FD"/>
+    <path d="M200 0V900M400 0V900M600 0V900M800 0V900M1000 0V900M1200 0V900M1400 0V900" stroke="#67E8F9"/>
+  </g>
+
+  <g opacity="0.34" stroke="#7C8AA8" stroke-width="2">
+    <path d="M180 194L362 286L542 186"/>
+    <path d="M172 650L360 578L536 690"/>
+    <path d="M1064 190L1244 284L1420 200"/>
+    <path d="M1060 694L1244 592L1426 680"/>
+    <path d="M362 286L360 578M1244 284V592"/>
+  </g>
+
+  <g fill="#11182B" stroke="#63708A" stroke-width="2">
+    <circle cx="180" cy="194" r="18"/>
+    <circle cx="362" cy="286" r="15"/>
+    <circle cx="542" cy="186" r="19"/>
+    <circle cx="172" cy="650" r="17"/>
+    <circle cx="360" cy="578" r="14"/>
+    <circle cx="536" cy="690" r="20"/>
+    <circle cx="1064" cy="190" r="19"/>
+    <circle cx="1244" cy="284" r="15"/>
+    <circle cx="1420" cy="200" r="18"/>
+    <circle cx="1060" cy="694" r="20"/>
+    <circle cx="1244" cy="592" r="14"/>
+    <circle cx="1426" cy="680" r="17"/>
+  </g>
+
+  <circle cx="800" cy="444" r="220" stroke="url(#ring)" stroke-width="3" stroke-dasharray="8 16" opacity="0.72"/>
+  <circle cx="800" cy="444" r="165" fill="#0D1122" fill-opacity="0.9" stroke="url(#ring)" stroke-width="4" filter="url(#glow)"/>
+  <circle cx="800" cy="444" r="112" fill="#16152D" stroke="#A78BFA" stroke-opacity="0.55" stroke-width="2"/>
+
+  <g filter="url(#glow)">
+    <circle cx="800" cy="444" r="9" fill="#F8FAFC"/>
+    <circle cx="744" cy="396" r="7" fill="#A78BFA"/>
+    <circle cx="866" cy="390" r="7" fill="#22D3EE"/>
+    <circle cx="856" cy="496" r="7" fill="#A78BFA"/>
+    <circle cx="730" cy="500" r="7" fill="#22D3EE"/>
+  </g>
+
+  <g stroke-width="2.5" opacity="0.86">
+    <path d="M744 396L800 444L866 390" stroke="#A78BFA"/>
+    <path d="M730 500L800 444L856 496" stroke="#22D3EE"/>
+    <path d="M744 396L730 500M866 390L856 496" stroke="#64748B"/>
+  </g>
+
+  <g stroke="url(#ring)" stroke-width="3" opacity="0.68">
+    <path d="M542 186C650 242 678 285 724 330"/>
+    <path d="M536 690C646 636 682 588 726 548"/>
+    <path d="M1064 190C958 244 924 286 878 332"/>
+    <path d="M1060 694C960 638 922 590 876 548"/>
+  </g>
+
+  <g font-family="Inter, ui-sans-serif, system-ui, sans-serif" text-anchor="middle">
+    <text x="800" y="421" fill="#DDD6FE" font-size="32" font-weight="700" letter-spacing="3">J-SPACE</text>
+    <text x="800" y="462" fill="#94A3B8" font-size="20" font-weight="500">silent concepts</text>
+    <text x="800" y="490" fill="#94A3B8" font-size="20" font-weight="500">shared reasoning</text>
+  </g>
+
+  <g font-family="Inter, ui-sans-serif, system-ui, sans-serif">
+    <text x="90" y="92" fill="#F8FAFC" font-size="46" font-weight="750">Inside Claude's J-Space</text>
+    <text x="92" y="132" fill="#A5B4FC" font-size="22" font-weight="500">Anthropic's global workspace research, explained</text>
+    <text x="1320" y="818" fill="#67E8F9" font-size="18" font-weight="650" letter-spacing="2">READ • EDIT • AUDIT</text>
+  </g>
+
+  <rect x="28" y="28" width="1544" height="844" rx="26" stroke="#E2E8F0" stroke-opacity="0.12" stroke-width="2"/>
+</svg>
