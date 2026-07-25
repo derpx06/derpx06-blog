@@ -19,8 +19,9 @@ export default function OpenGraphImage() {
           justifyContent: "space-between",
           padding: "72px 78px",
           color: "#f8fafc",
-          background:
-            "radial-gradient(circle at 18% 14%, rgba(250, 204, 21, 0.22), transparent 34%), radial-gradient(circle at 85% 78%, rgba(99, 102, 241, 0.2), transparent 38%), #070707",
+          backgroundColor: "#070707",
+          backgroundImage:
+            "radial-gradient(circle at 18% 14%, rgba(250, 204, 21, 0.22), transparent 34%), radial-gradient(circle at 85% 78%, rgba(99, 102, 241, 0.2), transparent 38%)",
           fontFamily: "Arial, sans-serif",
         }}
       >
@@ -33,7 +34,7 @@ export default function OpenGraphImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "#facc15",
+              backgroundColor: "#facc15",
               color: "#09090b",
               fontSize: 34,
               fontWeight: 800,
