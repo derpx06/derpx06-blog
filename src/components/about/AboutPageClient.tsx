@@ -79,7 +79,7 @@ export default function AboutPageClient() {
           </p>
           <div className={styles.actions}>
             <Link href="/work">Selected work <ArrowUpRight size={16} /></Link>
-            <a href="/resume/Manas Khairnar (1).pdf" target="_blank" rel="noreferrer">Resume</a>
+            <a href="/resume/Manas_Khairnar_Resume_Updated.pdf" target="_blank" rel="noreferrer">Resume</a>
           </div>
           <div className={styles.contactRow}>
             <a href="https://github.com/derpx06" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={18} /></a>
