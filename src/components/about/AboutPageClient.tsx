@@ -96,10 +96,12 @@ export default function AboutPageClient() {
           transition={{ ...transition, delay: reduced ? 0 : 0.12 }}
         >
           <Image
-            src="/images/manas-khairnar.webp"
-            alt="Portrait of Manas Khairnar"
-            width={900}
-            height={1200}
+            src="/images/manas-khairnar-final.jpg"
+            alt="Professional portrait of Manas Khairnar"
+            width={400}
+            height={500}
+            sizes="(max-width: 900px) 100vw, 42vw"
+            quality={90}
             priority
           />
           <figcaption><span /> Available for meaningful engineering work</figcaption>
