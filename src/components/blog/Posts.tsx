@@ -11,6 +11,7 @@ interface PostsProps {
   pathPrefix?: string;
   source?: string[];
   glowing?: boolean;
+  variant?: "default" | "home";
 }
 
 export async function Posts({
@@ -21,11 +22,11 @@ export async function Posts({
   direction,
   source = ["src", "app", "blog", "posts"],
   pathPrefix = "blog",
+  variant = "default",
 }: PostsProps) {
   const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
   let allBlogs = useMongo === "1" || useMongo === "true" ? await getPostsHybrid(source) : getPosts(source);
 
-  // Exclude by slug (exact match)
   if (exclude.length) {
     allBlogs = allBlogs.filter((post) => !exclude.includes(post.slug));
   }
@@ -41,7 +42,14 @@ export async function Posts({
   return (
     <>
       {displayedBlogs.length > 0 && (
-        <Grid columns={columns} s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
+        <Grid
+          className={variant === "home" ? "home-post-grid" : undefined}
+          columns={columns}
+          s={{ columns: 1 }}
+          fillWidth
+          marginBottom={variant === "home" ? undefined : "40"}
+          gap={variant === "home" ? "20" : "16"}
+        >
           {displayedBlogs.map((post) => (
             <Post
               key={post.slug}
@@ -49,6 +57,7 @@ export async function Posts({
               thumbnail={thumbnail}
               direction={direction}
               pathPrefix={pathPrefix}
+              variant={variant}
             />
           ))}
         </Grid>

@@ -1,67 +1,87 @@
-import {
-  Heading,
-  Text,
-  Button,
-  Avatar,
-  RevealFx,
-  Column,
-  Row,
-  Schema,
-  Meta,
-  Grid,
-} from "@once-ui-system/core";
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowUpRight, Code2, Smartphone, Server } from "lucide-react";
+import { RevealFx, Schema, Meta } from "@once-ui-system/core";
 import { home, about, person, baseURL, routes } from "@/resources";
-import { Mailchimp, SeeAllButton } from "@/components";
+import { Mailchimp } from "@/components";
 import { Posts } from "@/components/blog/Posts";
 import Post from "@/components/blog/Post";
 import { courses } from "@/resources/courses";
-import { CanvasTextDemo } from "@/components/ui/canvas-text-demo";
-import { HeroTyping } from "@/components/ui/hero-typing";
-import { TypingAnimation } from "@/components/ui/typing-animation";
+import styles from "./home.module.scss";
 
 export async function generateMetadata() {
   return Meta.generate({
     title: home.title,
     description: home.description,
-    baseURL: baseURL,
+    baseURL,
     path: home.path,
     image: home.image,
   });
 }
 
-type SectionProps = {
+const stats = [
+  ["210K+", "People reached"],
+  ["4×", "Hackathon winner"],
+  ["2", "Production mobile apps"],
+  ["3", "Core engineering domains"],
+];
+
+const domains = [
+  {
+    title: "Mobile products",
+    copy: "React Native applications designed for real operational workflows.",
+    index: "01",
+    icon: Smartphone,
+  },
+  {
+    title: "Backend systems",
+    copy: "Reliable APIs, data models, integrations, and production services.",
+    index: "02",
+    icon: Server,
+  },
+  {
+    title: "AI engineering",
+    copy: "Agentic workflows, retrieval systems, memory, and evaluation loops.",
+    index: "03",
+    icon: Code2,
+  },
+];
+
+type HomeSectionProps = {
+  index: string;
+  eyebrow: string;
   title: string;
+  copy: string;
   href: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
-function HomeSection({ title, href, children }: SectionProps) {
+function HomeSection({ index, eyebrow, title, copy, href, children }: HomeSectionProps) {
   return (
     <RevealFx translateY="8" fillWidth>
-      <Column
-        fillWidth
-        background="surface"
-        border="neutral-alpha-weak"
-        radius="l"
-        paddingX="20"
-        paddingY="20"
-        gap="20"
-      >
-        <Row fillWidth horizontal="between" vertical="center" paddingX="4">
-          <Heading as="h2" variant="display-strong-xs" wrap="balance">
-            {title}
-          </Heading>
-          <SeeAllButton href={href} />
-        </Row>
-        <Column fillWidth>{children}</Column>
-      </Column>
+      <section className={styles.section}>
+        <header className={styles.sectionHeader}>
+          <p className={styles.sectionIndex}>{index}</p>
+          <div>
+            <p className={styles.kicker}>{eyebrow}</p>
+            <h2>{title}</h2>
+            <p>{copy}</p>
+          </div>
+          <Link className={styles.sectionLink} href={href}>
+            View all <ArrowUpRight size={15} />
+          </Link>
+        </header>
+        {children}
+      </section>
     </RevealFx>
   );
 }
 
 export default function Home() {
   return (
-    <Column maxWidth="m" gap="xl" paddingY="16" horizontal="center">
+    <main className={styles.page}>
+      <div className={styles.ambient} aria-hidden="true" />
+
       <Schema
         as="webPage"
         baseURL={baseURL}
@@ -76,109 +96,159 @@ export default function Home() {
         }}
       />
 
+      <section className={styles.hero}>
+        <RevealFx translateY="8" fillWidth>
+          <div className={styles.heroCopy}>
+            <p className={styles.kicker}>Software engineer · Pune, India</p>
+            <h1>
+              I build useful software from <span>idea to production.</span>
+            </h1>
+            <p className={styles.heroLead}>
+              Production mobile products, dependable backend systems, and practical AI agents—built with ownership,
+              clarity, and attention to the details people actually feel.
+            </p>
+
+            <div className={styles.heroActions}>
+              {routes["/learn"] && (
+                <Link className={styles.primaryAction} href="/learn">
+                  Explore my work <ArrowUpRight size={16} />
+                </Link>
+              )}
+              <Link className={styles.secondaryAction} href={about.path}>
+                About me
+              </Link>
+            </div>
+
+            <div className={styles.heroNote}>
+              <span className={styles.statusDot} />
+              Available for meaningful engineering work and ambitious collaborations.
+            </div>
+          </div>
+        </RevealFx>
+
+        <RevealFx translateY="8" fillWidth>
+          <aside className={styles.heroPanel} aria-label="Engineering focus">
+            <div className={styles.panelTop}>
+              <p className={styles.panelLabel}>What I build</p>
+              <span>2026</span>
+            </div>
+
+            <div className={styles.domainList}>
+              {domains.map(({ title, copy, index, icon: Icon }) => (
+                <div className={styles.domainItem} key={title}>
+                  <span className={styles.domainIcon}>
+                    <Icon size={19} />
+                  </span>
+                  <div>
+                    <strong>{title}</strong>
+                    <p>{copy}</p>
+                  </div>
+                  <span>{index}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className={styles.panelFooter}>
+              Currently focused on production application architecture, agent reliability, and software that remains
+              maintainable as it grows.
+            </p>
+          </aside>
+        </RevealFx>
+      </section>
+
       <RevealFx translateY="8" fillWidth>
-        <Column
-          fillWidth
-          horizontal="center"
-          align="center"
-          gap="12"
-          paddingY="20"
-          paddingX="8"
-        >
-          <Text variant="label-default-m" onBackground="brand-weak">
-            Software Development • AI Engineering • Mobile Apps
-          </Text>
-          <h1 className="sr-only">{home.title}</h1>
-          <CanvasTextDemo />
-          {/* <Text variant="body-default-l" align="center" onBackground="neutral-weak" style={{ maxWidth: "56ch" }}>
-            <TypingAnimation delay={800} startOnView={true}>
-              {home.subline as string}
-            </TypingAnimation>
-          </Text> */}
-          <HeroTyping className="text-4xl font-bold" />
-          <Row gap="12" s={{ direction: "column" }}>
-            <Button
-              id="about"
-              data-border="rounded"
-              href={about.path}
-              variant="secondary"
-              size="m"
-              weight="default"
-              arrowIcon
-            >
-              <Row gap="8" vertical="center" paddingRight="4">
-                {about.avatar.display && (
-                  <Avatar
-                    marginRight="8"
-                    style={{ marginLeft: "-0.75rem" }}
-                    src={person.avatar}
-                    size="m"
-                  />
-                )}
-                {about.title}
-              </Row>
-            </Button>
-            {routes["/learn"] && (
-              <Button href="/learn" variant="primary" size="m" arrowIcon>
-                Explore
-              </Button>
-            )}
-          </Row>
-        </Column>
+        <section className={styles.stats} aria-label="Career highlights">
+          {stats.map(([value, label]) => (
+            <article className={styles.stat} key={label}>
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </article>
+          ))}
+        </section>
       </RevealFx>
 
       {routes["/learn"] && (
-        <HomeSection title="Latest Courses" href="/learn">
-          <Row flex={3} paddingX="8">
-            <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
-              {courses.slice(0, 4).map((course) => (
-                <Post
-                  key={course.id}
-                  post={{
-                    slug: course.slug,
-                    metadata: {
-                      title: course.title,
-                      summary: course.description,
-                      image: course.image,
-                      publishedAt: "2024-01-01",
-                    },
-                    content: "",
-                  }}
-                  thumbnail
-                  pathPrefix="learn"
-                  direction="column"
-                />
-              ))}
-            </Grid>
-          </Row>
+        <HomeSection
+          index="01"
+          eyebrow="Latest courses"
+          title="Practical learning built around real systems."
+          copy="Focused lessons for developers who want to understand the architecture, trade-offs, and implementation—not only copy code."
+          href="/learn"
+        >
+          <div className={styles.courseGrid}>
+            {courses.slice(0, 4).map((course) => (
+              <Post
+                key={course.id}
+                post={{
+                  slug: course.slug,
+                  metadata: {
+                    title: course.title,
+                    summary: course.description,
+                    image: course.image,
+                    publishedAt: "2024-01-01",
+                  },
+                  content: "",
+                }}
+                thumbnail
+                pathPrefix="learn"
+                direction="column"
+                variant="home"
+              />
+            ))}
+          </div>
         </HomeSection>
       )}
+
       {routes["/explainers"] && (
-        <HomeSection title="Latest Explainers" href="/explainers">
-          <Row flex={3} paddingX="8">
-            <Posts
-              range={[1, 4]}
-              columns="2"
-              thumbnail
-              direction="column"
-              glowing
-              source={["src", "app", "explainers", "posts"]}
-              pathPrefix="explainers"
-            />
-          </Row>
+        <HomeSection
+          index="02"
+          eyebrow="Selected explainers"
+          title="Complex engineering ideas, made understandable."
+          copy="Visual, first-principles explanations of AI systems, infrastructure, research, and the decisions behind modern software."
+          href="/explainers"
+        >
+          <Posts
+            range={[1, 4]}
+            columns="2"
+            thumbnail
+            direction="column"
+            source={["src", "app", "explainers", "posts"]}
+            pathPrefix="explainers"
+            variant="home"
+          />
         </HomeSection>
       )}
+
       {routes["/blog"] && (
-        <HomeSection title="Latest From The Blog" href="/blog">
-          <Row flex={3} paddingX="8">
-            <Posts range={[1, 6]} columns="3" thumbnail direction="column" />
-          </Row>
+        <HomeSection
+          index="03"
+          eyebrow="Recent writing"
+          title="Notes from building, researching, and experimenting."
+          copy="Engineering observations, research breakdowns, practical guides, and lessons collected while turning ideas into working products."
+          href="/blog"
+        >
+          <Posts range={[1, 6]} columns="3" thumbnail direction="column" variant="home" />
         </HomeSection>
       )}
 
-      <Mailchimp />
-
-    </Column>
-
+      <RevealFx translateY="8" fillWidth>
+        <section className={styles.finalCta}>
+          <div>
+            <p className={styles.sectionIndex}>Stay curious</p>
+            <h2>Useful engineering ideas, without the noise.</h2>
+            <p>
+              Follow new explainers, practical courses, and notes about mobile, backend, and AI systems as they are
+              published.
+            </p>
+            <Link href={about.path}>
+              More about me <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <div className={styles.newsletter}>
+            <Mailchimp />
+          </div>
+        </section>
+      </RevealFx>
+    </main>
   );
 }
