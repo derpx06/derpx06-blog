@@ -1,15 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
+import type { PointerEvent } from "react";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from "motion/react";
 import {
   ArrowDown,
   ArrowUpRight,
+  Code2,
   Github,
   Linkedin,
   Mail,
   MapPin,
+  Server,
+  Smartphone,
 } from "lucide-react";
 import styles from "./about-page.module.scss";
 
@@ -18,6 +27,27 @@ const stats = [
   ["4×", "Hackathon winner"],
   ["2", "Production mobile apps"],
   ["3", "Core engineering domains"],
+];
+
+const capabilities = [
+  {
+    number: "01",
+    title: "Mobile products",
+    copy: "React Native applications designed for real operational workflows.",
+    icon: Smartphone,
+  },
+  {
+    number: "02",
+    title: "Backend systems",
+    copy: "Reliable APIs, data models, integrations, and production services.",
+    icon: Server,
+  },
+  {
+    number: "03",
+    title: "AI engineering",
+    copy: "Agentic workflows, retrieval systems, memory, and evaluation loops.",
+    icon: Code2,
+  },
 ];
 
 const experience = [
@@ -36,10 +66,30 @@ const experience = [
 ];
 
 const projects = [
-  ["The Interview Room", "Community platform for company-specific interview experiences that reached more than 210,000 unique visitors.", "210K+ visitors"],
-  ["WebGenie", "Local-first browser automation agent with planner, navigator, validator loops, compressed DOM context, and persistent task state.", "TypeScript · React · Agents"],
-  ["Outreach AI", "Multi-agent outreach platform with research, profiling, RAG, memory, streaming, speech, and critic-based quality checks.", "Python · FastAPI · LangGraph"],
-  ["AssistFlow AI", "API-first support platform with crawling, vector search, human handoff, ticketing, and embeddable chat widgets.", "Node.js · MongoDB · RAG"],
+  {
+    name: "The Interview Room",
+    copy: "Community platform for company-specific interview experiences that reached more than 210,000 unique visitors.",
+    meta: "210K+ visitors",
+    href: "https://www.theinterviewroom.in/",
+  },
+  {
+    name: "WebGenie",
+    copy: "Local-first browser automation agent with planner, navigator, validator loops, compressed DOM context, and persistent task state.",
+    meta: "TypeScript · React · Agents",
+    href: "https://github.com/derpx06/webgenie",
+  },
+  {
+    name: "Outreach AI",
+    copy: "Multi-agent outreach platform with research, profiling, RAG, memory, streaming, speech, and critic-based quality checks.",
+    meta: "Python · FastAPI · LangGraph",
+    href: "https://github.com/derpx06/Outreach_bot",
+  },
+  {
+    name: "AssistFlow AI",
+    copy: "API-first support platform with crawling, vector search, human handoff, ticketing, and embeddable chat widgets.",
+    meta: "Node.js · MongoDB · RAG",
+    href: "https://github.com/derpx06/AssistFlow-Ai",
+  },
 ];
 
 const skills = [
@@ -49,17 +99,52 @@ const skills = [
   ["Infrastructure", "Docker, Kubernetes, Terraform, GitHub Actions, AWS, GCP, Linux"],
 ];
 
-const fade = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const fade = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export default function AboutPageClient() {
   const reduced = useReducedMotion();
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const smoothX = useSpring(pointerX, { stiffness: 90, damping: 22, mass: 0.45 });
+  const smoothY = useSpring(pointerY, { stiffness: 90, damping: 22, mass: 0.45 });
+  const portraitX = useTransform(smoothX, [-1, 1], [-8, 8]);
+  const portraitY = useTransform(smoothY, [-1, 1], [-5, 5]);
+  const glowX = useTransform(smoothX, [-1, 1], [-18, 18]);
+  const glowY = useTransform(smoothY, [-1, 1], [-12, 12]);
+
   const transition = reduced
     ? { duration: 0 }
     : { duration: 0.65, ease: [0.22, 1, 0.36, 1] as const };
 
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (reduced || event.pointerType === "touch") return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    pointerX.set(((event.clientX - rect.left) / rect.width) * 2 - 1);
+    pointerY.set(((event.clientY - rect.top) / rect.height) * 2 - 1);
+  };
+
+  const resetPointer = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
+
   return (
     <main className={styles.page}>
-      <section className={styles.hero}>
+      <section
+        className={styles.hero}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={resetPointer}
+      >
+        <motion.div
+          className={styles.heroGlow}
+          aria-hidden="true"
+          style={reduced ? undefined : { x: glowX, y: glowY }}
+        />
+
         <motion.div
           className={styles.heroCopy}
           initial="hidden"
@@ -67,45 +152,123 @@ export default function AboutPageClient() {
           variants={fade}
           transition={transition}
         >
-          <p className={styles.kicker}>Software engineer · Pune, India</p>
+          <p className={styles.kicker}>Manas Khairnar · Software engineer · Pune, India</p>
           <h1>
-            Manas
+            I build useful
             <br />
-            Khairnar<span>.</span>
+            software from
+            <br />
+            <span>idea to production.</span>
           </h1>
           <p className={styles.role}>
-            I build production mobile products, dependable backend systems,
-            and practical AI agents.
+            Production mobile products, dependable backend systems, and practical
+            AI agents—built with ownership, clarity, and attention to the details
+            people actually feel.
           </p>
           <div className={styles.actions}>
-            <Link href="/work">Selected work <ArrowUpRight size={16} /></Link>
-            <a href="/resume/Manas_Khairnar_Resume_Updated.pdf" target="_blank" rel="noreferrer">Resume</a>
+            <a href="#selected-work">
+              Explore my work <ArrowDown size={16} />
+            </a>
+            <a
+              href="/resume/Manas_Khairnar_Resume_Updated.pdf"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Resume <ArrowUpRight size={15} />
+            </a>
           </div>
-          <div className={styles.contactRow}>
-            <a href="https://github.com/derpx06" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={18} /></a>
-            <a href="https://www.linkedin.com/in/manas-khairnar-98329132b/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={18} /></a>
-            <a href="mailto:manaskhairnar1511@gmail.com" aria-label="Email"><Mail size={18} /></a>
+          <p className={styles.availability}>
+            <span /> Available for meaningful engineering work and ambitious collaborations.
+          </p>
+          <div className={styles.contactRow} aria-label="Contact links">
+            <a
+              href="https://github.com/derpx06"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Open Manas Khairnar's GitHub profile"
+              title="GitHub"
+            >
+              <Github size={18} />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/manas-khairnar-98329132b/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Open Manas Khairnar's LinkedIn profile"
+              title="LinkedIn"
+            >
+              <Linkedin size={18} />
+            </a>
+            <a
+              href="mailto:manaskhairnar1511@gmail.com"
+              aria-label="Email Manas Khairnar"
+              title="Email"
+            >
+              <Mail size={18} />
+            </a>
             <span><MapPin size={14} /> Pune, India</span>
           </div>
         </motion.div>
 
-        <motion.figure
-          className={styles.portrait}
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <motion.div
+          className={styles.heroVisual}
+          initial={{ opacity: 0, x: 26 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ ...transition, delay: reduced ? 0 : 0.12 }}
         >
-          <Image
-            src="/images/manas-khairnar-final.jpg"
-            alt="Professional portrait of Manas Khairnar"
-            width={400}
-            height={500}
-            sizes="(max-width: 900px) 100vw, 42vw"
-            quality={90}
-            priority
-          />
-          <figcaption><span /> Available for meaningful engineering work</figcaption>
-        </motion.figure>
+          <motion.div
+            className={styles.portraitBlend}
+            style={reduced ? undefined : { x: portraitX, y: portraitY }}
+          >
+            <Image
+              src="/images/manas-khairnar-final.jpg"
+              alt="Professional portrait of Manas Khairnar"
+              width={400}
+              height={500}
+              sizes="(max-width: 900px) 86vw, 42vw"
+              quality={92}
+              priority
+            />
+          </motion.div>
+
+          <div className={styles.visualGrid} aria-hidden="true" />
+
+          <div className={styles.capabilityPanel}>
+            <div className={styles.capabilityHeading}>
+              <span>What I build</span>
+              <time>2026</time>
+            </div>
+            <div className={styles.capabilityList}>
+              {capabilities.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <motion.article
+                    key={item.title}
+                    initial="hidden"
+                    animate="visible"
+                    variants={fade}
+                    transition={{
+                      ...transition,
+                      delay: reduced ? 0 : 0.2 + index * 0.08,
+                    }}
+                    whileHover={reduced ? undefined : { x: 5 }}
+                  >
+                    <div className={styles.capabilityIcon}><Icon size={19} /></div>
+                    <div>
+                      <h2>{item.title}</h2>
+                      <p>{item.copy}</p>
+                    </div>
+                    <span>{item.number}</span>
+                  </motion.article>
+                );
+              })}
+            </div>
+            <p className={styles.capabilityNote}>
+              Currently focused on production application architecture, agent
+              reliability, and software that remains maintainable as it grows.
+            </p>
+          </div>
+        </motion.div>
 
         <a className={styles.scrollCue} href="#about" aria-label="Scroll to About section">
           Scroll <ArrowDown size={14} />
@@ -155,15 +318,32 @@ export default function AboutPageClient() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={styles.section} id="selected-work">
         <header><p className={styles.sectionLabel}>03 / Selected work</p><h2>Projects that show how I think and build.</h2></header>
         <div className={styles.projects}>
-          {projects.map(([name, copy, meta], index) => (
-            <motion.article key={name} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} transition={{ ...transition, delay: reduced ? 0 : index * 0.06 }} whileHover={reduced ? undefined : { y: -4 }}>
+          {projects.map((project, index) => (
+            <motion.a
+              key={project.name}
+              className={styles.projectCard}
+              href={project.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open ${project.name}`}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fade}
+              transition={{ ...transition, delay: reduced ? 0 : index * 0.06 }}
+              whileHover={reduced ? undefined : { y: -4 }}
+            >
               <span>{String(index + 1).padStart(2, "0")}</span>
-              <h3>{name}</h3><p>{copy}</p>
-              <footer><small>{meta}</small><Link href="/work" aria-label={`View ${name}`}><ArrowUpRight size={17} /></Link></footer>
-            </motion.article>
+              <h3>{project.name}</h3>
+              <p>{project.copy}</p>
+              <footer>
+                <small>{project.meta}</small>
+                <span>Open project <ArrowUpRight size={17} /></span>
+              </footer>
+            </motion.a>
           ))}
         </div>
       </section>
