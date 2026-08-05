@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Code2, Smartphone, Server } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { RevealFx, Schema, Meta } from "@once-ui-system/core";
 import { home, about, person, baseURL, routes } from "@/resources";
 import { Mailchimp } from "@/components";
@@ -24,27 +24,6 @@ const stats = [
   ["4×", "Hackathon winner"],
   ["2", "Production mobile apps"],
   ["3", "Core engineering domains"],
-];
-
-const domains = [
-  {
-    title: "Mobile products",
-    copy: "React Native applications designed for real operational workflows.",
-    index: "01",
-    icon: Smartphone,
-  },
-  {
-    title: "Backend systems",
-    copy: "Reliable APIs, data models, integrations, and production services.",
-    index: "02",
-    icon: Server,
-  },
-  {
-    title: "AI engineering",
-    copy: "Agentic workflows, retrieval systems, memory, and evaluation loops.",
-    index: "03",
-    icon: Code2,
-  },
 ];
 
 type HomeSectionProps = {
@@ -124,35 +103,6 @@ export default function Home() {
               Available for meaningful engineering work and ambitious collaborations.
             </div>
           </div>
-        </RevealFx>
-
-        <RevealFx translateY="8" fillWidth>
-          <aside className={styles.heroPanel} aria-label="Engineering focus">
-            <div className={styles.panelTop}>
-              <p className={styles.panelLabel}>What I build</p>
-              <span>2026</span>
-            </div>
-
-            <div className={styles.domainList}>
-              {domains.map(({ title, copy, index, icon: Icon }) => (
-                <div className={styles.domainItem} key={title}>
-                  <span className={styles.domainIcon}>
-                    <Icon size={19} />
-                  </span>
-                  <div>
-                    <strong>{title}</strong>
-                    <p>{copy}</p>
-                  </div>
-                  <span>{index}</span>
-                </div>
-              ))}
-            </div>
-
-            <p className={styles.panelFooter}>
-              Currently focused on production application architecture, agent reliability, and software that remains
-              maintainable as it grows.
-            </p>
-          </aside>
         </RevealFx>
       </section>
 
