@@ -17,12 +17,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  opacity: 0.14;
+  opacity: 0.08;
   background-image:
     linear-gradient(var(--neutral-alpha-weak) 1px, transparent 1px),
     linear-gradient(90deg, var(--neutral-alpha-weak) 1px, transparent 1px);
   background-size: 52px 52px;
-  mask-image: linear-gradient(to bottom, black, transparent 44%);
+  mask-image: linear-gradient(to bottom, black, transparent 38%);
 }
 
 .hero {
@@ -226,7 +226,7 @@
   align-items: center;
   margin-bottom: 44px;
   padding: clamp(34px, 6vw, 68px);
-  border: 1px solid var(--brand-alpha-medium);
+  border: 1px solid var(--neutral-alpha-medium);
   border-radius: 28px;
   background: var(--neutral-alpha-weak);
 }
