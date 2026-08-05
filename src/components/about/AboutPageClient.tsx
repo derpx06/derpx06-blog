@@ -12,13 +12,10 @@ import {
 import {
   ArrowDown,
   ArrowUpRight,
-  Code2,
   Github,
   Linkedin,
   Mail,
   MapPin,
-  Server,
-  Smartphone,
 } from "lucide-react";
 import styles from "./about-page.module.scss";
 
@@ -27,27 +24,6 @@ const stats = [
   ["4×", "Hackathon winner"],
   ["2", "Production mobile apps"],
   ["3", "Core engineering domains"],
-];
-
-const capabilities = [
-  {
-    number: "01",
-    title: "Mobile products",
-    copy: "React Native applications designed for real operational workflows.",
-    icon: Smartphone,
-  },
-  {
-    number: "02",
-    title: "Backend systems",
-    copy: "Reliable APIs, data models, integrations, and production services.",
-    icon: Server,
-  },
-  {
-    number: "03",
-    title: "AI engineering",
-    copy: "Agentic workflows, retrieval systems, memory, and evaluation loops.",
-    icon: Code2,
-  },
 ];
 
 const experience = [
@@ -215,6 +191,7 @@ export default function AboutPageClient() {
           initial={{ opacity: 0, x: 26 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ ...transition, delay: reduced ? 0 : 0.12 }}
+          aria-label="Portrait of Manas Khairnar"
         >
           <motion.div
             className={styles.portraitBlend}
@@ -232,42 +209,6 @@ export default function AboutPageClient() {
           </motion.div>
 
           <div className={styles.visualGrid} aria-hidden="true" />
-
-          <div className={styles.capabilityPanel}>
-            <div className={styles.capabilityHeading}>
-              <span>What I build</span>
-              <time>2026</time>
-            </div>
-            <div className={styles.capabilityList}>
-              {capabilities.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <motion.article
-                    key={item.title}
-                    initial="hidden"
-                    animate="visible"
-                    variants={fade}
-                    transition={{
-                      ...transition,
-                      delay: reduced ? 0 : 0.2 + index * 0.08,
-                    }}
-                    whileHover={reduced ? undefined : { x: 5 }}
-                  >
-                    <div className={styles.capabilityIcon}><Icon size={19} /></div>
-                    <div>
-                      <h2>{item.title}</h2>
-                      <p>{item.copy}</p>
-                    </div>
-                    <span>{item.number}</span>
-                  </motion.article>
-                );
-              })}
-            </div>
-            <p className={styles.capabilityNote}>
-              Currently focused on production application architecture, agent
-              reliability, and software that remains maintainable as it grows.
-            </p>
-          </div>
         </motion.div>
 
         <a className={styles.scrollCue} href="#about" aria-label="Scroll to About section">
