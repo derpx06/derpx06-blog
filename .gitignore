@@ -11,3 +11,6 @@
 
 # Editor image uploads
 /public/uploads
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
