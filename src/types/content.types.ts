@@ -146,6 +146,8 @@ export interface About extends BasePageConfig {
     experiences: Array<{
       /** Company name */
       company: string;
+      /** Optional link to the company or the product shipped there */
+      link?: string;
       /** Timeframe of employment */
       timeframe: string;
       /** Role or job title */
@@ -238,3 +240,41 @@ export interface Gallery extends BasePageConfig {
     orientation: string;
   }>;
 }
+
+export type ContentSection = "blog" | "learn" | "explainers" | "work";
+
+export type ContentStatus = "draft" | "published" | "archived";
+
+export type ContentTeamMember = {
+  name: string;
+  role: string;
+  avatar: string;
+  linkedIn: string;
+};
+
+export type ContentMetadata = {
+  title: string;
+  publishedAt: string;
+  summary: string;
+  image: string;
+  images: string[];
+  tag: string;
+  topics: string[];
+  team: ContentTeamMember[];
+  link: string;
+};
+
+export type ContentSource = {
+  type: "mongodb" | "mdx";
+  path?: string;
+};
+
+export type ContentRecord = {
+  slug: string;
+  metadata: ContentMetadata;
+  content: string;
+  section: ContentSection;
+  status: ContentStatus;
+  updatedAt?: string;
+  source: ContentSource;
+};

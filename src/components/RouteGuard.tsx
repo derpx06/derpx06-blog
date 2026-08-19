@@ -1,67 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { routes, protectedRoutes } from "@/resources";
-import { Flex, Spinner, Button, Heading, Column, PasswordInput } from "@once-ui-system/core";
+import { useEffect, useState } from "react";
 import NotFound from "@/app/not-found";
+import { protectedRoutes, routes } from "@/resources";
 
-interface RouteGuardProps {
-  children: React.ReactNode;
+/**
+ * `routes` switches whole sections off; anything it does not mention — /saved,
+ * /signin, the editor — is a real page. The decision is pure config, so it is
+ * made during render: every public page ships its real HTML, and only the
+ * password-protected ones wait on a network check.
+ */
+function isRouteEnabled(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname in routes) return routes[pathname as keyof typeof routes];
+
+  for (const [route, enabled] of Object.entries(routes)) {
+    if (route !== "/" && pathname.startsWith(`${route}/`) && !enabled) return false;
+  }
+  return true;
 }
 
-const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
+const RouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
-  const [isRouteEnabled, setIsRouteEnabled] = useState(false);
-  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+  const enabled = isRouteEnabled(pathname);
+  const needsPassword = Boolean(protectedRoutes[pathname as keyof typeof protectedRoutes]);
+
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(needsPassword);
   const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
-    const performChecks = async () => {
-      setLoading(true);
-      setIsRouteEnabled(false);
-      setIsPasswordRequired(false);
-      setIsAuthenticated(false);
+    if (!needsPassword) {
+      setChecking(false);
+      return;
+    }
 
-      const checkRouteEnabled = () => {
-        if (!pathname) return false;
+    let cancelled = false;
+    setChecking(true);
+    setAuthenticated(false);
 
-        if (pathname in routes) {
-          return routes[pathname as keyof typeof routes];
-        }
+    fetch("/api/check-auth")
+      .then((response) => {
+        if (!cancelled) setAuthenticated(response.ok);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setChecking(false);
+      });
 
-        const dynamicRoutes = ["/blog", "/work", "/learn", "/explainers"] as const;
-        for (const route of dynamicRoutes) {
-          if (pathname?.startsWith(route) && routes[route]) {
-            return true;
-          }
-        }
-
-        return false;
-      };
-
-      const routeEnabled = checkRouteEnabled();
-      setIsRouteEnabled(routeEnabled);
-
-      if (protectedRoutes[pathname as keyof typeof protectedRoutes]) {
-        setIsPasswordRequired(true);
-
-        const response = await fetch("/api/check-auth");
-        if (response.ok) {
-          setIsAuthenticated(true);
-        }
-      }
-
-      setLoading(false);
+    return () => {
+      cancelled = true;
     };
+  }, [needsPassword, pathname]);
 
-    performChecks();
-  }, [pathname]);
-
-  const handlePasswordSubmit = async () => {
+  const submitPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
     const response = await fetch("/api/authenticate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -69,42 +64,51 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     });
 
     if (response.ok) {
-      setIsAuthenticated(true);
+      setAuthenticated(true);
       setError(undefined);
     } else {
       setError("Incorrect password");
     }
   };
 
-  if (loading) {
+  if (!enabled) return <NotFound />;
+
+  if (needsPassword && checking) {
     return (
-      <Flex fillWidth paddingY="128" horizontal="center">
-        <Spinner />
-      </Flex>
+      <div style={{ padding: "128px var(--gut)", textAlign: "center" }}>
+        <span className="ds-meta">Checking access…</span>
+      </div>
     );
   }
 
-  if (!isRouteEnabled) {
-    return <NotFound />;
-  }
-
-  if (isPasswordRequired && !isAuthenticated) {
+  if (needsPassword && !authenticated) {
     return (
-      <Column paddingY="128" maxWidth={24} gap="24" center>
-        <Heading align="center" wrap="balance">
+      <main id="main" style={{ padding: "96px var(--gut) 120px", maxWidth: "44ch" }}>
+        <h1 className="ds-t-page" style={{ marginBottom: 20 }}>
           This page is password protected
-        </Heading>
-        <Column fillWidth gap="8" horizontal="center">
-          <PasswordInput
-            id="password"
-            label="Password"
+        </h1>
+        <form className="ds-stack" style={{ gap: 10 }} onSubmit={submitPassword}>
+          <label className="ds-kickq" htmlFor="page-password">
+            Password
+          </label>
+          <input
+            id="page-password"
+            className="ds-field"
+            type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            errorMessage={error}
+            onChange={(event) => setPassword(event.target.value)}
+            style={{ flex: "none" }}
           />
-          <Button onClick={handlePasswordSubmit}>Submit</Button>
-        </Column>
-      </Column>
+          {error && (
+            <span className="ds-meta ds-meta-s" style={{ color: "var(--acc)" }} role="alert">
+              {error}
+            </span>
+          )}
+          <button type="submit" className="ds-box ds-dark">
+            Submit
+          </button>
+        </form>
+      </main>
     );
   }
 

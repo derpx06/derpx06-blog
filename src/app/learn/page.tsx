@@ -1,77 +1,95 @@
-import { Column, Heading, Meta, Schema, Grid, Text } from "@once-ui-system/core";
-import { Mailchimp } from "@/components";
-import Post from "@/components/blog/Post";
-import { baseURL, person, learn } from "@/resources";
-import { courses } from "@/resources/courses";
+import Image from "next/image";
+import Link from "next/link";
+import type { Metadata } from "next";
 
-export async function generateMetadata() {
-  return Meta.generate({
+import { JsonLd } from "@/components/site/JsonLd";
+import { Masthead } from "@/components/site/Masthead";
+import { RailBand } from "@/components/site/RailBand";
+import { resolveImage } from "@/lib/images";
+import { generateMeta } from "@/lib/metadata";
+import { getCourses } from "@/lib/course-repository";
+import { courseLessonCount, toRailCourses } from "@/lib/site-data";
+import { baseURL, learn, person } from "@/resources";
+
+export const revalidate = 300;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return generateMeta({
     title: learn.title,
     description: learn.description,
-    baseURL: baseURL,
-    image: `/api/og/generate?title=${encodeURIComponent(learn.title)}`,
+    baseURL,
     path: learn.path,
   });
 }
 
-export default function Learn() {
+export default async function Learn() {
+  const courses = await getCourses();
+  const railCourses = toRailCourses(courses);
+
   return (
-    <Column maxWidth="m" paddingTop="24" paddingX="16" horizontal="center">
-      <Schema
-        as="blogPosting"
+    <main id="main">
+      <JsonLd
+        as="webPage"
         baseURL={baseURL}
+        path={learn.path}
         title={learn.title}
         description={learn.description}
-        path={learn.path}
-        image={`/api/og/generate?title=${encodeURIComponent(learn.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}/learn`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        author={{ name: person.name, url: `${baseURL}/learn`, image: person.avatar }}
       />
-      <Column fillWidth horizontal="center" align="center" marginBottom="l" maxWidth="s">
-        <Heading as="h1" marginBottom="m" variant="heading-strong-xl" align="center">
-          {learn.title}
-        </Heading>
-        <Text
-          variant="body-default-l"
-          onBackground="neutral-weak"
-          align="center"
-          wrap="balance"
-        >
-          {learn.description}
-        </Text>
-      </Column>
-      <Column fillWidth flex={1} gap="40">
-        <Grid
-          columns="2"
-          s={{ columns: 1 }}
-          m={{ columns: 1 }}
-          fillWidth
-          gap="16"
-        >
-          {courses.map((course) => (
-            <Post
+
+      <Masthead current="learn" />
+
+      <div style={{ padding: "38px var(--gut) 26px" }}>
+        <h1 className="ds-t-page" style={{ marginBottom: 14 }}>
+          Learn
+        </h1>
+        <p className="ds-dek" style={{ maxWidth: "56ch" }}>
+          {courses.length} {courses.length === 1 ? "course" : "courses"}, each a sequence of short
+          lessons you can work through in order. Free, no video, no sign-up needed to read.
+        </p>
+      </div>
+
+      <div className="ds-stack" style={{ padding: "0 var(--gut) 44px" }}>
+        {courses.map((course, index) => {
+          const lessons = courseLessonCount(course);
+          const cover = resolveImage(course.image);
+          return (
+            <article
               key={course.id}
-              post={{
-                slug: course.slug,
-                metadata: {
-                  title: course.title,
-                  summary: course.description,
-                  image: course.image,
-                  publishedAt: "2024-01-01",
-                },
-                content: "",
+              className="ds-item ds-course-row"
+              style={{
+                borderBottom:
+                  index === courses.length - 1 ? "1px solid var(--rule-strong)" : undefined,
               }}
-              thumbnail
-              pathPrefix="learn"
-              direction="column"
-            />
-          ))}
-        </Grid>
-        <Mailchimp marginBottom="l" />
-      </Column>
-    </Column>
+            >
+              <span className="ds-num" style={{ width: 24 }}>
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 className="ds-t-m" style={{ marginBottom: 7 }}>
+                  <Link href={`/learn/${course.slug}`} className="ds-plain-link">
+                    {course.title}
+                  </Link>
+                </h2>
+                <p className="ds-dek" style={{ fontSize: 14, maxWidth: "62ch" }}>
+                  {course.description}
+                </p>
+                <span className="ds-meta ds-meta-s" style={{ display: "block", marginTop: 8 }}>
+                  {lessons} {lessons === 1 ? "lesson" : "lessons"} · {course.topics.length}{" "}
+                  {course.topics.length === 1 ? "part" : "parts"} · free
+                </span>
+              </div>
+              {cover && (
+                <Link href={`/learn/${course.slug}`} className="ds-ph ds-course-cover">
+                  <Image src={cover} alt="" width={340} height={200} sizes="170px" />
+                </Link>
+              )}
+            </article>
+          );
+        })}
+      </div>
+
+      <RailBand courses={railCourses} />
+    </main>
   );
 }

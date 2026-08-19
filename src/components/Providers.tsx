@@ -1,60 +1,19 @@
 "use client";
 
-import {
-  BorderStyle,
-  ChartMode,
-  ChartVariant,
-  DataThemeProvider,
-  IconProvider,
-  LayoutProvider,
-  NeutralColor,
-  ScalingSize,
-  Schemes,
-  SolidStyle,
-  SolidType,
-  SurfaceStyle,
-  ThemeProvider,
-  ToastProvider,
-  TransitionStyle,
-} from "@once-ui-system/core";
-import { style, dataStyle } from "../resources";
-import { iconLibrary } from "../resources/icons";
-import { SessionProvider } from "next-auth/react";
+import { ReaderProvider } from "@/components/site/ReaderProvider";
+import { SearchPalette } from "@/components/site/SearchPalette";
+import { ThemeProvider } from "@/components/site/theme";
+import { ToastProvider } from "@/components/site/toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <LayoutProvider>
-      <ThemeProvider
-        brand={style.brand as Schemes}
-        accent={style.accent as Schemes}
-        neutral={style.neutral as NeutralColor}
-        solid={style.solid as SolidType}
-        solidStyle={style.solidStyle as SolidStyle}
-        border={style.border as BorderStyle}
-        surface={style.surface as SurfaceStyle}
-        transition={style.transition as TransitionStyle}
-        scaling={style.scaling as ScalingSize}
-      >
-        <DataThemeProvider
-          variant={dataStyle.variant as ChartVariant}
-          mode={dataStyle.mode as ChartMode}
-          height={dataStyle.height}
-          axis={{
-            stroke: dataStyle.axis.stroke,
-          }}
-          tick={{
-            fill: dataStyle.tick.fill,
-            fontSize: dataStyle.tick.fontSize,
-            line: dataStyle.tick.line,
-          }}
-        >
-          <ToastProvider>
-            <SessionProvider>
-              <IconProvider icons={iconLibrary}>{children}</IconProvider>
-            </SessionProvider>
-          </ToastProvider>
-        </DataThemeProvider>
-      </ThemeProvider>
-    </LayoutProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <ReaderProvider>
+          {children}
+          <SearchPalette />
+        </ReaderProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

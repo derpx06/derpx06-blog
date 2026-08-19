@@ -1,16 +1,28 @@
-import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
-import { RevealFx, Schema, Meta } from "@once-ui-system/core";
-import { home, about, person, baseURL, routes } from "@/resources";
-import { Mailchimp } from "@/components";
-import { Posts } from "@/components/blog/Posts";
-import Post from "@/components/blog/Post";
-import { courses } from "@/resources/courses";
-import styles from "./home.module.scss";
+import type { Metadata } from "next";
 
-export async function generateMetadata() {
-  return Meta.generate({
+import { Masthead } from "@/components/site/Masthead";
+import { CourseRail } from "@/components/site/CourseRail";
+import { RailBand } from "@/components/site/RailBand";
+import { JsonLd } from "@/components/site/JsonLd";
+import { ReadingQueue } from "@/components/site/ReadingQueue";
+import { ResumeStrip } from "@/components/site/ResumeStrip";
+import { SaveButton } from "@/components/site/SaveButton";
+import { resolveImage } from "@/lib/images";
+import { generateMeta } from "@/lib/metadata";
+import {
+  formatShortDate,
+  getSiteSummary,
+  tagCounts,
+  toRailCourses,
+} from "@/lib/site-data";
+import { about, baseURL, home, person, routes } from "@/resources";
+
+export const revalidate = 300;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return generateMeta({
     title: home.title,
     description: home.description,
     baseURL,
@@ -19,186 +31,217 @@ export async function generateMetadata() {
   });
 }
 
-const stats = [
-  ["210K+", "People reached"],
-  ["4×", "Hackathon winner"],
-  ["2", "Production mobile apps"],
-  ["3", "Core engineering domains"],
-];
+export default async function Home() {
+  const { writing, explainers, courses } = await getSiteSummary();
 
-type HomeSectionProps = {
-  index: string;
-  eyebrow: string;
-  title: string;
-  copy: string;
-  href: string;
-  children: ReactNode;
-};
+  const [lead, ...rest] = writing;
+  const listed = rest.slice(0, 4);
+  const startHere = [...writing]
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, 4);
+  const archiveTags = tagCounts([...writing, ...explainers]);
+  const [leadExplainer, ...moreExplainers] = explainers;
+  const railCourses = toRailCourses(courses);
 
-function HomeSection({ index, eyebrow, title, copy, href, children }: HomeSectionProps) {
   return (
-    <RevealFx translateY="8" fillWidth>
-      <section className={styles.section}>
-        <header className={styles.sectionHeader}>
-          <p className={styles.sectionIndex}>{index}</p>
-          <div>
-            <p className={styles.kicker}>{eyebrow}</p>
-            <h2>{title}</h2>
-            <p>{copy}</p>
-          </div>
-          <Link className={styles.sectionLink} href={href}>
-            View all <ArrowUpRight size={15} />
-          </Link>
-        </header>
-        {children}
-      </section>
-    </RevealFx>
-  );
-}
-
-export default function Home() {
-  return (
-    <main className={styles.page}>
-      <div className={styles.ambient} aria-hidden="true" />
-
-      <Schema
+    <main id="main">
+      <JsonLd
         as="webPage"
         baseURL={baseURL}
         path={home.path}
         title={home.title}
         description={home.description}
-        image={`/api/og/generate?title=${encodeURIComponent(home.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}${about.path}`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        author={{ name: person.name, url: `${baseURL}${about.path}`, image: person.avatar }}
       />
 
-      <section className={styles.hero}>
-        <RevealFx translateY="8" fillWidth>
-          <div className={styles.heroCopy}>
-            <p className={styles.kicker}>Software engineer · Pune, India</p>
-            <h1>
-              I build useful software from <span>idea to production.</span>
-            </h1>
-            <p className={styles.heroLead}>
-              Production mobile products, dependable backend systems, and practical AI agents—built with ownership,
-              clarity, and attention to the details people actually feel.
-            </p>
+      <Masthead current={null} />
 
-            <div className={styles.heroActions}>
-              {routes["/learn"] && (
-                <Link className={styles.primaryAction} href="/learn">
-                  Explore my work <ArrowUpRight size={16} />
+      <p className="ds-meta ds-home-counts">
+        {writing.length} {writing.length === 1 ? "piece" : "pieces"} · {explainers.length}{" "}
+        {explainers.length === 1 ? "explainer" : "explainers"} · {courses.length}{" "}
+        {courses.length === 1 ? "course" : "courses"} · written by one developer, in public
+      </p>
+
+      <ResumeStrip />
+
+      <div className="ds-main-rail" style={{ padding: "40px var(--gut) 44px" }}>
+        <div>
+          <span className="ds-kickq" style={{ marginBottom: 22 }}>
+            Latest writing
+          </span>
+
+          {lead ? (
+            <article style={{ paddingBottom: 30, borderBottom: "1px solid var(--rule)" }}>
+              <span className="ds-kick" style={{ marginBottom: 10 }}>
+                {lead.tag} · {lead.minutes} min · {formatShortDate(lead.publishedAt)}
+              </span>
+              <h2 className="ds-t-lead" style={{ marginBottom: 12, maxWidth: "24ch" }}>
+                <Link href={lead.href} className="ds-plain-link">
+                  {lead.title}
                 </Link>
-              )}
-              <Link className={styles.secondaryAction} href={about.path}>
-                About me
+              </h2>
+              <p className="ds-dek" style={{ fontSize: 17, maxWidth: "56ch", marginBottom: 16 }}>
+                {lead.summary}
+              </p>
+              <div className="ds-row">
+                <Link href={lead.href} className="ds-box ds-dark">
+                  Read
+                </Link>
+                <SaveButton
+                  piece={{
+                    slug: lead.slug,
+                    href: lead.href,
+                    title: lead.title,
+                    minutes: lead.minutes,
+                  }}
+                />
+              </div>
+            </article>
+          ) : (
+            <p className="ds-dek">Nothing published yet.</p>
+          )}
+
+          {listed.length > 0 && (
+            <div className="ds-stack">
+              {listed.map((piece, index) => (
+                <div
+                  key={piece.slug}
+                  style={{
+                    display: "flex",
+                    gap: 26,
+                    padding: "22px 0",
+                    borderBottom:
+                      index === listed.length - 1
+                        ? "1px solid var(--rule-strong)"
+                        : "1px solid var(--rule)",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 className="ds-t-m" style={{ marginBottom: 7 }}>
+                      <Link href={piece.href} className="ds-plain-link">
+                        {piece.title}
+                      </Link>
+                    </h3>
+                    <p className="ds-dek" style={{ fontSize: 14, maxWidth: "52ch" }}>
+                      {piece.summary}
+                    </p>
+                  </div>
+                  <div style={{ width: 110, flex: "none", textAlign: "right" }}>
+                    <span className="ds-kick" style={{ marginBottom: 6 }}>
+                      {piece.tag}
+                    </span>
+                    <span className="ds-meta ds-meta-s">{piece.minutes} min</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {writing.length > 0 && (
+            <div style={{ marginTop: 22 }}>
+              <Link href="/blog" className="ds-box">
+                All {writing.length} {writing.length === 1 ? "piece" : "pieces"}
               </Link>
             </div>
+          )}
+        </div>
 
-            <div className={styles.heroNote}>
-              <span className={styles.statusDot} />
-              Available for meaningful engineering work and ambitious collaborations.
+        <aside className="ds-stack" style={{ gap: 36 }}>
+          {startHere.length > 0 && (
+            <div>
+              <span className="ds-kickq" style={{ marginBottom: 18 }}>
+                Start here
+              </span>
+              <div className="ds-stack" style={{ gap: 16 }}>
+                {startHere.map((piece, index) => (
+                  <div key={piece.slug} style={{ display: "flex", gap: 12 }}>
+                    <span className="ds-num" style={{ width: 16, fontSize: 13 }}>
+                      {index + 1}
+                    </span>
+                    <div>
+                      <Link href={piece.href} className="ds-t-xs ds-plain-link">
+                        {piece.title}
+                      </Link>
+                      <span
+                        className="ds-meta ds-meta-s"
+                        style={{ display: "block", marginTop: 5 }}
+                      >
+                        {piece.minutes} min · {piece.tag}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </RevealFx>
-      </section>
+          )}
 
-      <RevealFx translateY="8" fillWidth>
-        <section className={styles.stats} aria-label="Career highlights">
-          {stats.map(([value, label]) => (
-            <article className={styles.stat} key={label}>
-              <strong>{value}</strong>
-              <span>{label}</span>
-            </article>
-          ))}
-        </section>
-      </RevealFx>
+          {routes["/learn"] && <CourseRail courses={railCourses} compact />}
+        </aside>
+      </div>
 
-      {routes["/learn"] && (
-        <HomeSection
-          index="01"
-          eyebrow="Latest courses"
-          title="Practical learning built around real systems."
-          copy="Focused lessons for developers who want to understand the architecture, trade-offs, and implementation—not only copy code."
-          href="/learn"
+      {routes["/explainers"] && leadExplainer && (
+        <section
+          className="ds-tint"
+          style={{
+            borderTop: "1px solid var(--rule)",
+            borderBottom: "1px solid var(--rule)",
+            padding: "36px var(--gut) 40px",
+          }}
         >
-          <div className={styles.courseGrid}>
-            {courses.slice(0, 4).map((course) => (
-              <Post
-                key={course.id}
-                post={{
-                  slug: course.slug,
-                  metadata: {
-                    title: course.title,
-                    summary: course.description,
-                    image: course.image,
-                    publishedAt: "2024-01-01",
-                  },
-                  content: "",
-                }}
-                thumbnail
-                pathPrefix="learn"
-                direction="column"
-                variant="home"
-              />
-            ))}
-          </div>
-        </HomeSection>
-      )}
-
-      {routes["/explainers"] && (
-        <HomeSection
-          index="02"
-          eyebrow="Selected explainers"
-          title="Complex engineering ideas, made understandable."
-          copy="Visual, first-principles explanations of AI systems, infrastructure, research, and the decisions behind modern software."
-          href="/explainers"
-        >
-          <Posts
-            range={[1, 4]}
-            columns="2"
-            thumbnail
-            direction="column"
-            source={["src", "app", "explainers", "posts"]}
-            pathPrefix="explainers"
-            variant="home"
-          />
-        </HomeSection>
-      )}
-
-      {routes["/blog"] && (
-        <HomeSection
-          index="03"
-          eyebrow="Recent writing"
-          title="Notes from building, researching, and experimenting."
-          copy="Engineering observations, research breakdowns, practical guides, and lessons collected while turning ideas into working products."
-          href="/blog"
-        >
-          <Posts range={[1, 6]} columns="3" thumbnail direction="column" variant="home" />
-        </HomeSection>
-      )}
-
-      <RevealFx translateY="8" fillWidth>
-        <section className={styles.finalCta}>
-          <div>
-            <p className={styles.sectionIndex}>Stay curious</p>
-            <h2>Useful engineering ideas, without the noise.</h2>
-            <p>
-              Follow new explainers, practical courses, and notes about mobile, backend, and AI systems as they are
-              published.
-            </p>
-            <Link href={about.path}>
-              More about me <ArrowUpRight size={16} />
+          <div className="ds-between" style={{ marginBottom: 24 }}>
+            <h2 className="ds-t-l">Explainers — drawn, not written</h2>
+            <Link href="/explainers" className="ds-box">
+              All {explainers.length}
             </Link>
           </div>
-          <div className={styles.newsletter}>
-            <Mailchimp />
+          <div className="ds-three">
+            {[leadExplainer, ...moreExplainers].slice(0, 3).map((piece) => {
+              const image = resolveImage(piece.image);
+              return (
+              <article key={piece.slug}>
+                <Link href={piece.href} className="ds-plain-link">
+                  <div className="ds-ph" style={{ height: 150, marginBottom: 14 }}>
+                    {image ? (
+                      <Image
+                        src={image}
+                        alt=""
+                        width={360}
+                        height={150}
+                        sizes="(max-width: 760px) 100vw, 33vw"
+                      />
+                    ) : (
+                      "diagram"
+                    )}
+                  </div>
+                  <span className="ds-kick" style={{ marginBottom: 7 }}>
+                    {piece.tag} · {piece.minutes} min
+                  </span>
+                  <h3 className="ds-t-s">{piece.title}</h3>
+                </Link>
+              </article>
+              );
+            })}
           </div>
         </section>
-      </RevealFx>
+      )}
+
+      <div className="ds-main-rail" style={{ padding: "38px var(--gut) 44px" }}>
+        <div>
+          <span className="ds-kickq" style={{ marginBottom: 18 }}>
+            Browse the archive
+          </span>
+          <div className="ds-wrap">
+            {archiveTags.map(({ tag, count }) => (
+              <Link key={tag} href={`/blog?tag=${encodeURIComponent(tag)}`} className="ds-box">
+                {tag} {count}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <ReadingQueue />
+      </div>
+
+      <RailBand courses={railCourses} />
     </main>
   );
 }

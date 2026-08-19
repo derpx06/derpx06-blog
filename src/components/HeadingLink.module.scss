@@ -1,24 +1,28 @@
 .control {
-    cursor: pointer;
+    position: relative;
+    scroll-margin-top: 24px;
 
-    &:hover {
-        .visibility {
-            opacity: 1;
-        }
-
-        .text {
-            text-decoration-line: underline;
-        }
+    &:hover .visibility {
+        opacity: 1;
     }
-}
-
-.text {
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.25em;
-    text-decoration-color: var(--neutral-border-strong);
 }
 
 .visibility {
     opacity: 0;
-    transform: scale(0.875);
+    margin-left: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--mut);
+    cursor: pointer;
+    vertical-align: middle;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+        color: var(--acc);
+    }
+
+    &:focus-visible {
+        opacity: 1;
+    }
 }

@@ -1,1 +1,0 @@
-we have been hearing about tranformers foe a while now.Transfomers is baiscally an architecure that uses self attention to significanlty impore the performance

@@ -1,34 +1,43 @@
-import { Flex, Meta, Schema } from "@once-ui-system/core";
+import type { Metadata } from "next";
+
 import GalleryView from "@/components/gallery/GalleryView";
+import { JsonLd } from "@/components/site/JsonLd";
+import { Masthead } from "@/components/site/Masthead";
+import { generateMeta } from "@/lib/metadata";
 import { baseURL, gallery, person } from "@/resources";
 
-export async function generateMetadata() {
-  return Meta.generate({
+export async function generateMetadata(): Promise<Metadata> {
+  return generateMeta({
     title: gallery.title,
     description: gallery.description,
-    baseURL: baseURL,
-    image: `/api/og/generate?title=${encodeURIComponent(gallery.title)}`,
+    baseURL,
     path: gallery.path,
   });
 }
 
 export default function Gallery() {
   return (
-    <Flex maxWidth="l">
-      <Schema
+    <main id="main">
+      <JsonLd
         as="webPage"
         baseURL={baseURL}
+        path={gallery.path}
         title={gallery.title}
         description={gallery.description}
-        path={gallery.path}
-        image={`/api/og/generate?title=${encodeURIComponent(gallery.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}${gallery.path}`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        author={{ name: person.name, url: `${baseURL}${gallery.path}`, image: person.avatar }}
       />
-      <GalleryView />
-    </Flex>
+      <Masthead current={null} />
+      <div style={{ padding: "38px var(--gut) 20px" }}>
+        <h1 className="ds-t-page" style={{ marginBottom: 14 }}>
+          Gallery
+        </h1>
+        <p className="ds-dek" style={{ maxWidth: "52ch" }}>
+          {gallery.description}
+        </p>
+      </div>
+      <div style={{ padding: "0 var(--gut) 44px" }}>
+        <GalleryView />
+      </div>
+    </main>
   );
 }

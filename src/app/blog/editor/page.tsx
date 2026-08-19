@@ -1,14 +1,11 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import EditorClient from "@/components/editor/EditorClient";
-import { authOptions } from "@/lib/auth";
+import { isLocalArticleEditorHost } from "@/lib/article-editor-access";
 
 export default async function EditorPage() {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/api/auth/signin");
-  }
+  const requestHeaders = await headers();
+  if (!isLocalArticleEditorHost(requestHeaders.get("host"))) notFound();
 
   return <EditorClient />;
 }

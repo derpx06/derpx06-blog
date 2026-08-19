@@ -1,37 +1,77 @@
-import { Column, Heading, Meta, Schema } from "@once-ui-system/core";
-import { baseURL, about, person, work } from "@/resources";
-import { Projects } from "@/components/work/Projects";
+import Link from "next/link";
+import type { Metadata } from "next";
 
-export async function generateMetadata() {
-  return Meta.generate({
+import { JsonLd } from "@/components/site/JsonLd";
+import { Masthead } from "@/components/site/Masthead";
+import { generateMeta } from "@/lib/metadata";
+import { formatShortDate, getPieces } from "@/lib/site-data";
+import { baseURL, person, work } from "@/resources";
+
+export const revalidate = 300;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return generateMeta({
     title: work.title,
     description: work.description,
-    baseURL: baseURL,
-    image: `/api/og/generate?title=${encodeURIComponent(work.title)}`,
+    baseURL,
     path: work.path,
   });
 }
 
-export default function Work() {
+export default async function Work() {
+  const projects = await getPieces("work");
+
   return (
-    <Column maxWidth="m" paddingTop="24">
-      <Schema
+    <main id="main">
+      <JsonLd
         as="webPage"
         baseURL={baseURL}
         path={work.path}
         title={work.title}
         description={work.description}
-        image={`/api/og/generate?title=${encodeURIComponent(work.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}${about.path}`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        author={{ name: person.name, url: `${baseURL}${work.path}`, image: person.avatar }}
       />
-      <Heading as="h1" marginBottom="l" variant="heading-strong-xl" align="center">
-        {work.title}
-      </Heading>
-      <Projects />
-    </Column>
+
+      <Masthead current={null} />
+
+      <div style={{ padding: "38px var(--gut) 20px" }}>
+        <h1 className="ds-t-page" style={{ marginBottom: 14 }}>
+          Projects
+        </h1>
+        <p className="ds-dek" style={{ maxWidth: "56ch" }}>
+          {work.description}
+        </p>
+      </div>
+
+      <div className="ds-stack" style={{ padding: "0 var(--gut) 44px" }}>
+        {projects.map((project, index) => (
+          <article
+            key={project.slug}
+            className="ds-item"
+            style={{
+              alignItems: "baseline",
+              gap: 16,
+              padding: "22px 0",
+              borderBottom: index === projects.length - 1 ? "1px solid var(--rule-strong)" : undefined,
+            }}
+          >
+            <span className="ds-num" style={{ width: 24 }}>
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 className="ds-t-m" style={{ marginBottom: 6 }}>
+                <Link href={project.href} className="ds-plain-link">
+                  {project.title}
+                </Link>
+              </h2>
+              <p className="ds-dek" style={{ fontSize: 14, maxWidth: "62ch" }}>
+                {project.summary}
+              </p>
+            </div>
+            <span className="ds-meta ds-meta-s">{formatShortDate(project.publishedAt)}</span>
+          </article>
+        ))}
+      </div>
+    </main>
   );
 }

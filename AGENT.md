@@ -2,72 +2,72 @@
 
 ## 1. Project Context & Architecture ✅
 - **Framework**: Next.js 16 (App Router) + TypeScript.
-- **UI Library**: Once UI System (`@once-ui-system/core`).
-- **Styling**: Prop-based styling via Once UI components (e.g., `paddingTop="24"`).
-  - ❌ Avoid Tailwind classes or raw CSS/SCSS unless unavoidable.
-  - ✅ Use Once UI layout components (`Flex`, `Grid`, `Column`, `Row`) for structure.
-- **Data Layer**: File-system based MDX content.
-  - Data access: `getPosts` and `getMDXData` in `src/utils/utils.ts`.
-  - Content structure: `src/app/[section]/posts/*.mdx`.
-- **Config**: Centralized in `src/resources`.
-  - `once-ui.config.ts`: Routes, fonts, theme, social.
-  - `content.tsx`: Static text content (labels, titles).
+- **UI**: no component library. The site is plain semantic HTML styled by the
+  editorial design system in `src/resources/design-system.css`.
+  - ✅ Use the `ds-` primitives (`.ds-t-*`, `.ds-dek`, `.ds-meta`, `.ds-box`,
+    `.ds-item`, `.ds-rule`, `.ds-ph`, `.ds-main-rail`, `.ds-three`, …).
+  - ✅ Use the CSS custom properties for colour (`--ink`, `--acc`, `--tint`, …).
+    They are defined for light on `:root` and for dark on `[data-theme="dark"]`.
+  - ❌ Never hardcode a hex value in a component.
+  - Tailwind is still installed, but only the effect components in
+    `src/components/ui/*` use it.
+- **Data Layer**: MongoDB via `src/lib/content-repository.ts` and
+  `src/lib/course-repository.ts`, with MDX files on disk as a fallback.
+  `CONTENT_STORAGE` / `COURSE_STORAGE` choose `local`, `hybrid` or `mongodb`.
+- **Config**: centralized in `src/resources`.
+  - `site.config.ts`: routes, fonts, editorial copy, newsletter, schema.
+  - `content.tsx`: person details, page titles, about-page content.
 
-## 2. Codebase Map (The "Roadmap") 🗺️
-Understand the purpose of every key folder to navigate quickly.
+## 2. Codebase Map 🗺️
 
 ### `src/app`
-- **`[route]/page.tsx`**: Server Component entry point for routes (e.g., `/blog`, `/work`). Fetches data via `utils.ts`.
-- **`[route]/posts/[slug].mdx`**: The actual content files. AI should read these to understand content structure.
-- **`api/`**: Next.js API Routes.
-  - `authenticate/`: Validates password (`POST`).
-  - `check-auth/`: Verifies `authToken` cookie (`GET`).
-  - `og/generate/`: Dynamic OpenGraph image generation.
+- **`[route]/page.tsx`**: Server Component per route. Reads through
+  `src/lib/site-data.ts`, never the database directly.
+- **`api/auth/*`**: reader accounts — signup, login, logout.
+- **`api/reader/*`**: per-reader state — progress, saved, lessons, and a
+  `state` endpoint the client provider reads once on mount.
+- **`api/articles` / `api/upload`**: the localhost-only editor's write API.
+- **`api/og/generate`**: dynamic OpenGraph images.
 
-### `src/components`
-- **`mdx.tsx`**: The custom MDX renderer. Maps HTML tags to Once UI components (e.g., `a` -> `SmartLink`).
-- **`RouteGuard.tsx`**: Client-side auth wrapper. Checks `protectedRoutes` config and handles password UI.
-- **`Header.tsx` / `Footer.tsx`**: Global layout elements.
+### `src/components/site` (the design system in React)
+- **`Masthead` / `SiteFooter`**: the page chrome on every route.
+- **`ArticleView` / `ReaderHeader` / `ArticleContents`**: the reader.
+- **`ReaderProvider`**: fetches reader state once and applies optimistic
+  updates. Every retention component reads it through `useReader()`.
+- **`mdx-kit.tsx`**: plain replacements for the component-library tags the
+  existing MDX bodies still reference (`Row`, `Card`, `Feedback`, …).
 
-### `src/resources` (Configuration Center)
-- **`once-ui.config.ts`**: **The Brain**. Controls distinct site settings:
-  - `routes`: Enable/disable top-level links.
-  - `protectedRoutes`: specific paths requiring password.
-  - `style`: Theme, visual tokens (radius, scaling).
-- **`content.tsx`**: **The Voice**. Contains all static strings, labels, and person details. Edit this to change site text.
+### `src/lib`
+- **`pieces.ts`**: pure shaping of content records (read time, tags, grouping).
+- **`site-data.ts`**: the I/O layer over `pieces.ts`.
+- **`reader-selectors.ts`**: pure reads over reader state (resume point,
+  course standing). Shared by server and client so the rules cannot diverge.
+- **`auth/`**: scrypt password hashing, Mongo-backed sessions, rate limiting.
+- **`images.ts`**: `resolveImage()` — never render a path that isn't on disk.
+- **`highlight.ts`**: shiki, server-side only.
 
-### `src/utils`
-- **`utils.ts`**: **The Engine**.
-  - `getPosts()`: Reads MDX files recursively.
-  - `getMDXData()`: Parses frontmatter (gray-matter).
-  - Defines `Metadata` type (title, date, images, team).
+## 3. Key Patterns 🧩
+- **Static by default.** Content routes are prerendered; anything per-reader
+  arrives through `ReaderProvider`'s single `/api/reader/state` fetch. Do not
+  call `cookies()` in a layout — it would make the whole site dynamic.
+- **`routes` disables sections.** `RouteGuard` treats it as a deny-list: a path
+  it does not mention is a real page.
+- **Two auth systems, deliberately.** `PAGE_ACCESS_PASSWORD` gates author
+  routes; reader accounts (`/signin`, `/signup`) gate nothing and only carry
+  saved pieces, reading progress and lesson completion.
+- **No invented numbers.** There is no analytics; never render a read count,
+  student count or "most read" ranking that isn't backed by real data.
 
-## 3. Key Patterns & Conventions 🧩
-- **Navigation & Auth**:
-  - Protected routes defined in `protectedRoutes` (`once-ui.config.ts`).
-  - `RouteGuard.tsx` (Client Component) handles locking logic via `PAGE_ACCESS_PASSWORD` env var.
-  - Auth flow: Client -> `POST /api/authenticate` -> Set `authToken` cookie.
-- **MDX Rendering**:
-  - Use `CustomMDX` (`src/components/mdx.tsx`) to render content.
-  - Internal links MUST be relative (start with `/`).
-- **State Management**:
-  - Prefer Server Components for data fetching (`page.tsx`).
-  - Use simple React state (`useState`) for interactive UI.
+## 4. Developer Workflow 🔧
+- **Start**: `npm run dev`
+- **Test**: `npm test` (pure logic), `npm run content:test`, `npm run course:test`
+- **Lint**: `npm run lint` (Biome) · **Format**: `npm run biome-write`
+- **Build**: `npm run build`
+- **Images**: store in `public/images`; editor uploads land in `public/uploads`
+  (or Cloudinary when `CLOUDINARY_*` is configured).
 
-## 4. Developer Workflow Reality 🔧
-- **Start**: `npm run dev` (Next.js dev server).
-- **Format**: `npm run biome-write` (Uses Biome, NOT Prettier).
-- **Build**: `npm run build` (Standard Next.js build).
-- **Images**:
-  - Store in `public/images`.
-  - Reference dynamically via `baseURL` in metadata.
-
-## 5. Integration & Data Flow 📡
-- **Content Flow**: MDX Files -> `utils.ts` (fs read) -> Server Page (`page.tsx`) -> `CustomMDX`.
-- **Auth Flow**: User visits Protected Route -> `RouteGuard` checks config -> If locked & no cookie, show Password Input -> API Validate -> Cookie Set -> Refetch/Access.
-- **External**: Mailchimp & Netlify configured via `once-ui.config.ts` and `netlify.toml`.
-
-## 6. Do's and Don'ts
-- ✅ **DO** update `src/resources/content.tsx` when changing static text.
-- ✅ **DO** use `npm run biome-write` before committing.
-- ❌ **DON'T** hardcode colors. Use semantic tokens from Once UI.
+## 5. Do's and Don'ts
+- ✅ **DO** put new copy in `src/resources/site.config.ts` or `content.tsx`.
+- ✅ **DO** add a case to `scripts/site-logic.test.ts` when you touch a pure helper.
+- ✅ **DO** check both themes and 390 / 768 / 1440 widths before calling UI done.
+- ❌ **DON'T** reintroduce a component library; the design is the markup.

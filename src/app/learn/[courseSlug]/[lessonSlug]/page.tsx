@@ -1,223 +1,163 @@
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CustomMDX } from "@/components";
-import {
-    Meta,
-    Schema,
-    Column,
-    Heading,
-    Icon,
-    Text,
-    Avatar,
-    Row,
-    Media,
-    Button,
-    HeadingNav,
-} from "@once-ui-system/core";
-import { baseURL, about, person } from "@/resources";
-import { formatDate } from "@/utils/formatDate";
-import { getPosts } from "@/utils/utils";
-import { Metadata } from "next";
-import { courses } from "@/resources/courses";
 import { cache } from "react";
+import type { Metadata } from "next";
 
-const getPostsCached = cache(getPosts);
+import { CustomMDX } from "@/components";
+import { ArticleContents } from "@/components/site/ArticleContents";
+import { JsonLd } from "@/components/site/JsonLd";
+import { MarkLessonRead } from "@/components/site/MarkLessonRead";
+import { extractHeadings } from "@/lib/headings";
+import { resolveImage } from "@/lib/images";
+import { generateMeta } from "@/lib/metadata";
+import { getContentBySlugs } from "@/lib/content-repository";
+import { getCourseBySlug, getCourses } from "@/lib/course-repository";
+import { courseLessons, readingMinutes } from "@/lib/site-data";
+import { about, baseURL, person } from "@/resources";
+import { formatDate } from "@/utils/formatDate";
+
+const getContentBySlugsCached = cache(getContentBySlugs);
 
 export const dynamicParams = false;
-
-// Helper to flatten course links for navigation
-const getCourseLinks = (course: any) => {
-    return course.topics.flatMap((topic: any) => topic.links);
-};
+export const revalidate = 300;
 
 export async function generateStaticParams() {
-    const params = [];
-    for (const course of courses) {
-        for (const topic of course.topics) {
-            for (const link of topic.links) {
-                params.push({
-                    courseSlug: course.slug,
-                    lessonSlug: link.slug,
-                });
-            }
-        }
-    }
-    return params;
+  const courses = await getCourses();
+  return courses.flatMap((course) =>
+    course.topics.flatMap((topic) =>
+      topic.links.map((link) => ({ courseSlug: course.slug, lessonSlug: link.slug })),
+    ),
+  );
 }
 
 export async function generateMetadata({
-    params,
+  params,
 }: {
-    params: Promise<{ courseSlug: string; lessonSlug: string }>;
+  params: Promise<{ courseSlug: string; lessonSlug: string }>;
 }): Promise<Metadata> {
-    const { courseSlug, lessonSlug } = await params;
-    const course = courses.find((c) => c.slug === courseSlug);
-    if (!course) return {};
+  const { courseSlug, lessonSlug } = await params;
+  const course = await getCourseBySlug(courseSlug);
+  if (!course) return {};
 
-    const link = getCourseLinks(course).find((l: any) => l.slug === lessonSlug);
-    if (!link) return {};
+  const link = courseLessons(course).find((item) => item.slug === lessonSlug);
+  if (!link) return {};
 
-    const posts = getPostsCached(["src", "app", "learn", "posts"]);
-    const postStub = link.postSlugs[0];
-    const post = posts.find((p) => p.slug === postStub);
+  const post = (await getContentBySlugsCached("learn", [link.postSlugs[0]]))[0];
+  if (!post) return {};
 
-    if (!post) return {};
-
-    const title = `${link.title} | ${course.title}`;
-    const description = post.metadata.summary;
-    const image = post.metadata.image || `/api/og/generate?title=${encodeURIComponent(link.title)}`;
-    const path = `/learn/${courseSlug}/${lessonSlug}`;
-    const canonicalUrl = `${baseURL}${path}`;
-
-    const baseMeta = Meta.generate({
-        title,
-        description,
-        baseURL: baseURL,
-        image,
-        path,
-    });
-
-    return {
-        ...baseMeta,
-        alternates: {
-            canonical: canonicalUrl,
-        },
-        openGraph: {
-            type: "article",
-            title,
-            description,
-            url: canonicalUrl,
-            images: [image],
-        },
-        twitter: {
-            card: "summary_large_image",
-            title,
-            description,
-            images: [image],
-        },
-    };
+  return generateMeta({
+    title: `${link.title} | ${course.title}`,
+    description: post.metadata.summary,
+    baseURL,
+    path: `/learn/${courseSlug}/${lessonSlug}`,
+    image: post.metadata.image,
+    type: "article",
+    publishedTime: post.metadata.publishedAt,
+    author: { name: person.name, url: `${baseURL}${about.path}` },
+  });
 }
 
 export default async function CourseLesson({
-    params,
+  params,
 }: {
-    params: Promise<{ courseSlug: string; lessonSlug: string }>;
+  params: Promise<{ courseSlug: string; lessonSlug: string }>;
 }) {
-    const { courseSlug, lessonSlug } = await params;
-    const course = courses.find((c) => c.slug === courseSlug);
-    if (!course) notFound();
+  const { courseSlug, lessonSlug } = await params;
+  const course = await getCourseBySlug(courseSlug);
+  if (!course) notFound();
 
-    const flatLinks = getCourseLinks(course);
-    const linkIndex = flatLinks.findIndex((l: any) => l.slug === lessonSlug);
-    const link = flatLinks[linkIndex];
+  const lessons = courseLessons(course);
+  const index = lessons.findIndex((item) => item.slug === lessonSlug);
+  const link = lessons[index];
+  if (!link) notFound();
 
-    if (!link) notFound();
+  const posts = await getContentBySlugsCached("learn", link.postSlugs);
+  const primary = posts[0];
+  if (!primary) notFound();
 
-    const allPosts = getPostsCached(["src", "app", "learn", "posts"]);
-    const lessonPosts = link.postSlugs.map((slug: string) => allPosts.find((p) => p.slug === slug)).filter(Boolean);
+  const previous = index > 0 ? lessons[index - 1] : null;
+  const next = index < lessons.length - 1 ? lessons[index + 1] : null;
 
-    if (lessonPosts.length === 0) {
-        notFound();
-    }
+  const body = posts.map((post) => post.content).join("\n\n");
+  const headings = extractHeadings(body);
+  const minutes = readingMinutes(body);
+  const hero = resolveImage(primary.metadata.image);
 
-    const prevLink = linkIndex > 0 ? flatLinks[linkIndex - 1] : null;
-    const nextLink = linkIndex < flatLinks.length - 1 ? flatLinks[linkIndex + 1] : null;
+  return (
+    <>
+      <JsonLd
+        as="techArticle"
+        baseURL={baseURL}
+        path={`/learn/${courseSlug}/${lessonSlug}`}
+        title={link.title}
+        description={primary.metadata.summary}
+        datePublished={primary.metadata.publishedAt}
+        image={primary.metadata.image}
+        author={{ name: person.name, url: `${baseURL}${about.path}`, image: person.avatar }}
+      />
+      <MarkLessonRead courseSlug={courseSlug} lessonSlug={lessonSlug} />
 
-    const primaryPost = lessonPosts[0];
-    if (!primaryPost) notFound();
+      <div className="ds-lesson-grid">
+        <article id="main" className="ds-lesson-article">
+          <span className="ds-kick" style={{ marginBottom: 14 }}>
+            {link.topic} · {minutes} min
+            {primary.metadata.publishedAt ? ` · ${formatDate(primary.metadata.publishedAt)}` : ""}
+          </span>
+          <h1 className="ds-t-hero" style={{ marginBottom: 18 }}>
+            {link.title}
+          </h1>
+          {primary.metadata.summary && (
+            <p className="ds-dek" style={{ fontSize: 18, marginBottom: 22, color: "var(--ink)" }}>
+              {primary.metadata.summary}
+            </p>
+          )}
 
-    return (
-        <Column fillWidth horizontal="center" paddingBottom="160">
-            <Row maxWidth="l" s={{ style: { maxWidth: "100%" } }} m={{ style: { maxWidth: "100%" } }} gap="l">
-                <Column maxWidth="m" s={{ style: { maxWidth: "100%" } }} m={{ style: { maxWidth: "100%" } }} gap="l">
-                    <Schema
-                        as="blogPosting"
-                        baseURL={baseURL}
-                        path={`/learn/${courseSlug}/${lessonSlug}`}
-                        title={link.title}
-                        description={primaryPost.metadata.summary}
-                        datePublished={primaryPost.metadata.publishedAt}
-                        dateModified={primaryPost.metadata.publishedAt}
-                        image={primaryPost.metadata.image}
-                        author={{
-                            name: person.name,
-                            url: `${baseURL}${about.path}`,
-                            image: `${baseURL}${person.avatar}`,
-                        }}
-                    />
+          {hero && (
+            <figure className="ds-figure">
+              <Image
+                src={hero}
+                alt=""
+                width={1200}
+                height={630}
+                priority
+                sizes="(max-width: 1024px) 100vw, 700px"
+                style={{ width: "100%", height: "auto" }}
+              />
+            </figure>
+          )}
 
-                    <Column gap="16">
-                        <Text variant="body-default-xs" onBackground="neutral-weak">
-                            {course.title} • {primaryPost.metadata.publishedAt && formatDate(primaryPost.metadata.publishedAt)}
-                        </Text>
-                        <Heading as="h1" variant="display-strong-m">{link.title}</Heading>
-                    </Column>
+          <div className="ds-prose">
+            {posts.map((post) => (
+              <CustomMDX key={post.slug} source={post.content} />
+            ))}
+          </div>
 
-                    <Row gap="16" vertical="center" marginBottom="24">
-                        <Avatar size="s" src={person.avatar} />
-                        <Text variant="label-default-m" onBackground="brand-weak">
-                            {person.name}
-                        </Text>
-                    </Row>
+          <nav className="ds-lesson-pager" aria-label="Lesson navigation">
+            {previous ? (
+              <Link href={`/learn/${courseSlug}/${previous.slug}`} className="ds-box">
+                ← {previous.title}
+              </Link>
+            ) : (
+              <Link href={`/learn/${courseSlug}`} className="ds-box">
+                ← Course overview
+              </Link>
+            )}
+            {next && (
+              <Link href={`/learn/${courseSlug}/${next.slug}`} className="ds-box ds-dark">
+                {next.title} →
+              </Link>
+            )}
+          </nav>
+        </article>
 
-                    {primaryPost.metadata.image && require("fs").existsSync(require("path").join(process.cwd(), "public", primaryPost.metadata.image)) && (
-                        <Media
-                            src={primaryPost.metadata.image}
-                            alt={link.title}
-                            aspectRatio="16/9"
-                            priority
-                            sizes="(min-width: 768px) 100vw, 768px"
-                            border="neutral-alpha-weak"
-                            radius="l"
-                            marginBottom="32"
-                        />
-                    )}
-
-                    <Column as="article" maxWidth="m" s={{ style: { maxWidth: "100%" } }} m={{ style: { maxWidth: "100%" } }}>
-                        {lessonPosts.map((post: any, idx: number) => (
-                            <CustomMDX key={idx} source={post.content} />
-                        ))}
-                    </Column>
-
-                    <Row fillWidth gap="16" marginTop="32" horizontal="between">
-                        {prevLink ? (
-                            <Button
-                                href={`/learn/${courseSlug}/${prevLink.slug}`}
-                                variant="secondary"
-                                size="s"
-                                prefixIcon="chevronLeft"
-                            >
-                                Previous
-                            </Button>
-                        ) : (
-                            <div />
-                        )}
-
-                        {nextLink && (
-                            <Button
-                                href={`/learn/${courseSlug}/${nextLink.slug}`}
-                                variant="secondary"
-                                size="s"
-                                suffixIcon="chevronRight"
-                            >
-                                Next
-                            </Button>
-                        )}
-                    </Row>
-                </Column>
-                <Column
-                    maxWidth={16}
-                    paddingLeft="16"
-                    paddingRight="16"
-                    position="sticky"
-                    top="80"
-                    gap="16"
-                    m={{ hide: true }}
-                    s={{ hide: true }}
-                    className="sticky-sidebar"
-                >
-                    <HeadingNav fitHeight />
-                </Column>
-            </Row >
-        </Column >
-    );
+        <aside className="ds-lesson-toc">
+          <span className="ds-kickq" style={{ marginBottom: 16 }}>
+            Contents
+          </span>
+          <ArticleContents headings={headings} />
+        </aside>
+      </div>
+    </>
+  );
 }

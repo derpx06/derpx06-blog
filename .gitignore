@@ -3,6 +3,11 @@
 /.next
 /.idea
 .env
+.env.local
+.env.*.local
 /.agent
 /.agents
 /.codex
+
+# Editor image uploads
+/public/uploads

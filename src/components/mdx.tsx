@@ -1,6 +1,5 @@
 import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
 import React, { ReactNode } from "react";
-import { slugify as transliterate } from "transliteration";
 import { HeadingLink } from "@/components/HeadingLink";
 import { SafeCodeBlock } from "@/components/SafeCodeBlock";
 import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
@@ -9,28 +8,25 @@ import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 
+import Image from "next/image";
+import Link from "next/link";
+import { slugifyHeading } from "@/lib/slug";
 import {
-  Heading,
-  Text,
-  InlineCode,
-  TextProps,
-  MediaProps,
   Accordion,
   AccordionGroup,
-  Table as OnceTable,
-  Feedback,
   Button,
   Card,
-  Grid,
-  Row,
   Column,
+  Feedback,
+  Grid,
+  Heading,
   Icon,
-  Media,
-  SmartLink,
-  List,
-  ListItem,
+  InlineCode,
   Line,
-} from "@once-ui-system/core";
+  Media,
+  Row,
+  Text,
+} from "@/components/site/mdx-kit";
 
 type CustomLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
@@ -45,9 +41,9 @@ type TableData = {
 function CustomLink({ href, children, ...props }: CustomLinkProps) {
   if (href.startsWith("/")) {
     return (
-      <SmartLink href={href} {...props}>
+      <Link href={href} {...props}>
         {children}
-      </SmartLink>
+      </Link>
     );
   }
 
@@ -66,24 +62,28 @@ function CustomLink({ href, children, ...props }: CustomLinkProps) {
   );
 }
 
-export function createImage({ alt, src, ...props }: MediaProps & { src: string }) {
+export function createImage({
+  alt,
+  src,
+  ...props
+}: { alt?: string; src: string } & Record<string, unknown>) {
   if (!src) {
     console.error("Media requires a valid 'src' property.");
     return null;
   }
 
   return (
-    <Media
-      marginTop="8"
-      marginBottom="16"
-      enlarge
-      radius="m"
-      border="neutral-alpha-medium"
-      sizes="(max-width: 960px) 100vw, 960px"
-      alt={alt}
-      src={src}
-      {...props}
-    />
+    <figure className="ds-figure">
+      <Image
+        src={src}
+        alt={alt || ""}
+        width={Number(props.width) || 1200}
+        height={Number(props.height) || 675}
+        sizes="(max-width: 960px) 100vw, 960px"
+        style={{ width: "100%", height: "auto" }}
+      />
+      {alt ? <figcaption>{alt}</figcaption> : null}
+    </figure>
   );
 }
 
@@ -119,23 +119,18 @@ function asArrayLikeObject(input: any): any[] | null {
 }
 
 function slugify(input: any): string {
-  const str = extractText(input);
-  const strWithAnd = str.replace(/&/g, " and ");
-  return transliterate(strWithAnd, {
-    lowercase: true,
-    separator: "-",
-  }).replace(/\-\-+/g, "-");
+  return slugifyHeading(extractText(input));
 }
 
 function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   const CustomHeading = ({
     children,
     ...props
-  }: Omit<React.ComponentProps<typeof HeadingLink>, "as" | "id" | "level">) => {
+  }: { children?: ReactNode }) => {
     const slug = slugify(children as string);
     const level = parseInt(as.replace("h", "")) as 1 | 2 | 3 | 4 | 5 | 6;
     return (
-      <HeadingLink marginTop="24" marginBottom="12" level={level} id={slug} {...props}>
+      <HeadingLink level={level} id={slug}>
         {children}
       </HeadingLink>
     );
@@ -146,21 +141,11 @@ function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   return CustomHeading;
 }
 
-function createParagraph({ children }: TextProps) {
-  return (
-    <Text
-      style={{ lineHeight: "175%" }}
-      variant="body-default-m"
-      onBackground="neutral-medium"
-      marginTop="8"
-      marginBottom="12"
-    >
-      {children}
-    </Text>
-  );
+function createParagraph({ children }: { children?: ReactNode }) {
+  return <p>{children}</p>;
 }
 
-function createInlineCode({ children }: { children: ReactNode }) {
+function createInlineCode({ children }: { children?: ReactNode }) {
   return <InlineCode>{children}</InlineCode>;
 }
 
@@ -292,7 +277,7 @@ function ServerCodeBlock(props: any) {
       };
     });
 
-    return <JupyterCodeBlock cells={jupyterCells} marginBottom={rest.marginBottom} />;
+    return <JupyterCodeBlock cells={jupyterCells} />;
   }
 
   if (Array.isArray(processedCodes)) {
@@ -386,92 +371,65 @@ function ServerCodeBlock(props: any) {
   return <SafeCodeBlock codes={processedCodes} {...rest} />;
 }
 
-function createList({ children }: { children: ReactNode }) {
-  return <List>{children}</List>;
+function createUnorderedList({ children }: { children?: ReactNode }) {
+  return <ul>{children}</ul>;
 }
 
-function createListItem({ children }: { children: ReactNode }) {
-  return (
-    <ListItem
-      marginTop="4"
-      marginBottom="8"
-      onBackground="neutral-medium"
-      style={{ lineHeight: "175%" }}
-    >
-      {children}
-    </ListItem>
-  );
+function createOrderedList({ children }: { children?: ReactNode }) {
+  return <ol>{children}</ol>;
+}
+
+function createListItem({ children }: { children?: ReactNode }) {
+  return <li>{children}</li>;
 }
 
 function createHR() {
-  return (
-    <Row fillWidth horizontal="center">
-      <Line maxWidth="40" />
-    </Row>
-  );
-}
-
-function normalizeTableData(data: any, props: any): TableData | null {
-  if (data && Array.isArray(data.headers) && Array.isArray(data.rows)) {
-    return data as TableData;
-  }
-
-  if (Array.isArray(props?.headers) && Array.isArray(props?.rows)) {
-    return {
-      headers: props.headers,
-      rows: props.rows,
-    };
-  }
-
-  return null;
+  return <hr />;
 }
 
 function MarkdownTable({ children }: { children?: ReactNode }) {
   return (
-    <Column fillWidth overflowX="auto" marginBottom="16">
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        {children}
-      </table>
-    </Column>
+    <div className="ds-table-scroll">
+      <table>{children}</table>
+    </div>
   );
 }
 
+/** Accepts either markdown table children or a {headers, rows} data object. */
 function ResponsiveTable(props: any) {
-  const { data, headers, rows, children, ...rest } = props;
-  const normalizedData = normalizeTableData(data, { headers, rows });
+  const { data, headers, rows, children } = props;
+  const resolvedHeaders = data?.headers ?? headers;
+  const resolvedRows = data?.rows ?? rows;
 
-  if (normalizedData) {
+  if (Array.isArray(resolvedHeaders) && Array.isArray(resolvedRows)) {
     return (
-      <Column fillWidth overflowX="auto">
-        <OnceTable data={normalizedData} {...rest} />
-      </Column>
+      <div className="ds-table-scroll">
+        <table>
+          <thead>
+            <tr>
+              {resolvedHeaders.map((header: any, index: number) => (
+                <th key={header?.key ?? index}>{header?.content ?? header}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {resolvedRows.map((row: ReactNode[], rowIndex: number) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) => (
+                  <td key={cellIndex}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 
-  if (children) {
-    return <MarkdownTable>{children}</MarkdownTable>;
-  }
+  if (children) return <MarkdownTable>{children}</MarkdownTable>;
 
-  console.warn("Table render skipped: expected either data.headers+data.rows, headers+rows, or markdown table children.");
+  console.warn("Table render skipped: expected headers+rows or markdown table children.");
   return null;
-}
-
-function CustomFeedback({ children, ...props }: any) {
-  return (
-    <Feedback
-      {...props}
-      style={{
-        backdropFilter: "blur(24px)",
-        background: "rgba(125, 125, 125, 0.08)",
-        border: "1px solid var(--neutral-alpha-medium)",
-        ...props.style,
-      }}
-    >
-      <Column fillWidth style={{ marginTop: "-6px" }}>
-        {children}
-      </Column>
-    </Feedback>
-  );
 }
 
 const components = {
@@ -487,8 +445,8 @@ const components = {
   a: CustomLink as any,
   code: createInlineCode as any,
   pre: ServerCodeBlock as any,
-  ol: createList as any,
-  ul: createList as any,
+  ol: createOrderedList as any,
+  ul: createUnorderedList as any,
   li: createListItem as any,
   hr: createHR as any,
   table: MarkdownTable as any,
@@ -499,7 +457,7 @@ const components = {
   Accordion,
   AccordionGroup,
   Table: ResponsiveTable,
-  Feedback: CustomFeedback,
+  Feedback,
   Button,
   Card,
   Grid,
@@ -507,7 +465,7 @@ const components = {
   Column,
   Icon,
   Media,
-  SmartLink,
+  SmartLink: CustomLink,
   Timeline,
   Line,
 };

@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import { connectToDatabase } from "@/lib/mongodb";
 
 type Team = {
   name: string;
@@ -82,45 +81,19 @@ export function getPosts(customPath = ["", "", "", ""]) {
 }
 
 export async function getPostsHybrid(customPath = ["", "", "", ""]) {
-  const postsDir = path.join(process.cwd(), ...customPath);
-  const mdxPosts = getMDXData(postsDir);
+  const source = customPath.join("/");
+  const section = source.includes("/blog/")
+    ? "blog"
+    : source.includes("/learn/")
+      ? "learn"
+      : source.includes("/explainers/")
+        ? "explainers"
+        : source.includes("/work/")
+          ? "work"
+          : null;
 
-  try {
-    const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
-    if (useMongo === "1" || useMongo === "true") {
-      const { db } = await connectToDatabase();
-      const collection = db.collection("articles");
-      const docs = await collection.find({ published: true }).sort({ publishedAt: -1 }).toArray();
+  if (!section) return getMDXData(path.join(process.cwd(), ...customPath));
 
-      const dbPosts = docs.map((doc: any) => ({
-        metadata: {
-          title: doc.title || "",
-          publishedAt: doc.publishedAt || doc.createdAt || "",
-          summary: doc.summary || "",
-          image: doc.image || "",
-          images: doc.images || [],
-          tag: doc.tag || [],
-          topics: doc.topics || [],
-          team: doc.team || [],
-          link: doc.link || "",
-        },
-        slug: doc.slug,
-        content: doc.content || "",
-      }));
-
-      // merge: prefer DB doc when slug conflicts
-      const combined = [...mdxPosts];
-      for (const p of dbPosts) {
-        const idx = combined.findIndex((c) => c.slug === p.slug);
-        if (idx >= 0) combined[idx] = p;
-        else combined.push(p);
-      }
-
-      return combined;
-    }
-  } catch (e) {
-    console.error("Failed to fetch posts from MongoDB:", e);
-  }
-
-  return mdxPosts;
+  const { getContentList } = await import("@/lib/content-repository");
+  return getContentList(section);
 }

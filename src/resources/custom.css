@@ -5,23 +5,8 @@
 @custom-variant dark (&:is([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  --scheme-brand-1000: #eef3ff;
-  --scheme-brand-1100: #f2f6ff;
-  --scheme-brand-1200: #f6f8ff;
-  --scheme-accent-1000: #f1f5f7;
-  --scheme-accent-1100: #f4f7f9;
-  --scheme-accent-1200: #f7fafb;
-  --scheme-neutral-600-10: rgba(137, 152, 159, 0.08);
-  --scheme-neutral-600-30: rgba(137, 152, 159, 0.2);
-  --scheme-neutral-600-50: rgba(137, 152, 159, 0.35);
-  --scheme-neutral-900: #e6eaee;
 
   /* Dimmer light theme colors */
-  --scheme-brand-1200: #f0f4f8;
-  --scheme-accent-1200: #f0f4f8;
-  --scheme-neutral-1200: #f0f4f8;
-  --scheme-neutral-1100: #e8eef2;
-  --scheme-neutral-1000: #dde4ea;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -56,193 +41,16 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* Reduce brightness in light theme */
-[data-theme="light"] {
-  filter: brightness(0.90) saturate(1);
-}
-
-/* Alternative: Target specific backgrounds for more subtle effect */
-[data-theme="light"] body {
-  background-color: #f8f9fa !important;
-}
-
 /*
-Example setup for custom colors
-Generate at: https://once-ui.com/customize
+Shadcn/Tailwind tokens for the effect components in src/components/ui.
+The editorial design system lives in design-system.css.
 */
-:root {
-  --scheme-brand-100: #08002f;
-  --scheme-brand-200: #04025c;
-  --scheme-brand-300: #1f398e;
-  --scheme-brand-400: #3856ae;
-  --scheme-brand-500: #5071cc;
-  --scheme-brand-600: #6f94f1;
-  --scheme-brand-700: #8db3ff;
-  --scheme-brand-800: #b2dbff;
-  --scheme-brand-900: #bfe8ff;
-  --scheme-brand-1000: #ccf6ff;
-  --scheme-brand-1100: #d2fcff;
-  --scheme-brand-1200: #d2fcff;
-  --scheme-brand-600-10: rgba(111, 148, 241, 0.1);
-  --scheme-brand-600-30: rgba(111, 148, 241, 0.3);
-  --scheme-brand-600-50: rgba(111, 148, 241, 0.5);
 
-  --scheme-accent-100: #030b10;
-  --scheme-accent-200: #0d181d;
-  --scheme-accent-300: #364248;
-  --scheme-accent-400: #505d64;
-  --scheme-accent-500: #69777e;
-  --scheme-accent-600: #8a989f;
-  --scheme-accent-700: #a8b7bf;
-  --scheme-accent-800: #c8d7df;
-  --scheme-accent-900: #d5e4ec;
-  --scheme-accent-1000: #e2f1f9;
-  --scheme-accent-1100: #e9f8ff;
-  --scheme-accent-1200: #efffff;
-  --scheme-accent-600-10: rgba(138, 152, 159, 0.1);
-  --scheme-accent-600-30: rgba(138, 152, 159, 0.3);
-  --scheme-accent-600-50: rgba(138, 152, 159, 0.5);
-
-  --scheme-neutral-100: #020b10;
-  --scheme-neutral-200: #0b181d;
-  --scheme-neutral-300: #344248;
-  --scheme-neutral-400: #4f5d64;
-  --scheme-neutral-500: #68777e;
-  --scheme-neutral-600: #89989f;
-  --scheme-neutral-700: #a7b7be;
-  --scheme-neutral-800: #c7d7df;
-  --scheme-neutral-900: #d4e4ec;
-  --scheme-neutral-1000: #e1f2f9;
-  --scheme-neutral-1100: #e7f8ff;
-  --scheme-neutral-1200: #eeffff;
-  --scheme-neutral-600-10: rgba(137, 152, 159, 0.1);
-  --scheme-neutral-600-30: rgba(137, 152, 159, 0.3);
-  --scheme-neutral-600-50: rgba(137, 152, 159, 0.5);
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--scheme-neutral-100);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--scheme-neutral-500);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scheme-neutral-600);
-}
-
-/* Fix sticky positioning for Table of Contents and sidebars */
-.sticky-sidebar {
-  align-self: flex-start !important;
-  max-height: calc(100vh - 100px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-.canvas-hero-wrap {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 0.5rem 0;
-}
-
-.canvas-hero-title {
-  margin: 0;
-  max-width: 16ch;
-  text-align: center;
-  font-size: clamp(2rem, 6vw, 4.6rem);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: 800;
-  color: var(--neutral-on-background-strong);
-}
-
-.canvas-text-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.08em 0.28em;
-  border-radius: 0.22em;
-  overflow: hidden;
-  border: 1px solid var(--brand-alpha-strong);
-}
-
-.canvas-text-canvas {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.canvas-text-label {
-  position: relative;
-  z-index: 1;
-  color: var(--neutral-on-background-strong);
-}
-
-.canvas-text-yellow {
-  background: linear-gradient(
-    120deg,
-    rgba(255, 188, 40, 0.25) 0%,
-    rgba(255, 168, 0, 0.35) 40%,
-    rgba(255, 208, 96, 0.2) 100%
-  );
-  box-shadow: 0 0 24px rgba(255, 176, 24, 0.22);
-}
-
-.home-page-shell {
-  position: relative;
-}
-
-.home-page-shell::before {
-  content: "";
-  position: absolute;
-  inset: -40px -20px auto -20px;
-  height: 260px;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(73, 126, 255, 0.18), transparent 45%),
-    radial-gradient(circle at 80% 10%, rgba(81, 200, 155, 0.15), transparent 40%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.home-hero-panel,
-.home-section-card {
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 10px 32px rgba(11, 24, 29, 0.08);
-}
-
-.home-section-card {
-  transition: border-color 220ms ease, box-shadow 220ms ease;
-}
-
-.home-section-card:hover {
-  border-color: var(--scheme-brand-600-30);
-  box-shadow: 0 14px 40px rgba(11, 24, 29, 0.12);
-}
-
-.home-chip {
-  border: 1px solid var(--scheme-neutral-600-30);
-  background: color-mix(in srgb, var(--page-background) 88%, white 12%);
-  border-radius: 999px;
-  padding: 0.32rem 0.72rem;
-  color: var(--neutral-on-background-medium);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-section-card {
-    transition: none;
-  }
-}
+/* Scrollbars follow the editorial palette */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--tint); }
+::-webkit-scrollbar-thumb { background: var(--rule); }
+::-webkit-scrollbar-thumb:hover { background: var(--mut); }
 
 [data-theme="dark"] {
   --background: oklch(0.145 0 0);
@@ -346,13 +154,10 @@ Generate at: https://once-ui.com/customize
 }
 
 @layer base {
+  /* Page colour and type come from design-system.css, not from the
+     shadcn tokens — only the effect components in src/components/ui use those. */
   * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
+    @apply border-border;
   }
 }
+

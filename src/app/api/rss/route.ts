@@ -1,10 +1,9 @@
-import { getPosts, getPostsHybrid } from "@/utils/utils";
+import { getContentList } from "@/lib/content-repository";
 import { baseURL, blog, person } from "@/resources";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
-  const posts = useMongo === "1" || useMongo === "true" ? await getPostsHybrid(["src", "app", "blog", "posts"]) : getPosts(["src", "app", "blog", "posts"]);
+  const posts = await getContentList("blog");
 
   // Sort posts by date (newest first)
   const sortedPosts = posts.sort((a, b) => {
