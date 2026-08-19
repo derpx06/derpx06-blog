@@ -14,3 +14,6 @@
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
+
+# Ready-to-paste Vercel env (contains real secrets)
+.env.vercel
