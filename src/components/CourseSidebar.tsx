@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
-import type { Course } from "@/resources/courses";
+import type { Course } from "@/types";
 import { useReader } from "@/components/site/ReaderProvider";
 
 interface CourseSidebarProps {

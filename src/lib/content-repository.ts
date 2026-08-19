@@ -1,7 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import { getPosts } from "@/utils/utils";
 import { connectToDatabase } from "@/lib/mongodb";
+import { failIfBuilding } from "@/lib/build-guard";
 import type {
   ContentMetadata,
   ContentRecord,
@@ -28,97 +26,48 @@ type ContentDocument = {
   topics?: string[];
   team?: ContentTeamMember[];
   link?: string;
-  source?: { type?: "mongodb" | "mdx"; path?: string };
+  source?: { type?: "mongodb" };
 };
-
-type ContentStorageMode = "local" | "hybrid" | "mongodb";
 
 type ContentQueryOptions = {
   includeBody?: boolean;
   includeUnpublished?: boolean;
 };
 
-const localPaths: Record<ContentSection, string[]> = {
-  blog: ["src", "app", "blog", "posts"],
-  learn: ["src", "app", "learn", "posts"],
-  explainers: ["src", "app", "explainers", "posts"],
-  work: ["src", "app", "work", "projects"],
-};
-
 const collectionName = process.env.MONGODB_CONTENT_COLLECTION || "content";
 
-function isMongoEnabled() {
-  const value = (process.env.USE_MONGODB || "false").toLowerCase();
-  return value === "1" || value === "true";
-}
-
-function storageMode(): ContentStorageMode {
-  const configured = (process.env.CONTENT_STORAGE || "").toLowerCase();
-  if (configured === "local" || configured === "hybrid" || configured === "mongodb") {
-    return configured;
-  }
-
-  return isMongoEnabled() ? "hybrid" : "local";
+async function contentCollection() {
+  const { db } = await connectToDatabase();
+  return db.collection<ContentDocument>(collectionName);
 }
 
 function normalizeDate(value: unknown): string {
   if (!value) return "";
-  const date = value instanceof Date ? value : new Date(String(value));
-  if (Number.isNaN(date.getTime())) return String(value);
-
-  return date.toISOString().slice(0, 10);
+  if (value instanceof Date) return value.toISOString();
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
 }
 
 function asArray<T>(value: T | T[] | null | undefined): T[] {
-  if (value === undefined || value === null || value === "") return [];
+  if (value === null || value === undefined) return [];
   return Array.isArray(value) ? value : [value];
 }
 
 function normalizeMetadata(metadata: Partial<ContentMetadata> = {}): ContentMetadata {
-  const tag = Array.isArray(metadata.tag) ? metadata.tag[0] : metadata.tag;
-
   return {
-    title: typeof metadata.title === "string" ? metadata.title : "",
+    title: metadata.title || "",
     publishedAt: normalizeDate(metadata.publishedAt),
-    summary: typeof metadata.summary === "string" ? metadata.summary : "",
-    image: typeof metadata.image === "string" ? metadata.image : "",
+    summary: metadata.summary || "",
+    image: metadata.image || "",
     images: asArray(metadata.images),
-    tag: typeof tag === "string" ? tag : "",
+    tag: Array.isArray(metadata.tag) ? metadata.tag[0] || "" : metadata.tag || "",
     topics: asArray(metadata.topics),
     team: asArray(metadata.team),
-    link: typeof metadata.link === "string" ? metadata.link : "",
+    link: metadata.link || "",
   };
 }
 
-function localRecord(section: ContentSection, post: any, status: ContentStatus = "published"): ContentRecord {
-  return {
-    section,
-    slug: post.slug,
-    metadata: normalizeMetadata(post.metadata),
-    content: post.content || "",
-    status,
-    updatedAt: normalizeDate(post.metadata?.publishedAt),
-    source: { type: "mdx", path: path.join(...localPaths[section], `${post.slug}.mdx`) },
-  };
-}
-
-function localRecords(section: ContentSection, includeUnpublished = false): ContentRecord[] {
-  const posts = getPosts(localPaths[section]);
-  const records = posts.map((post) => localRecord(section, post));
-
-  if (includeUnpublished && section === "blog") {
-    const drafts = getPosts(["src", "app", "blog", "drafts"]);
-    records.push(...drafts.map((post) => localRecord(section, post, "draft")));
-  }
-
-  return records;
-}
-
-function contentKey(section: ContentSection, slug: string) {
-  return `${section}:${slug}`;
-}
-
-function documentToRecord(document: ContentDocument, includeBody: boolean): ContentRecord {
+function toRecord(document: ContentDocument, includeBody: boolean): ContentRecord {
   const status: ContentStatus = document.status || (document.published ? "published" : "draft");
 
   return {
@@ -138,78 +87,34 @@ function documentToRecord(document: ContentDocument, includeBody: boolean): Cont
     content: includeBody ? document.body || "" : "",
     status,
     updatedAt: normalizeDate(document.updatedAt || document.publishedAt || document.createdAt),
-    source: { type: "mongodb", path: document.source?.path },
+    source: { type: "mongodb" },
   };
 }
 
-function sortRecords(records: ContentRecord[]) {
-  return records.sort((a, b) => {
-    return new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime();
-  });
+function projection(includeBody: boolean) {
+  return includeBody ? { _id: 0 } : { _id: 0, body: 0 };
 }
 
-async function mongoDocuments(
-  section: ContentSection,
-  filter: Record<string, unknown>,
-  includeBody: boolean,
-) {
-  const { db } = await connectToDatabase();
-  const projection = includeBody ? undefined : { body: 0 };
-
-  return db
-    .collection<ContentDocument>(collectionName)
-    .find({ section, ...filter }, projection ? { projection } : undefined)
-    .sort({ publishedAt: -1, updatedAt: -1 })
-    .toArray();
-}
-
-function mergeHybrid(
-  local: ContentRecord[],
-  documents: ContentDocument[],
-  includeBody: boolean,
-): ContentRecord[] {
-  const dbRecords = documents.map((document) => documentToRecord(document, includeBody));
-  const dbKeys = new Set(dbRecords.map((record) => contentKey(record.section, record.slug)));
-  const databaseRecords = new Map(dbRecords.map((record) => [contentKey(record.section, record.slug), record]));
-  const localVisible = local.filter((record) => {
-    const key = contentKey(record.section, record.slug);
-    return !dbKeys.has(key);
-  });
-
-  return sortRecords([...localVisible, ...databaseRecords.values()].filter((record) => record.status === "published"));
-}
-
-export function getContentStorageMode() {
-  return storageMode();
-}
+/* -------------------------------------------------------------------- reads */
 
 export async function getContentList(
   section: ContentSection,
   options: ContentQueryOptions = {},
 ): Promise<ContentRecord[]> {
   const includeBody = options.includeBody === true;
-  const mode = storageMode();
-  const local = localRecords(section);
-
-  if (mode === "local" || !isMongoEnabled()) return sortRecords(local);
 
   try {
-    const documents = await mongoDocuments(
-      section,
-      mode === "hybrid" ? {} : { status: "published" },
-      includeBody,
-    );
+    const collection = await contentCollection();
+    const documents = await collection
+      .find({ section, status: "published" }, { projection: projection(includeBody) })
+      .sort({ publishedAt: -1 })
+      .toArray();
 
-    if (mode === "hybrid") return mergeHybrid(local, documents, includeBody);
-
-    return sortRecords(
-      documents
-        .filter((document) => (document.status || (document.published ? "published" : "draft")) === "published")
-        .map((document) => documentToRecord(document, includeBody)),
-    );
+    return documents.map((document) => toRecord(document, includeBody));
   } catch (error) {
+    failIfBuilding(`${section} content`, error);
     console.error(`Failed to fetch ${section} content from MongoDB:`, error);
-    return sortRecords(local);
+    return [];
   }
 }
 
@@ -219,96 +124,64 @@ export async function getContentBySlug(
   options: ContentQueryOptions = {},
 ): Promise<ContentRecord | null> {
   const includeBody = options.includeBody !== false;
-  const mode = storageMode();
-  const local = localRecords(section, options.includeUnpublished);
-  const localMatch = local.find((record) => record.slug === slug) || null;
-
-  if (mode === "local" || !isMongoEnabled()) {
-    return options.includeUnpublished || localMatch?.status === "published" ? localMatch : null;
-  }
 
   try {
-    const documents = await mongoDocuments(
-      section,
-      options.includeUnpublished ? { slug } : { slug, status: "published" },
-      includeBody,
-    );
-    const document = documents[0];
+    const collection = await contentCollection();
+    const filter = options.includeUnpublished
+      ? { section, slug }
+      : { section, slug, status: "published" as ContentStatus };
 
-    if (document) {
-      const record = documentToRecord(document, includeBody);
-      return options.includeUnpublished || record.status === "published" ? record : null;
-    }
-
-    if (mode === "hybrid") {
-      const anyDocument = await mongoDocuments(section, { slug }, false);
-      if (anyDocument[0]) return null;
-      return options.includeUnpublished || localMatch?.status === "published" ? localMatch : null;
-    }
-
-    return null;
+    const document = await collection.findOne(filter, { projection: projection(includeBody) });
+    return document ? toRecord(document, includeBody) : null;
   } catch (error) {
+    failIfBuilding(`${section}/${slug}`, error);
     console.error(`Failed to fetch ${section}/${slug} from MongoDB:`, error);
-    return options.includeUnpublished || localMatch?.status === "published" ? localMatch : null;
+    return null;
   }
 }
 
+/** Several slugs at once, returned in the order asked for. */
 export async function getContentBySlugs(
   section: ContentSection,
   slugs: string[],
+  options: ContentQueryOptions = {},
 ): Promise<ContentRecord[]> {
   if (slugs.length === 0) return [];
-
-  const mode = storageMode();
-  const local = localRecords(section);
-  const localMap = new Map(local.map((record) => [record.slug, record]));
-
-  if (mode === "local" || !isMongoEnabled()) {
-    return slugs.map((slug) => localMap.get(slug)).filter(Boolean) as ContentRecord[];
-  }
+  const includeBody = options.includeBody !== false;
 
   try {
-    const documents = await mongoDocuments(section, { slug: { $in: slugs } }, true);
-    const databaseRecords = new Map(
-      documents
-        .filter((document) => (document.status || (document.published ? "published" : "draft")) === "published")
-        .map((document) => {
-          const record = documentToRecord(document, true);
-          return [record.slug, record] as const;
-        }),
-    );
-    const suppressedSlugs = new Set(
-      documents
-        .filter((document) => (document.status || (document.published ? "published" : "draft")) !== "published")
-        .map((document) => document.slug),
-    );
+    const collection = await contentCollection();
+    const documents = await collection
+      .find(
+        { section, slug: { $in: slugs }, status: "published" },
+        { projection: projection(includeBody) },
+      )
+      .toArray();
 
-    return slugs
-      .map((slug) => (
-        databaseRecords.get(slug)
-        || (mode === "hybrid" && !suppressedSlugs.has(slug) ? localMap.get(slug) : undefined)
-      ))
-      .filter(Boolean) as ContentRecord[];
+    const bySlug = new Map(documents.map((document) => [document.slug, document]));
+    return slugs.flatMap((slug) => {
+      const document = bySlug.get(slug);
+      return document ? [toRecord(document, includeBody)] : [];
+    });
   } catch (error) {
+    failIfBuilding(`${section} lessons`, error);
     console.error(`Failed to fetch ${section} content from MongoDB:`, error);
-    return slugs.map((slug) => localMap.get(slug)).filter(Boolean) as ContentRecord[];
+    return [];
   }
 }
 
 export async function getContentDrafts(section: ContentSection = "blog") {
-  const mode = storageMode();
-  const local = localRecords(section, true).filter((record) => record.status === "draft");
-
-  if (mode === "local" || !isMongoEnabled()) return local;
-
   try {
-    const documents = await mongoDocuments(section, { status: "draft" }, true);
-    const databaseRecords = documents.map((document) => documentToRecord(document, true));
-    const keys = new Set(databaseRecords.map((record) => record.slug));
-    return [...databaseRecords, ...local.filter((record) => !keys.has(record.slug))];
+    const collection = await contentCollection();
+    const documents = await collection
+      .find({ section, status: "draft" }, { projection: projection(true) })
+      .sort({ updatedAt: -1 })
+      .toArray();
+
+    return documents.map((document) => toRecord(document, true));
   } catch (error) {
     console.error(`Failed to fetch ${section} drafts from MongoDB:`, error);
-    return local;
+    return [];
   }
 }
 
@@ -316,6 +189,8 @@ export async function getPublishedContentRoutes(section: ContentSection) {
   const records = await getContentList(section);
   return records.map((record) => record.slug);
 }
+
+/* ------------------------------------------------------------------- writes */
 
 function slugFromTitle(title: string) {
   return title
@@ -337,81 +212,15 @@ export type SaveContentInput = {
   tag?: string;
   topics?: string[];
   publish?: boolean;
-  /** Overrides DEFAULT_ARTICLE_STORAGE for this save. */
-  storage?: "mongodb" | "mdx";
 };
 
-function defaultArticleStorage(): "mongodb" | "mdx" {
-  const configured = (process.env.DEFAULT_ARTICLE_STORAGE || "").toLowerCase();
-  if (configured === "mongodb" || configured === "mdx") return configured;
-  return isMongoEnabled() ? "mongodb" : "mdx";
-}
-
-/** Writes an .mdx file into the section's posts (or blog drafts) directory. */
-function saveContentToDisk(
-  section: ContentSection,
-  slug: string,
-  input: SaveContentInput,
-): ContentRecord {
-  if (section !== "blog") {
-    throw new Error("File storage currently supports blog articles only");
-  }
-
-  const directory = path.join(
-    process.cwd(),
-    ...(input.publish ? localPaths.blog : ["src", "app", "blog", "drafts"]),
-  );
-  fs.mkdirSync(directory, { recursive: true });
-
-  const publishedAt = input.publish ? new Date().toISOString() : "";
-  const escape = (value: string) => value.replace(/"/g, '\\"');
-  const frontmatter = [
-    "---",
-    `title: "${escape(input.title)}"`,
-    `summary: "${escape(input.summary ?? "")}"`,
-    `publishedAt: "${publishedAt}"`,
-    `image: "${escape(input.image ?? "")}"`,
-    `tag: "${escape(input.tag ?? "")}"`,
-    "---",
-    "",
-    "",
-  ].join("\n");
-
-  fs.writeFileSync(path.join(directory, `${slug}.mdx`), frontmatter + input.content, "utf8");
-
-  return {
-    section,
-    slug,
-    metadata: normalizeMetadata({
-      title: input.title,
-      summary: input.summary,
-      publishedAt,
-      image: input.image,
-      tag: input.tag,
-    }),
-    content: input.content,
-    status: input.publish ? "published" : "draft",
-    updatedAt: new Date().toISOString(),
-    source: { type: "mdx", path: path.join(...localPaths[section], `${slug}.mdx`) },
-  };
-}
-
-/**
- * Upsert an article. Used by the local editor — the only writer of content in
- * the app. Storage follows DEFAULT_ARTICLE_STORAGE unless overridden.
- */
+/** Upsert an article. Used by the local editor — the only writer of content. */
 export async function saveContent(input: SaveContentInput): Promise<ContentRecord> {
   const section = input.section ?? "blog";
   const slug = (input.slug || slugFromTitle(input.title)).trim();
   if (!slug) throw new Error("A title or slug is required");
 
-  if ((input.storage ?? defaultArticleStorage()) === "mdx") {
-    return saveContentToDisk(section, slug, { ...input, slug });
-  }
-
-  const { db } = await connectToDatabase();
-  const collection = db.collection<ContentDocument>(collectionName);
-
+  const collection = await contentCollection();
   const now = new Date();
   const status: ContentStatus = input.publish ? "published" : "draft";
   const existing = await collection.findOne({ section, slug });
@@ -425,10 +234,9 @@ export async function saveContent(input: SaveContentInput): Promise<ContentRecor
     bodyFormat: input.bodyFormat ?? "mdx",
     status,
     published: status === "published",
+    // A re-publish must not reset the original date.
     publishedAt:
-      status === "published"
-        ? (existing?.publishedAt ?? now)
-        : (existing?.publishedAt ?? null),
+      status === "published" ? (existing?.publishedAt ?? now) : (existing?.publishedAt ?? null),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
     image: input.image ?? existing?.image ?? "",
@@ -442,5 +250,5 @@ export async function saveContent(input: SaveContentInput): Promise<ContentRecor
 
   await collection.updateOne({ section, slug }, { $set: document }, { upsert: true });
 
-  return documentToRecord(document, true);
+  return toRecord(document, true);
 }

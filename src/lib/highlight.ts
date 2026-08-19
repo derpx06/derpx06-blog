@@ -3,9 +3,37 @@ import { createHighlighter, type Highlighter } from "shiki";
 const THEMES = { light: "github-light", dark: "github-dark" } as const;
 
 const LANGS = [
-  "bash", "c", "cpp", "csharp", "css", "diff", "docker", "go", "graphql", "html", "ini",
-  "java", "javascript", "json", "jsx", "kotlin", "lua", "markdown", "php", "python", "ruby",
-  "rust", "scss", "shell", "sql", "swift", "toml", "tsx", "typescript", "xml", "yaml",
+  "bash",
+  "c",
+  "cpp",
+  "csharp",
+  "css",
+  "diff",
+  "docker",
+  "go",
+  "graphql",
+  "html",
+  "ini",
+  "java",
+  "javascript",
+  "json",
+  "jsx",
+  "kotlin",
+  "lua",
+  "markdown",
+  "php",
+  "python",
+  "ruby",
+  "rust",
+  "scss",
+  "shell",
+  "sql",
+  "swift",
+  "toml",
+  "tsx",
+  "typescript",
+  "xml",
+  "yaml",
 ] as const;
 
 const ALIASES: Record<string, string> = {
@@ -56,10 +84,7 @@ export async function highlight(code: string, language: string): Promise<string>
     });
   } catch (error) {
     console.error("Highlight failed:", error);
-    const escaped = code
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return `<pre class="shiki"><code>${escaped}</code></pre>`;
   }
 }

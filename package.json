@@ -4,18 +4,13 @@
   "scripts": {
     "dev": "next dev",
     "dev:safe": "NODE_OPTIONS=--max-old-space-size=1536 next dev --turbopack --hostname 127.0.0.1",
-    "export": "next export",
     "build": "next build",
-    "content:test": "node --test scripts/content-migration-utils.test.cjs",
-    "course:test": "node --test scripts/course-migration-utils.test.cjs",
-    "content:db:setup": "node scripts/setup-content-database.cjs",
-    "content:migrate": "node scripts/migrate-mdx-to-mongodb.cjs",
-    "content:verify": "node scripts/verify-content-migration.cjs",
-    "course:migrate": "node scripts/migrate-courses-to-mongodb.cjs",
-    "biome-write": "npx @biomejs/biome format --write .",
     "start": "next start",
+    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/register-ts.mjs --test scripts/*.test.ts",
     "lint": "npx @biomejs/biome lint src scripts",
-    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/register-ts.mjs --test scripts/*.test.ts"
+    "biome-write": "npx @biomejs/biome format --write .",
+    "content:export": "node scripts/export-content.mjs",
+    "content:db:setup": "node scripts/setup-content-database.cjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
@@ -47,7 +42,6 @@
     "clsx": "^2.1.1",
     "cobe": "^2.0.0",
     "cookie": "^1.1.1",
-    "gray-matter": "^4.0.3",
     "lint-staged": "^16.4.0",
     "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.577.0",

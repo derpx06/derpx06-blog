@@ -53,15 +53,9 @@ export async function POST(request: Request) {
       image: body?.image ? String(body.image) : undefined,
       tag: body?.tag ? String(body.tag) : undefined,
       publish: Boolean(body?.publish),
-      storage: body?.storage === "mdx" || body?.storage === "mongodb" ? body.storage : undefined,
     });
 
-    return NextResponse.json({
-      slug: record.slug,
-      section: record.section,
-      status: record.status,
-      storage: record.source.type,
-    });
+    return NextResponse.json({ slug: record.slug, section: record.section, status: record.status });
   } catch (error) {
     console.error("Saving article failed:", error);
     return NextResponse.json(

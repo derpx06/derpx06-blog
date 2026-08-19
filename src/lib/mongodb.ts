@@ -1,4 +1,4 @@
-import { MongoClient, Db } from "mongodb";
+import { MongoClient, type Db } from "mongodb";
 
 type MongoCache = {
   client: MongoClient | null;
@@ -31,18 +31,21 @@ export async function connectToDatabase() {
   }
 
   const client = new MongoClient(uri);
-  cache.promise = client.connect().then(() => {
-    const dbName = process.env.MONGODB_DB || "derpx06";
-    const db = client.db(dbName);
+  cache.promise = client
+    .connect()
+    .then(() => {
+      const dbName = process.env.MONGODB_DB || "derpx06";
+      const db = client.db(dbName);
 
-    cache.client = client;
-    cache.db = db;
-    cache.promise = null;
-    return { client, db };
-  }).catch((error) => {
-    cache.promise = null;
-    throw error;
-  });
+      cache.client = client;
+      cache.db = db;
+      cache.promise = null;
+      return { client, db };
+    })
+    .catch((error) => {
+      cache.promise = null;
+      throw error;
+    });
 
   return cache.promise;
 }

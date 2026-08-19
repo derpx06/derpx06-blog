@@ -1,6 +1,6 @@
 import { getContentList } from "@/lib/content-repository";
 import { getCourses } from "@/lib/course-repository";
-import type { Course } from "@/resources/courses";
+import type { Course } from "@/types/content.types";
 import type { ContentSection } from "@/types/content.types";
 import { toPiece, type Piece } from "./pieces";
 

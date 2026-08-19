@@ -17,3 +17,6 @@ tsconfig.tsbuildinfo
 
 # Ready-to-paste Vercel env (contains real secrets)
 .env.vercel
+
+# Content export (mongodb -> mdx backup)
+/content-backup

@@ -3,7 +3,7 @@
 import { Menu } from "lucide-react";
 import { useState } from "react";
 import { CourseSidebar } from "@/components/CourseSidebar";
-import type { Course } from "@/resources/courses";
+import type { Course } from "@/types";
 
 /** The lesson reader shell: syllabus rail on desktop, drawer on small screens. */
 export default function CourseMobileControls({
