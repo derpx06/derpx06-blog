@@ -1,0 +1,63 @@
+---
+title: "Local-First AI Is a Systems Problem, Not a Model Problem"
+summary: "Running a model on your own machine is the easy part. Everything that makes it useful afterwards is scheduling, memory and backpressure — which is to say, ordinary systems engineering."
+publishedAt: "2026-09-10T09:00:00.000Z"
+image: ""
+tag: "LLM Systems"
+topics: ["Local-First", "Ollama", "Inference", "Scheduling"]
+status: "published"
+---
+
+Getting a language model running on a laptop takes about four minutes now. Install a runtime, pull a quantized checkpoint, send it a prompt. The demo works immediately, and it feels like the hard problem has been solved by someone else and handed to you finished.
+
+Then you put it inside an application that does more than one thing at a time, and you discover that the model was never the hard part. The hard part is that you have just introduced a single, slow, memory-hungry, non-preemptible resource into a codebase that was written on the assumption that calls to other services are cheap and parallel.
+
+## What actually changes when the model comes in-process
+
+A remote model API is, architecturally, a well-behaved dependency. It is elastic, someone else runs its queue, and if you send it eight requests at once, eight requests happen. Your code can be as naive about concurrency as it likes, because the elasticity is bought for you.
+
+A local model is the opposite in every respect. There is exactly one of it. It holds several gigabytes of weights resident for as long as you want low latency. It processes one batch at a time, and it cannot be interrupted mid-generation. Sending it eight concurrent requests does not produce eight parallel generations — it produces eight generations that interleave badly, evict each other's KV cache, and finish later in aggregate than if you had simply run them one after another.
+
+I hit this building Outreach AI, a multi-agent pipeline running against Ollama, where several agents — research, profiling, drafting, a critic — all want the model. Written the obvious way, with each agent awaiting its own call, the whole thing ran slower than the sequential version and the machine's fans told the story. Nothing was wrong with the model. Everything was wrong with my assumption that concurrency was free.
+
+<Feedback variant="info" title="The reframe that fixes most of it">
+Stop thinking of the local model as a service you call. Think of it as a single-threaded worker behind a queue, like a printer or a database write lock. Every design pattern that applies to those applies here, and almost none of the patterns you use for HTTP clients do.
+</Feedback>
+
+## Serialise deliberately, and own the queue
+
+Once you accept there is one worker, the design follows. Put an explicit queue in front of the model. Give it a bounded depth. Decide what happens when it is full — reject, shed, or block — and make that decision visible rather than discovering it as a memory leak at three in the morning.
+
+A bounded queue is not a limitation you are working around; it is the mechanism by which the system stays honest. An unbounded queue in front of a slow resource does not make anything faster. It converts a fast, legible failure — *we are at capacity* — into a slow, illegible one, where latency climbs for twenty minutes and then the process is killed by the OOM reaper with no useful log line.
+
+Priority matters more here than in an elastic system, too. In Outreach AI, the critic that checks a draft and the research agent that fetches background are not equally urgent — one is blocking a user-visible result and one is filling a cache. With one worker, choosing the order is the only lever you have, and it is a surprisingly large one.
+
+## Memory is the resource you are actually scheduling
+
+The naive mental model is that you are scheduling compute. You are not. On a laptop you are scheduling memory, and the numbers are unforgiving in a way that cloud inference hides.
+
+Weights are the fixed cost, and quantization is what makes them fit at all. The variable cost is the KV cache, which grows linearly with context length and with the number of sequences in flight — and it is the one that ends the process. Two concurrent long-context requests can need more cache than the machine has left after the weights, and the failure is not graceful.
+
+This is why model swapping deserves real thought. Unloading a 4 GB model and loading another costs seconds of wall-clock, all of it user-visible. A pipeline that alternates between a small extraction model and a larger drafting model can spend more time swapping than generating. Sometimes the correct answer is to use one slightly-worse model for both jobs, because a model that is 10% weaker and always resident beats a model that is 10% stronger and paged in from disk.
+
+<Feedback variant="warning" title="Budget the cache, not just the weights">
+"The model is 4 GB and I have 16 GB" is not a capacity plan. Compute the KV cache cost per concurrent request at your maximum context length and add it. That is the number that decides whether your application survives its own success on a user's machine.
+</Feedback>
+
+## Streaming is not a UI feature
+
+With a local model, time-to-first-token and total generation time diverge sharply, and that gap is the entire user experience.
+
+A remote model that takes 900ms to produce a complete short answer can get away with a spinner. A local 7B model producing three paragraphs takes long enough that a spinner is a bad experience and a stream is a good one — not because streaming is faster, but because it converts an unbounded wait into visible progress. The generation is identical; the perception is not.
+
+The engineering consequence is that streaming has to go all the way through. If your agent framework buffers the whole response to parse it, or your API layer waits for a complete JSON object, you have thrown the benefit away at the last hop. Designing for the stream from the model to the pixel is a structural decision, and it is far more painful to retrofit than to start with.
+
+## What local-first actually buys
+
+It is worth being precise about this, because the case is often made badly. A local model is not smarter. It is usually meaningfully worse than the frontier alternative, and pretending otherwise sets up the disappointment.
+
+What it buys is a set of properties that have nothing to do with quality: no per-call cost, so you can be profligate; no network, so latency is predictable and offline works; no third party, so private data stays put; and no vendor, so behaviour does not change underneath you. Those are the reasons to do it, and every one of them is a systems property.
+
+Which is the point. The decision to run locally is a decision to take on the scheduling, memory management and backpressure that a hosted API was quietly doing on your behalf. That work does not disappear. It moves into your codebase, where it is your problem — and it is, satisfyingly, the kind of problem that has known answers.
+
+The model was never the hard part. The queue in front of it always was.

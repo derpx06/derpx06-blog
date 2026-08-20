@@ -1,0 +1,142 @@
+---
+title: "Speculative Decoding: The Same Distribution, Twice as Fast"
+summary: "A small model guesses several tokens ahead, a large model checks them all in one pass, and a rejection-sampling rule guarantees the output is exactly what the large model would have produced alone."
+publishedAt: "2026-09-21T09:00:00.000Z"
+image: ""
+tag: "Inference"
+topics: ["Speculative Decoding", "Inference", "Sampling", "Latency"]
+status: "published"
+---
+
+Generating a hundred tokens from a large language model requires a hundred sequential forward passes. Each one depends on the token before it, so there is nothing to parallelise, and the whole process runs at the speed of one pass times the length of the answer. That is the fundamental shape of autoregressive decoding and it looks unimprovable.
+
+It is not, and the reason is a detail of hardware rather than of algorithms: a single forward pass for one token and a single forward pass for five tokens cost almost exactly the same. Decoding is memory-bound. The GPU spends its time streaming weights from memory, and the arithmetic for a handful of extra positions is nearly free. There is a large amount of unused compute in every step, and speculative decoding is how you spend it.
+
+## 1. The insight
+
+Most tokens are easy. In *the capital of France is Paris*, only one word required a large model; the rest are determined by grammar and context so strongly that a much smaller model would produce them identically. But we pay full price for every token, because we cannot tell in advance which ones are hard.
+
+Speculative decoding inverts the problem. Instead of predicting which tokens are easy, let a cheap model **guess several ahead**, then have the expensive model **check them all at once** — using the parallelism that was going to waste anyway.
+
+Yaniv Leviathan, Matan Kalman and Yossi Matias formalised this in *Fast Inference from Transformers via Speculative Decoding*, an ICML 2023 oral, reporting **2×–3×** speedups on T5-XXL with **no change to the outputs** and no retraining or architecture change. Chen and colleagues at DeepMind published a closely related method independently around the same time.
+
+## 2. The loop
+
+You need two models over the same vocabulary: a **draft** model $q$, small and fast, and the **target** model $p$, the one you actually want to sample from. Each iteration:
+
+1. **Draft.** Run $q$ autoregressively for $\gamma$ steps, producing candidate tokens $x_1 \dots x_\gamma$ and their probabilities.
+2. **Verify.** Run $p$ **once** over the whole candidate sequence. Because the tokens already exist, this is a single parallel forward pass, and it yields $p$'s distribution at every position — including one position past the last accepted token.
+3. **Accept or reject.** Walk the candidates left to right, applying the rule below. Keep the accepted prefix, discard the rest.
+4. **Repeat.**
+
+If all $\gamma$ candidates are accepted you have produced $\gamma + 1$ tokens for the price of one target pass. If the first is rejected you have produced one, and wasted the draft work. Real text is somewhere in between.
+
+<Feedback variant="info" title="Why the free token exists">
+The verification pass computes $p$'s distribution at every candidate position, including the one after the last accepted token. So even a full rejection at position one still yields a valid sample from $p$ at that position — the iteration never makes negative progress.
+</Feedback>
+
+## 3. The acceptance rule, and why the output is exact
+
+This is the part that makes it a result rather than a heuristic. For each candidate token $x$ drawn from the draft distribution $q$, accept it with probability
+
+$$
+\min\!\left(1, \frac{p(x)}{q(x)}\right)
+$$
+
+If the target model likes the token at least as much as the draft did, accept unconditionally. If the target likes it less, accept in proportion to the ratio.
+
+On rejection, do not simply resample from $p$ — that would bias the result, because you would be resampling only in cases where the draft happened to over-propose. Instead sample from the **residual distribution**
+
+$$
+p'(x) = \frac{\max\!\left(0,\, p(x) - q(x)\right)}{\sum_{x'} \max\!\left(0,\, p(x') - q(x')\right)}
+$$
+
+which is $p$ with the probability mass the draft already accounted for removed and the remainder renormalised.
+
+The two steps together are a rejection-sampling scheme whose stationary distribution is exactly $p$. Every token emitted is distributed identically to a token sampled directly from the target model. **The output is not an approximation of the large model's output — it is a sample from the same distribution.** Run with a fixed seed and you get the same text you would have got without speculation.
+
+That guarantee is what separates this from every quality-for-speed trade in the inference literature. There is nothing to re-evaluate, no benchmark to re-run, no risk of subtle degradation in the tail.
+
+## 4. What determines the speedup
+
+Two quantities, pulling against each other.
+
+**Acceptance rate $\alpha$** — how often the draft's tokens survive. Driven by how well $q$ approximates $p$. A draft from the same family and tokenizer, trained on similar data, does well; an unrelated small model does badly.
+
+**Draft cost ratio $c$** — the cost of one draft step relative to one target step. A model ten times smaller gives roughly $c = 0.1$.
+
+The expected number of tokens per iteration for speculation length $\gamma$ is
+
+$$
+\mathbb{E}[\text{tokens}] = \frac{1 - \alpha^{\gamma+1}}{1 - \alpha}
+$$
+
+and the cost of that iteration is one target pass plus $\gamma$ draft passes. The tension is straightforward: raising $\gamma$ raises the ceiling on tokens per iteration, but the marginal candidate is only reached if all before it were accepted, so its expected value decays as $\alpha^\gamma$ while its cost is paid every time. There is an optimum, it is usually between 3 and 7, and it depends on $\alpha$ — which depends on the text.
+
+<Feedback variant="warning" title="Acceptance is content-dependent, so the speedup is too">
+Boilerplate, code with rigid syntax and formulaic prose accept at very high rates. Genuinely novel or creative text accepts poorly. A benchmark on one workload does not transfer, and a reported "2.5× speedup" is a statement about a corpus as much as about a system.
+</Feedback>
+
+Batch size matters too, and cuts the other way. The whole idea depends on spare compute during decoding. At batch size one there is a great deal of it. Under heavy batched serving the GPU is already saturated, and the draft model's work competes with real requests rather than filling idle capacity. Speculative decoding is at its best for latency-sensitive, low-concurrency workloads — a single user waiting on a response, which is exactly the interactive case.
+
+## 5. A worked example
+
+Numbers make the trade concrete. Take a draft model one-tenth the cost of the target, so $c = 0.1$, and suppose it agrees with the target 80% of the time, so $\alpha = 0.8$. Speculate $\gamma = 4$ tokens ahead.
+
+Expected tokens per iteration:
+
+$$
+\frac{1 - 0.8^{5}}{1 - 0.8} = \frac{1 - 0.328}{0.2} \approx 3.36
+$$
+
+Cost per iteration, in units of one target forward pass: one verification pass plus four draft passes at 0.1 each, so $1 + 0.4 = 1.4$.
+
+Tokens per unit cost: $3.36 / 1.4 = 2.4$. Against the baseline of exactly one token per target pass, that is a **2.4× speedup** — squarely in the range the paper reports.
+
+Now vary one thing at a time and the sensitivities appear. Drop $\alpha$ to 0.6 and expected tokens fall to 2.34, giving 1.67×. Drop it to 0.4 and you get 1.18× — most of the benefit is gone. Raise $\gamma$ to 8 at $\alpha = 0.8$ and expected tokens rise to 4.16 but cost rises to 1.8, giving 2.3× — slightly *worse* than $\gamma = 4$, because the later candidates rarely survive long enough to be used.
+
+This is why $\gamma$ has an optimum rather than being "as large as possible", and why acceptance rate is the variable worth engineering. A better draft model helps twice: it raises $\alpha$ directly, and a higher $\alpha$ makes a larger $\gamma$ worthwhile.
+
+## 6. Getting the draft model without having one
+
+The requirement for a compatible small model is a real obstacle, and most of the follow-up work is about removing it.
+
+**Self-speculation** skips layers of the target model to form the draft, so no second model is needed and the tokenizer matches by construction.
+
+**Medusa** attaches extra prediction heads to the target model, each trained to predict a token some distance ahead, generating candidates in one pass without a separate autoregressive draft.
+
+**Prompt lookup** is the cheapest idea and works better than it should: for tasks with heavy input–output overlap — summarisation, editing, retrieval-augmented answering — draft candidates by copying from the prompt itself. No model, no training, and high acceptance precisely because the answer really does reuse the input.
+
+**Tree-based verification** drafts several alternative continuations arranged as a tree and verifies them in a single pass with an attention mask, raising the chance that some branch survives.
+
+## 7. What it looks like in a real serving stack
+
+You do not implement this yourself any more. The major inference engines expose it as configuration, and the interesting work is in choosing the parameters rather than writing the loop.
+
+The decisions that actually matter in production:
+
+**Pick the draft from the same family.** Vocabulary must match exactly — the acceptance rule compares $p(x)$ and $q(x)$ for the same token id, so two models with different tokenizers cannot be paired at all. Beyond that, a draft trained on similar data agrees more often, which is the whole ballgame.
+
+**Measure $\alpha$ on your own traffic, not on a benchmark.** Every serious implementation reports acceptance rate. It is the single number that tells you whether the feature is earning its keep, and it varies enormously by workload. If it is below about 0.5, the draft model is costing you more than it saves.
+
+**Watch the memory.** Two models are resident instead of one, and the draft's KV cache is live alongside the target's. On a memory-constrained deployment the draft model can reduce the batch size you can serve, and that loss may exceed the latency gain.
+
+**Turn it off under load.** Because the mechanism depends on idle compute, the correct configuration at batch size 1 is the wrong configuration at batch size 64. Some systems adapt $\gamma$ dynamically with load; if yours does not, it is worth routing interactive and batch traffic differently.
+
+<Feedback variant="info" title="The easiest win is often prompt lookup">
+If your workload is summarisation, editing, translation of a provided document, or retrieval-augmented answering, try n-gram prompt lookup before setting up a draft model. It requires no second model, no extra memory, and on high-overlap tasks the acceptance rate is high enough to beat a real draft model that has to be loaded and fed.
+</Feedback>
+
+## 8. Why it matters
+
+Speculative decoding is one of the few optimisations in this field with no downside to weigh. Quantization trades precision. Distillation trades capability. Caching trades memory. Sparse attention trades exactness. Speculative decoding trades *nothing* — it spends idle compute and returns the identical distribution.
+
+The reason it exists at all is the same reason FlashAttention exists: an honest accounting of what the hardware is doing. Decoding was never compute-bound. Once you notice that, the question stops being how to make each step cheaper and becomes how to get more tokens out of a step you were paying for regardless.
+
+The pattern generalises past inference. Where a system is bottlenecked on one resource and idle on another, the win is usually not efficiency — it is finding speculative work to fill the gap, plus a cheap way to verify it.
+
+## Sources
+
+- Leviathan, Kalman, Matias — [*Fast Inference from Transformers via Speculative Decoding*](https://arxiv.org/abs/2211.17192), ICML 2023
+- Chen, Borgeaud, Irving, Lespiau, Sifre, Jumper — [*Accelerating Large Language Model Decoding with Speculative Sampling*](https://arxiv.org/abs/2302.01318), 2023
+- Cai, Li, Geng, Peng, Lee, Chen, Dao — [*Medusa: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads*](https://arxiv.org/abs/2401.10774), 2024

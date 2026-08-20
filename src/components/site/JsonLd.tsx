@@ -1,3 +1,5 @@
+import { resolveImage } from "@/lib/images";
+
 export type JsonLdProps = {
   as: "website" | "article" | "blogPosting" | "techArticle" | "webPage" | "organization";
   title: string;
@@ -48,7 +50,7 @@ export function JsonLd({
     headline: title,
     description,
     url,
-    image: absolute(baseURL, image),
+    image: absolute(baseURL, resolveImage(image) ?? undefined),
     datePublished,
     dateModified: dateModified || datePublished,
     sameAs,
@@ -57,7 +59,7 @@ export function JsonLd({
           "@type": "Person",
           name: author.name,
           url: author.url,
-          image: absolute(baseURL, author.image),
+          image: absolute(baseURL, resolveImage(author.image) ?? undefined),
         }
       : undefined,
   };

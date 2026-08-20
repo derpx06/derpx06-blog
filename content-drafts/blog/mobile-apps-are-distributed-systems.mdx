@@ -1,0 +1,69 @@
+---
+title: "Mobile Apps Are Distributed Systems With Terrible Networks"
+summary: "A phone is a replica that goes offline without warning, holds writes for hours and rejoins with a conflicting view of the world. Most mobile bugs are distributed-systems bugs that nobody labelled as such."
+publishedAt: "2026-10-08T09:00:00.000Z"
+image: ""
+tag: "Distributed Systems"
+topics: ["Mobile", "Offline-First", "Sync", "React Native"]
+status: "published"
+---
+
+A field salesperson opens a CRM app in a basement showroom, updates three deals, adds a note, and puts the phone away. Ninety minutes later they surface, the app reconnects, and everything they did has to be reconciled with a server that meanwhile accepted changes from two colleagues and a nightly import.
+
+Nothing in that paragraph is a mobile problem. It is replication, partition tolerance and conflict resolution — the same problems a distributed database has — and the only unusual thing is that one of the replicas is in someone's pocket and its network partition is called "a lift". We do not usually describe mobile work this way, and I think that is precisely why so much of it goes wrong.
+
+## The network is not slow. It is absent, intermittently, without telling you.
+
+Backend engineers work with networks that are fast, reliable and fail loudly. Mobile networks are none of those, and the third is the one that causes the damage.
+
+`isConnected` returns true on a train that has signal and no throughput. A request succeeds and its response never arrives because the radio slept. The OS suspends your process mid-flight and resumes it, from the app's perspective, instantly — but four minutes have passed and the token has expired. A captive portal at an airport returns HTTP 200 with a login page to every request your app makes, and your JSON parser is now the error handler.
+
+Each of these produces a bug report that says "sometimes it doesn't save", which is unreproducible on a desk with office Wi-Fi. They are not flaky. They are correct behaviour of a system whose assumptions do not match the environment.
+
+<Feedback variant="warning" title="Connectivity is not a boolean and never was">
+The only reliable evidence that a request succeeded is a response you received and validated. Anything derived from a connectivity API is a guess about the future, and mobile is where that guess is wrong most often.
+</Feedback>
+
+## Offline-first is a data model, not a cache
+
+The usual first attempt is to add a cache: keep the last response, show it when the network is down. This makes the app feel better and changes nothing structurally, because the write path still assumes the server is reachable.
+
+Offline-first means something stronger — that the local store is the source of truth for the UI, and the network is a background process that reconciles it. The user's action writes locally and returns immediately. Sync happens later, possibly much later, possibly in a different process lifetime.
+
+That inversion has consequences you have to design for rather than discover:
+
+**Identity has to be local.** If the server assigns the id, a record created offline has no id, and anything referencing it — a note attached to a new contact — cannot be expressed. Generate a UUID on the device at creation time and let the server accept it. This one decision removes an entire category of sync bug.
+
+**Every record needs sync state.** Not a boolean. At minimum: `pending`, `syncing`, `synced`, `failed`. The UI has to be able to show a row as not-yet-saved, because the honest thing to tell the user is that their change is safe on the device and not yet on the server. Hiding that distinction is how you get a user who thinks work is saved when it is queued behind a permanent failure.
+
+**The queue must survive process death.** The OS will kill your app while a sync is pending. If the queue is in memory, the work is gone and the user was told it was fine. It belongs in the same durable store as the data — ideally in the same transaction that wrote it.
+
+## Conflicts are a product question wearing an engineering costume
+
+Two people edited the same deal. One was offline. Something has to give, and the engineering literature offers a menu: last-write-wins, vector clocks, CRDTs, server-authoritative merge.
+
+Choosing from that menu first is the mistake. The right question is what the *user* expects to happen, and the answer varies by field within a single record.
+
+On a CRM record, a deal's stage is a workflow position where the most recent deliberate change should win, and a stale offline update overwriting a colleague's advance is a genuine bug. The notes field is append-only in spirit — two people adding notes should produce both notes, and last-write-wins silently destroys one. The assigned-owner field probably should not merge at all; it should surface a conflict, because a record with two people who each believe they own it is a real-world problem that no algorithm resolves.
+
+So: field-level resolution, chosen per field, from what the field means. Last-write-wins on a timestamp is fine for values that are genuinely single-valued and low-stakes. Append semantics for anything that is a log. Explicit conflict surfacing for the small set of fields where silently picking a winner is worse than asking.
+
+<Feedback variant="info" title="Last-write-wins needs a clock you can trust">
+Device clocks are wrong, sometimes by hours, occasionally on purpose. If you resolve by timestamp, stamp on the server at receipt, or use a logical clock. Resolving by device time means a user with a misconfigured phone can overwrite everyone.
+</Feedback>
+
+## Idempotency, again
+
+A phone retries constantly — the OS retries, the HTTP layer retries, the sync queue retries after a crash. Which means the server will receive the same logical write more than once, routinely, as normal operation rather than as an edge case.
+
+If the create-deal endpoint is not idempotent, that basement showroom produces three deals. The fix is the same as anywhere else: the client generates a key per logical operation, the server records it with the result, and repeated attempts return the original outcome. On mobile this is not a nicety for rare failures. It is load-bearing, because duplicate delivery is the expected case.
+
+The device-generated UUID from earlier does double duty here, which is a pleasant accident of good design.
+
+## What this reframing buys you
+
+Once you accept that a phone is a replica, the mobile-specific bug reports stop looking like a random assortment and start looking like a small number of known problems with known answers. "Sometimes it doesn't save" is a durable queue problem. "It saved but then reverted" is a conflict-resolution problem. "It created two" is an idempotency problem. "It showed old data" is a cache-invalidation problem.
+
+None of those are solved by a better HTTP client or a stricter connectivity check. They are solved by admitting that you are running a replicated system where one replica is unreliable, occasionally lies about its clock, and is being carried into a basement — and then applying the ordinary, well-understood answers to that situation.
+
+The network is not going to get better. The model of what you are building can.

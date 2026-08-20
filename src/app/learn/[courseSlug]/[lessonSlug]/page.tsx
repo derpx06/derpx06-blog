@@ -161,12 +161,14 @@ export default async function CourseLesson({
           </nav>
         </article>
 
-        <aside className="ds-lesson-toc">
-          <span className="ds-kickq" style={{ marginBottom: 16 }}>
-            Contents
-          </span>
-          <ArticleContents headings={headings} />
-        </aside>
+        {headings.length > 0 && (
+          <aside className="ds-lesson-toc">
+            <span className="ds-kickq" style={{ marginBottom: 16 }}>
+              Contents
+            </span>
+            <ArticleContents headings={headings} />
+          </aside>
+        )}
       </div>
     </>
   );

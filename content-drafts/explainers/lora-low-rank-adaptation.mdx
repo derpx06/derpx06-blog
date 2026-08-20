@@ -1,0 +1,132 @@
+---
+title: "LoRA: Why a Rank-8 Matrix Is Enough"
+summary: "Fine-tuning a 175-billion-parameter model used to mean storing another 175 billion parameters. LoRA reduced the trainable count by ten thousand times by betting that the update you need is very low rank."
+publishedAt: "2026-09-07T09:00:00.000Z"
+image: ""
+tag: "Research Papers"
+topics: ["LoRA", "Fine-tuning", "PEFT", "Adapters"]
+status: "published"
+---
+
+Fine-tuning, done the obvious way, has an economics problem that gets worse the better models get. Adapting GPT-3 for a task means producing a second set of 175 billion weights. Adapting it for nine tasks means nine such sets. The model that is good enough to be worth specialising is exactly the model you cannot afford to specialise, and by 2021 that had become the central practical obstacle to using large models for anything specific.
+
+LoRA's answer was to stop asking how to store the fine-tuned model and start asking how to store the *difference*. The difference, it turns out, is a much smaller object than the thing it modifies.
+
+<Button href="https://arxiv.org/abs/2106.09685" variant="primary" suffixIcon="arrowUpRight">See the research paper</Button>
+
+Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang and Weizhu Chen published *LoRA: Low-Rank Adaptation of Large Language Models* in June 2021.
+
+## 1. What full fine-tuning is actually computing
+
+Full fine-tuning takes pre-trained weights $W_0$ and produces $W_0 + \Delta W$. The trained artefact is the sum, but the thing your task actually contributed is $\Delta W$ — a matrix the same shape as $W_0$, holding the entire difference between "knows English" and "knows English and does your task".
+
+Three costs follow, and only the first is widely discussed.
+
+**Storage** is one full model per task. **Optimiser state** is worse than the weights: Adam keeps first and second moment estimates per parameter, so training memory is several times the parameter count and is usually what actually stops you. And **serving** many tasks means either holding many models resident or paying a model-swap on every request.
+
+The question LoRA asks is whether $\Delta W$ genuinely needs to be that large — whether the update carries as much information as its shape implies.
+
+## 2. The hypothesis: adaptation has low intrinsic rank
+
+The paper's premise, drawing on earlier work showing that over-parameterised models have a low intrinsic dimension, is that $\Delta W$ is **not** a full-rank matrix in any meaningful sense. Pre-training already installed the representations; a downstream task mostly needs to reweight and steer them, and that is a structurally simple operation even though it is expressed in a very large matrix.
+
+If that is true, $\Delta W$ can be factored. Instead of learning a $d \times k$ matrix directly, learn two thin matrices whose product has the right shape:
+
+$$
+\Delta W = BA, \qquad B \in \mathbb{R}^{d \times r},\ A \in \mathbb{R}^{r \times k},\ r \ll \min(d,k)
+$$
+
+The forward pass becomes
+
+$$
+h = W_0 x + \Delta W x = W_0 x + BAx
+$$
+
+$W_0$ is **frozen** — never updated, never given optimiser state. Only $A$ and $B$ train.
+
+The parameter count drops from $d \times k$ to $r(d + k)$. For a $4096 \times 4096$ attention projection at $r = 8$: 16.8 million becomes 65,536. Roughly 0.4%, from one line of algebra.
+
+## 3. The initialisation is not incidental
+
+$A$ is initialised from a random Gaussian and $B$ is initialised to **zero**, so at the start of training $BA = 0$ and the adapted model is exactly the pre-trained model.
+
+This matters more than it looks. Training begins from the pre-trained function rather than from a perturbation of it, which means no warm-up is needed to recover from initialisation damage and the first gradient steps are all task signal. If both matrices were random, the model would start by being worse than the base model and spend its early budget climbing back.
+
+The update is also scaled by $\alpha / r$, where $\alpha$ is a constant. This decouples the learning rate from the rank: change $r$ and the effective step size stays comparable, so you can sweep rank without re-tuning everything else. In practice many people set $\alpha = r$ and treat the scale as fixed, which is why the two are so often seen equal in configs.
+
+<Feedback variant="info" title="Rank is a capacity dial, and it saturates early">
+The paper's ablations find surprisingly small ranks sufficient — often 1 to 8 — with little gain from raising it. If a task genuinely needs high rank, that is evidence the task is far from what pre-training covered, and it is a signal to reconsider whether adaptation is the right tool at all.
+</Feedback>
+
+## 4. The property that made it win: no inference latency
+
+Adapter methods existed before LoRA. They insert small trainable modules between layers, and they work — but they add depth. Every forward pass runs extra sequential operations, so inference gets slower, and in a serving system that cost is permanent.
+
+LoRA has a structural advantage here, and it is the reason it displaced the alternatives. Because the update is *added to* an existing weight matrix rather than inserted as a new layer, you can simply compute
+
+$$
+W = W_0 + BA
+$$
+
+once, before serving, and deploy $W$. The result is a normal weight matrix of the original shape. The architecture is unchanged, the latency is unchanged, and there is no trace of LoRA left in the deployed model at all.
+
+The abstract states it directly: *unlike adapters, no additional inference latency*.
+
+Better still, merging is reversible. Keep $W_0$ and swap adapters at runtime: subtract one, add another. Serving fifty fine-tunes becomes one base model in memory plus fifty small files — a few megabytes each — instead of fifty full models. That is the property multi-tenant model serving is built on today.
+
+## 5. Where to put the adapters
+
+Not every matrix needs one. The paper studies which projections in the attention block benefit, and finds — given a fixed parameter budget — that spreading a **low rank across more matrices** beats concentrating a **higher rank in fewer**. Adapting the query and value projections at $r = 4$ outperforms adapting only the query at $r = 8$.
+
+That is a useful and slightly counter-intuitive result: coverage matters more than capacity. The common defaults that adapt query, key, value and output projections follow from it.
+
+## 6. The reported numbers
+
+From the abstract, comparing against GPT-3 175B fine-tuned with Adam:
+
+- **10,000×** fewer trainable parameters
+- **3×** lower GPU memory requirement
+- Higher training throughput, and **no additional inference latency**
+- Quality **on par with or better than** full fine-tuning on RoBERTa, DeBERTa, GPT-2 and GPT-3
+
+The "or better" is not a rounding artefact. On smaller datasets, constraining the update to low rank acts as a regulariser — there is simply less capacity available to memorise the training set — and constrained adaptation can generalise better than unconstrained. Fewer parameters producing a better model is unusual enough to be worth pausing on.
+
+## 7. The knobs that actually matter
+
+Four settings account for most of the difference between a LoRA run that works and one that does not.
+
+**Rank $r$.** Start at 8 or 16. Raise it only if the training loss plateaus above where you need it — that is the signal of insufficient capacity. Raising rank to fix a run that is *overfitting* makes it worse, and a rank of 128 on a small dataset is a common and expensive mistake.
+
+**Which modules.** Attention projections at minimum. Including the feed-forward layers helps when the task requires new behaviour rather than reweighted behaviour, at roughly triple the adapter size. Follow the paper's finding — spread wider before going deeper.
+
+**$\alpha$.** Setting $\alpha = r$ is a reasonable default. Setting $\alpha = 2r$ is a common alternative that amounts to a larger effective learning rate on the adapter. It is a knob, not a law, and it interacts with the learning rate — do not sweep both at once.
+
+**Learning rate.** Higher than full fine-tuning, typically by an order of magnitude, because you are training a small randomly-initialised module rather than nudging a converged one. Using a full-fine-tuning learning rate on a LoRA run is why some people conclude LoRA does not work.
+
+<Feedback variant="warning" title="Two failure modes that look identical">
+Training loss falls and evaluation quality does not improve: the rank is too high for the dataset and you are memorising. Training loss will not fall at all: the learning rate is too low, or you are adapting modules that cannot express the change. Both present as "LoRA didn't help", and the fixes are opposite.
+</Feedback>
+
+## 8. QLoRA, and why this is now the default
+
+The obvious follow-on: if the base model is frozen, its precision only has to be good enough to compute a forward pass, not to accumulate gradients. So quantize it. QLoRA loads the base in 4-bit and trains LoRA adapters on top in higher precision, bringing single-GPU fine-tuning within reach of consumer hardware.
+
+This is the recipe most people are running today whether they name it or not. The small fine-tune I keep on my own machine — a Qwen2.5-Coder 0.5B adapted for shell commands — is a 4-bit base with adapters trained on top, and the entire run finished in under an hour on one machine. The reason a student can fine-tune a useful model on a laptop is a chain that starts with this paper.
+
+<Feedback variant="warning" title="LoRA teaches behaviour, not facts">
+Low-rank adaptation is excellent at format, style, tone and task shape. It is a poor mechanism for injecting substantial new knowledge, because there is not enough capacity in a rank-8 update to store much, and what you get instead is a model that has learned to sound confident about the new domain. For facts, retrieval is the right tool; for behaviour, LoRA is.
+</Feedback>
+
+## 9. The idea worth keeping
+
+Strip away the transformers and LoRA is a statement about where information lives. A large model's weights encode a great deal, and the delta between the general model and a specialised one encodes very little — so representing that delta at the same size as the model is enormous waste, and the compression ratio available is around four orders of magnitude.
+
+That reframing keeps paying out. It is why adapter files are megabytes, why serving hundreds of fine-tunes from one base is routine, and why the practical question about a fine-tune moved from *can I afford this* to *do I have the data*.
+
+Most of the time, the change you need is much smaller than the thing you are changing.
+
+## Sources
+
+- Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, Chen — [*LoRA: Low-Rank Adaptation of Large Language Models*](https://arxiv.org/abs/2106.09685), 2021
+- Dettmers, Pagnoni, Holtzman, Zettlemoyer — [*QLoRA: Efficient Finetuning of Quantized LLMs*](https://arxiv.org/abs/2305.14314), 2023
+- Aghajanyan, Zettlemoyer, Gupta — [*Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning*](https://arxiv.org/abs/2012.13255), 2020

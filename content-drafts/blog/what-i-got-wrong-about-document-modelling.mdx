@@ -1,0 +1,73 @@
+---
+title: "What I Got Wrong About Document Modelling"
+summary: "Choosing MongoDB is a five-minute decision. Deciding what a document is takes months to get wrong and is expensive to undo."
+publishedAt: "2026-10-01T09:00:00.000Z"
+image: ""
+tag: "Databases"
+topics: ["MongoDB", "Data Modelling", "Schema Design", "NoSQL"]
+status: "published"
+---
+
+The pitch that sells a document database is that you do not need a schema. The reality is that you always have a schema; the only question is whether it is written down where a machine can enforce it, or scattered across the application code that reads the collection. I spent a long time believing the first version of that sentence, and every modelling mistake I have made since traces back to it.
+
+None of what follows is an argument against document databases. It is a list of the things I had to learn the hard way about using one, most of which are really the same lesson from different angles.
+
+## Model on access patterns, not on entities
+
+The instinct carried over from relational design is to enumerate the nouns and give each one a collection. Users, orders, products, comments. It feels principled and it is exactly backwards for this kind of database.
+
+Relational modelling normalises first and lets the query planner reassemble things at read time — that is what joins are for, and they are very good. A document database has no equivalent, so a shape that requires assembling five collections per request is not a neutral design choice; it is a decision to do the join in application code, over the network, once per request, forever.
+
+The question that produces better models is not *what are my entities* but *what do I read together, and how often*. On a CRM I worked on, contacts and their activity timeline were separate collections because they are obviously separate things. Every screen in the product showed them together. Every page load was two round trips and a merge, and the merge code was where the bugs lived. They were separate because a diagram said so, not because anything in the application ever wanted them apart.
+
+<Feedback variant="info" title="The heuristic that has held up">
+Embed what is read together and written together, and where the embedded side has a natural bound. Reference what is large, unbounded, shared between parents, or written on a different rhythm than its parent.
+</Feedback>
+
+## Embedding is not free, and unbounded arrays are the trap
+
+Embedding solves the read problem so cleanly that it becomes the default answer, and then you hit the case it does not fit.
+
+The failure is the array with no natural limit. Comments on a post. Events on a session. Messages in a conversation. Each looks like a child that belongs to exactly one parent — textbook embedding. But the parent document now grows without bound, and three unpleasant things follow.
+
+Every read of the parent pulls the entire array over the wire, even when you wanted one field. Every append rewrites the document, and once it outgrows its allocated space the storage engine relocates it. And there is a hard document size limit waiting at the end, which you will discover in production, on your most active record — because the biggest document is by definition the one belonging to your best customer.
+
+The tell is a question: *can a user, by using the product normally, make this array arbitrarily long?* If yes, it is a separate collection with an index on the parent id, and you have accepted a second query in exchange for a system that does not have a cliff in it.
+
+## Denormalisation is a write-path commitment
+
+Copying a customer's name into every order makes the read trivial. It also means the customer's name now exists in an unknown number of places, and changing it is a fan-out write you have to design, execute and monitor.
+
+I am not against this — for genuinely read-heavy data it is often correct, and there are cases where the copy is *more* correct than the reference. The invoice should record the address at the time it was issued, not the address the customer has today. That is not denormalisation, that is capturing a historical fact, and joining to get it would be a bug.
+
+The mistake is failing to distinguish the two. A cached copy is a performance optimisation with a consistency obligation attached. A recorded fact is data. Writing them the same way, and remembering which is which by intuition, is how you end up with an update path that fixes four of the five places a name appears.
+
+If you denormalise a mutable field, write down where the copies live at the moment you create the second one. That comment will be worth more than most of the code around it.
+
+## Schemaless is a deployment strategy, not a modelling one
+
+The freedom to write any shape into a collection is genuinely valuable, and its value is almost entirely in *migration*. You can deploy code that writes a new field before backfilling. You can support two shapes during a rollout. That is real and it is a lot better than a locked table.
+
+What it is not is permission to skip deciding the shape. Without a decision you get drift: some documents have `email`, some have `emailAddress`, some have both and disagree. Every read path grows a fallback. Six months later, nobody can tell you what a document in that collection contains without reading it, and the answer is "it depends when it was written".
+
+Which is why I now turn on schema validation for every collection that matters. This site's content collection has a JSON Schema validator that rejects a malformed insert outright — required fields, enums on the status and section, dates that must be real dates rather than ISO strings that merely look like them. It cost half an hour, it has caught several bad writes from my own scripts, and it did not take away a single thing I actually wanted from a document database.
+
+<Feedback variant="warning" title="Validation at the boundary, or it does not exist">
+Enforcing shape in the application layer works right up until the second writer — a migration script, an admin tool, a colleague's notebook. The database is the only place every writer has to pass through.
+</Feedback>
+
+## Indexes decide whether the model works
+
+A document model is a hypothesis about access patterns, and indexes are how you find out whether the hypothesis was right. The failure is invisible in development, where a collection scan over 200 documents is instant, and obvious in production, where it is not.
+
+Two habits have paid for themselves repeatedly. Check the query plan for anything on a hot path — a full scan where you expected an index lookup is a five-second check that saves a five-hour incident. And index on the shape the query actually uses: for a compound index, the field order determines which prefixes it can serve, and an index on the wrong prefix order is dead weight that still costs you on every write.
+
+## What I would do differently from the start
+
+- Write the queries the application needs before designing a single document.
+- Embed what is bounded and read together; reference everything that can grow.
+- Turn on schema validation immediately, and treat it as documentation that executes.
+- Record where every denormalised copy lives, the moment there is more than one.
+- Check the plan for hot queries before shipping, not after profiling.
+
+The database was never the decision. The decision is what a document is, and unlike the database, it is not a thing you can swap out on a Tuesday.

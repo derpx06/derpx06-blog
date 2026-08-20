@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { resolveImage } from "./images";
 
 export type MetaProps = {
   title: string;
@@ -41,7 +42,12 @@ export function generateMeta({
   alternates,
 }: MetaProps): Metadata {
   const url = canonical || absolute(baseURL, path);
-  const ogImage = absolute(baseURL, image || `/api/og/generate?title=${encodeURIComponent(title)}`);
+  // A path that is not on disk would be emitted as an absolute URL and 404 for
+  // every crawler that follows it. Fall through to the generated card instead.
+  const ogImage = absolute(
+    baseURL,
+    resolveImage(image) || `/api/og/generate?title=${encodeURIComponent(title)}`,
+  );
 
   return {
     metadataBase: new URL(baseURL),

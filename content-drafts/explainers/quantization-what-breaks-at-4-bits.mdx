@@ -1,0 +1,111 @@
+---
+title: "Quantization: What Actually Breaks at 4 Bits"
+summary: "Storing weights in four bits instead of sixteen should destroy a model. It mostly does not — and the reasons it sometimes does are specific, well understood, and worth knowing before you pick a quant."
+publishedAt: "2026-10-05T09:00:00.000Z"
+image: ""
+tag: "Inference"
+topics: ["Quantization", "GPTQ", "AWQ", "Inference"]
+status: "published"
+---
+
+A 70-billion-parameter model in 16-bit precision needs 140 GB just to hold its weights, before any activations or KV cache. That is several data-centre GPUs. The same model quantized to 4 bits needs about 35 GB and fits on one, which is the difference between a model you can run and a model you can read about.
+
+Compressing every number to a quarter of its size sounds like it should be catastrophic. In practice a well-quantized 4-bit model is close to indistinguishable from the original on most tasks, and the interesting question is not *why does it work* but *where exactly does it stop working* — because the failure is not gradual, and it is not uniform across the model.
+
+## 1. What quantization actually is
+
+Take a tensor of floating-point weights and map them onto a small set of integers. The standard scheme is affine:
+
+$$
+w_q = \mathrm{round}\!\left(\frac{w}{s}\right) + z
+$$
+
+where $s$ is a **scale** and $z$ a **zero point** that lets the representable range be asymmetric. Dequantizing reverses it: $w \approx s(w_q - z)$.
+
+With 4 bits you get 16 distinct values. If a tensor's weights run from $-0.8$ to $+0.9$, those 16 levels are spread across that range, and every weight snaps to the nearest one. The error per weight is bounded by half a step.
+
+The immediate consequence — and the one that drives every design decision that follows — is that **the scale is set by the extremes**. One weight at $+8.0$ in a tensor where everything else is under $0.5$ stretches the range sixteen-fold, and now all the ordinary weights are crushed into one or two levels. A single outlier can destroy the precision of everything it shares a scale with.
+
+## 2. Granularity: the first real lever
+
+The fix is to not share a scale so widely.
+
+**Per-tensor** quantization uses one scale for an entire weight matrix. Cheapest, and maximally vulnerable to the outlier problem above.
+
+**Per-channel** uses a scale per row or column. Much better, because outliers are usually concentrated in particular channels and now only damage their own.
+
+**Group-wise** subdivides further — one scale per group of 64 or 128 consecutive weights. This is what modern 4-bit formats use, and the group size is the parameter you see in filenames like `g128`.
+
+Group-wise costs something: each group stores its own scale and zero point, so the *effective* bit-width is higher than the nominal one. At group size 128 with 16-bit scales, 4-bit weights actually cost around 4.25 bits. That overhead buys most of the quality back, which is a good trade and the reason nobody uses per-tensor for weights any more.
+
+<Feedback variant="info" title="Why it works at all">
+Neural networks are massively over-parameterised and trained with noisy gradients on noisy data. They are not precision instruments; they are robust statistical objects, and small perturbations to individual weights are absorbed. Quantization exploits the same slack that makes dropout and stochastic gradient descent work.
+</Feedback>
+
+## 3. Activations are the harder problem
+
+Weights are known in advance, examinable offline, and static. **Activations** are computed at runtime, depend on the input, and — critically — contain far more extreme outliers.
+
+Research on this found something specific: in large transformers, a small number of *feature dimensions* develop systematically huge activation magnitudes, orders of magnitude above the rest. These emergent outlier features appear consistently past a certain model scale, they occupy the same dimensions across different inputs, and they are functionally important — zeroing them badly damages the model.
+
+That combination is what makes naive 8-bit activation quantization fail on large models while working fine on small ones, and it is why the field settled on **weight-only** quantization for LLM inference. Weights go to 4 bits; activations stay in 16-bit; the matrix multiply dequantizes weights on the fly.
+
+This looks wasteful and is not, because of the point that makes the whole area make sense.
+
+## 4. Quantization is a bandwidth optimisation
+
+Decoding one token from a large model reads every weight from memory and does relatively little arithmetic with each. It is memory-bound — the same diagnosis that motivates FlashAttention and speculative decoding.
+
+So 4-bit weights are fast for a reason that has nothing to do with integer arithmetic being cheaper: **there are four times fewer bytes to move**. The dequantization work is essentially free because it happens on data the chip was already waiting for.
+
+This explains an otherwise puzzling observation. Quantization speeds up single-stream decoding substantially, and does much less for large-batch throughput — because at high batch size the same weights serve many sequences, arithmetic intensity rises, and the operation is no longer bandwidth-limited.
+
+It also explains why weight-only quantization is not a compromise. Keeping activations in 16 bits costs almost nothing, because activations are small relative to weights and were never the bottleneck.
+
+## 5. The methods, and what distinguishes them
+
+**Round-to-nearest** is the baseline: quantize each weight independently to its closest level. Free, instant, and noticeably lossy at 4 bits.
+
+**GPTQ** (Frantar et al.) treats it as an optimisation problem. Quantize weights one column at a time, and after each one, *update the remaining unquantized weights* to compensate for the error just introduced, using second-order information from a small calibration set. The model is not merely rounded; it is adjusted so the layer's output stays as close as possible to the original. This is meaningfully better than round-to-nearest and requires a calibration pass of a few hundred samples.
+
+**AWQ** (Lin et al.) starts from the observation that not all weights matter equally: a small fraction — around 1% — are salient, identifiable by the magnitude of the *activations* they multiply, not by their own magnitude. Rather than keeping those in high precision, which breaks hardware efficiency, AWQ scales the salient channels up before quantizing so they land on the quantization grid more precisely, and compensates elsewhere. Because it depends on activation statistics rather than weight reconstruction, it tends to generalise better outside the calibration distribution.
+
+**GGUF / llama.cpp k-quants** are the formats you meet running models locally. The naming encodes the scheme: `Q4_K_M` is 4-bit, k-quant, medium — which in practice means most tensors at 4 bits with selected sensitive ones kept larger.
+
+<Feedback variant="warning" title="Calibration data leaks into behaviour">
+GPTQ and AWQ both tune against a calibration set. Calibrate on English Wikipedia and quantize a model you will use for Python, and the quantization error is optimised for the wrong distribution. Where a quant's calibration corpus is documented, check it matches your use.
+</Feedback>
+
+## 6. Where it actually breaks
+
+The failures are not uniform, and knowing the pattern is the practical payoff.
+
+**Long generations degrade before short ones.** Quantization error is small per token and compounds through a long autoregressive chain. A model that answers factual questions perfectly at 4 bits can drift noticeably over two thousand tokens of generation.
+
+**Rare knowledge goes first.** Frequently-reinforced facts are represented redundantly and survive; long-tail facts sit in fine weight distinctions that 16 levels cannot preserve. Perplexity on a general corpus barely moves while the model quietly gets worse at exactly the specialised knowledge you might have chosen it for.
+
+**Reasoning chains are fragile.** Multi-step arithmetic or logic requires many consecutive correct steps, so a small per-step error rate compounds multiplicatively. This is the most commonly reported real-world degradation.
+
+**Small models suffer more.** A 70B model at 4 bits usually beats a 13B model at 16 bits. A 1B model at 4 bits can be genuinely broken. Redundancy is what absorbs the error, and small models have less of it. The general rule — *prefer a larger model more heavily quantized* — holds until the model gets small, and then reverses.
+
+**Below 4 bits, quality falls off a cliff.** 3-bit is usable with care; 2-bit generally is not, for anything that matters.
+
+## 7. Choosing, in practice
+
+If the model fits at 8 bits, use 8 bits — the degradation is close to unmeasurable and you avoid the whole question.
+
+If it does not, 4-bit with a good method (GPTQ or AWQ, group size 128) is the default and is genuinely fine for most work. Prefer AWQ if your domain is far from typical calibration text.
+
+Then measure on *your* task. Perplexity is the metric everyone reports and it is the least informative one available — it is an average over ordinary text, and the failures above are concentrated in the tail, in long generations, and in multi-step reasoning. A quantized model with identical perplexity can be materially worse at the thing you need. Thirty of your own evaluation cases will tell you more than any benchmark table.
+
+## 8. The framing
+
+Quantization is not compression in the ordinary sense. It is a deliberate reduction in the resolution of a system that turns out not to need most of its resolution — and it pays out in bandwidth, which is the resource that was actually scarce.
+
+Which is the same story as FlashAttention and speculative decoding, arrived at from a third direction. The consistent lesson of inference optimisation is that the constraint is almost never arithmetic. It is moving bytes, and every technique that has stuck is a way of moving fewer of them.
+
+## Sources
+
+- Frantar, Ashkboos, Hoefler, Alistarh — [*GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers*](https://arxiv.org/abs/2210.17323), 2022
+- Lin, Tang, Tang, Yang, Dang, Han — [*AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration*](https://arxiv.org/abs/2306.00978), 2023
+- Dettmers, Lewis, Belkada, Zettlemoyer — [*LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale*](https://arxiv.org/abs/2208.07339), 2022

@@ -1,0 +1,92 @@
+---
+title: "B-Trees or LSM-Trees: Your Database Already Chose"
+summary: "Every storage engine picks a side in the same trade — fast writes or fast reads — and almost every performance surprise you have had with a database follows from which side it picked."
+publishedAt: "2026-10-15T09:00:00.000Z"
+image: ""
+tag: "Databases"
+topics: ["Storage Engines", "B-Tree", "LSM-Tree", "Performance"]
+status: "published"
+---
+
+Ask why Postgres and Cassandra behave so differently under a write-heavy load and you will get answers about SQL, about distribution, about consistency models. Those are real differences and they are not the one that matters here. The one that matters is that they wrote the data to disk in fundamentally different shapes, and everything downstream — write throughput, read latency, disk usage, how the system degrades when it is full — falls out of that choice.
+
+There are essentially two shapes. Knowing which one you are running explains most of what your database does when it is under pressure.
+
+## The physical constraint underneath both
+
+A disk is very fast at sequential access and much slower at random access. That gap was three orders of magnitude on spinning disks; SSDs narrowed it, but did not close it, and they added a second constraint — flash must be erased in large blocks before it can be rewritten, so small in-place updates are more expensive than their size suggests.
+
+Every storage engine is an answer to one question: your data arrives in random key order, and the disk wants sequential writes. Where do you put the mismatch?
+
+There are exactly two places to put it. Pay at write time, keeping the data always sorted on disk. Or pay at read time, writing whatever arrives wherever it fits and sorting later.
+
+## B-trees: pay at write time
+
+A B-tree keeps the data sorted in fixed-size pages, and updates it **in place**. To write a key, find the page it belongs on, read it, modify it, write it back. If the page is full, split it and update the parent.
+
+Reads are excellent, and they are excellent in a way that matters more than average latency: to find a key you traverse from the root, and the depth is logarithmic with a very large branching factor. A tree over a billion rows is three or four levels deep, the upper levels are cached, and a point lookup is one or two actual disk reads. Crucially, that is the *worst* case as well as the typical case — there is exactly one place a key can be.
+
+Range scans are similarly good, because the data is already in order. `WHERE created_at BETWEEN` walks contiguous pages.
+
+The cost is on writes. Every insert is a random write to a specific page, and a page is typically 4 or 8 KB, so writing 100 bytes writes 8 KB. Then, because a torn page during a crash would corrupt the tree, most engines write the change to a write-ahead log first — so the same 100 bytes are written twice. This is **write amplification**: bytes actually written to disk divided by bytes of data you asked to store, and for a B-tree it is routinely 10× or more.
+
+<Feedback variant="info" title="Where you have already met this">
+Postgres, MySQL's InnoDB, and MongoDB's WiredTiger are B-tree engines. So is essentially every filesystem index and every relational database you have used. If your workload is read-heavy with moderate writes — which describes most applications — this is the correct default and you should not think about it again.
+</Feedback>
+
+## LSM-trees: pay at read time
+
+A log-structured merge-tree refuses to update in place. Writes go into an in-memory sorted structure — the memtable — and to a write-ahead log for durability. That is the entire write path: an append and a memory insert. No page lookup, no random write, no read-modify-write.
+
+When the memtable fills, it is flushed to disk in one **sequential** write as an immutable sorted file, an SSTable. Files are never modified after creation. An update to an existing key is just a newer entry in a newer file; a delete is a **tombstone**, a marker that says this key is gone.
+
+Write throughput is dramatically higher, because every write is sequential and nothing is read first.
+
+The bill arrives at read time. A key might be in the memtable, or in any of the SSTables on disk, and you must check newest to oldest until you find it. Without help, a read touches every level.
+
+Two mechanisms make this survivable:
+
+**Bloom filters.** A small probabilistic structure per SSTable that answers "is this key definitely not here?" with certainty, and "possibly here" otherwise. False positives cost a wasted read; false negatives cannot happen. This lets a lookup skip almost every file it would otherwise have to open, and it is the reason LSM reads are viable at all.
+
+**Compaction.** A background process that merges SSTables, keeps the newest version of each key, and drops tombstoned ones. It reclaims space and bounds how many files a read must consult.
+
+## Compaction is where the surprises live
+
+Compaction is the part that generates the operational stories, because it is background work that competes with foreground traffic for exactly the resources the foreground needs.
+
+Under sustained heavy writes, compaction can fall behind. SSTable count grows, read latency climbs because each read consults more files, and disk usage grows because superseded data has not been merged away yet. If it falls far enough behind, some engines deliberately slow incoming writes to let it catch up — which surfaces as a database that was fast for six hours and then abruptly is not, with no change in the query pattern.
+
+There is also a space cost that catches people out: deleted data does not free space until compaction runs. A large delete can *increase* disk usage in the short term, because tombstones are themselves records. A database that gets fuller when you delete from it is deeply counter-intuitive and entirely by design.
+
+<Feedback variant="warning" title="Read amplification has a specific worst case">
+Range scans on an LSM-tree are much worse than point lookups, because Bloom filters cannot help — they answer questions about single keys, not ranges. Every file in range must be opened and merged. A workload that is mostly scans on an LSM engine is fighting the design.
+</Feedback>
+
+LevelDB, RocksDB, Cassandra, ScyllaDB and HBase are LSM engines, and RocksDB in particular sits underneath a surprising number of systems that do not advertise it.
+
+## The trade, stated plainly
+
+| | B-tree | LSM-tree |
+|---|---|---|
+| Write path | random, in place | sequential, append |
+| Write amplification | high | lower, but paid later by compaction |
+| Point read | 1–2 disk reads, predictable | varies with file count and Bloom hit |
+| Range scan | excellent | weaker; must merge files |
+| Space | fragmentation from partly-used pages | superseded data until compaction |
+| Latency profile | stable | mostly fast, with compaction-driven variance |
+
+You cannot have both. Sorting on disk is work, and the only question is when you do it.
+
+This is formalised as the **RUM conjecture**: you can optimise for read overhead, update overhead or memory overhead, and improving any two costs you the third. Every storage engine is a point on that surface, and every "revolutionary" engine is a different point, not an escape.
+
+## What to actually do with this
+
+Most of the time, nothing — pick the boring default and move on. The knowledge earns its keep in three situations.
+
+When choosing under a genuinely write-heavy load: an append-only log, event ingestion, time-series, metrics. That is the workload B-trees are worst at and LSM-trees were built for, and the difference is large enough to change your architecture.
+
+When a database gets mysteriously slower under sustained writes. On an LSM engine, look at compaction before you look at your queries. The pending-compaction backlog is usually the first honest signal, and it moves before latency does.
+
+And when a delete makes things worse rather than better. That is tombstones, and the answer is not to delete more carefully but to understand that reclamation is asynchronous.
+
+The engine chose its side before you wrote a line of application code. Knowing which side it chose turns a class of baffling production behaviour into something you could have predicted from first principles.

@@ -10,7 +10,9 @@
     "lint": "npx @biomejs/biome lint src scripts",
     "biome-write": "npx @biomejs/biome format --write .",
     "content:export": "node scripts/export-content.mjs",
-    "content:db:setup": "node scripts/setup-content-database.cjs"
+    "content:db:setup": "node scripts/setup-content-database.cjs",
+    "content:import": "node scripts/import-content.mjs",
+    "content:check": "node scripts/check-content.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",

@@ -1,0 +1,120 @@
+---
+title: "Mamba: What If Attention Isn't the Answer?"
+summary: "State space models were fast and forgetful; attention was expensive and precise. Mamba's contribution was making a state space model that can choose what to remember — without giving up linear time."
+publishedAt: "2026-10-12T09:00:00.000Z"
+image: ""
+tag: "Research Papers"
+topics: ["Mamba", "State Space Models", "Architecture", "Long Context"]
+status: "published"
+---
+
+Attention's cost is quadratic in sequence length, and although FlashAttention made the constant far smaller, it did not change the exponent. Doubling the context still quadruples the work. Generation is worse in a different way: the KV cache grows linearly with every token produced, so the memory of a long conversation is unbounded and the cost of the thousandth token is higher than the cost of the first.
+
+Recurrent networks had neither problem. They processed a sequence in linear time and carried a fixed-size hidden state, so cost per token was constant regardless of history. They lost anyway — they could not be parallelised across the sequence during training, and they forgot things.
+
+Mamba is an attempt to get the recurrent cost profile with something closer to attention's ability to remember, and the mechanism it introduces to do that is the interesting part.
+
+<Button href="https://arxiv.org/abs/2312.00752" variant="primary" suffixIcon="arrowUpRight">See the research paper</Button>
+
+Albert Gu and Tri Dao published *Mamba: Linear-Time Sequence Modeling with Selective State Spaces* in December 2023.
+
+## 1. State space models, briefly
+
+A state space model comes from control theory and describes a system with a hidden state evolving under an input. In continuous time:
+
+$$
+h'(t) = \mathbf{A}h(t) + \mathbf{B}x(t), \qquad y(t) = \mathbf{C}h(t)
+$$
+
+Discretised for a sequence, this becomes a linear recurrence:
+
+$$
+h_t = \bar{\mathbf{A}}h_{t-1} + \bar{\mathbf{B}}x_t, \qquad y_t = \mathbf{C}h_t
+$$
+
+Which looks exactly like an RNN, with one crucial difference: the recurrence is **linear** in the state, with no nonlinearity between steps.
+
+That linearity is what makes it trainable at scale. A linear recurrence can be unrolled into a convolution, and a convolution over the whole sequence can be computed in parallel — so the model trains like a CNN and runs at inference like an RNN. The S4 line of work built on this and produced genuinely strong results on long-range tasks.
+
+<Feedback variant="info" title="Two views of the same model">
+The dual nature is the point. **Convolutional mode** for training: parallel across the sequence, fast on a GPU. **Recurrent mode** for inference: constant work and constant memory per token, no growing cache. Attention has no equivalent — it is parallel in training and linear-in-history at inference.
+</Feedback>
+
+## 2. The problem: the model was the same for every token
+
+In S4 and its relatives, $\mathbf{A}$, $\mathbf{B}$ and $\mathbf{C}$ are learned parameters that are **fixed across the sequence**. The same dynamics apply to every position regardless of what that position contains.
+
+This makes the convolutional view possible — a convolution kernel is by definition the same everywhere — and it is also a hard limit on capability. The model cannot decide that *this* token matters and should be written strongly into the state, while *that* one is filler and should be ignored. Its compression of history is content-independent.
+
+The paper demonstrates the gap with two synthetic tasks. **Selective copying** requires reproducing certain tokens while ignoring interspersed noise — you must choose what to remember. **Induction heads** requires spotting a pattern seen earlier and completing it — you must retrieve based on content. Attention does both easily, because it compares every position against every other. A fixed-dynamics SSM fails both, and no amount of scale repairs it, because the deficiency is structural.
+
+## 3. Selectivity: make the parameters depend on the input
+
+Mamba's change is direct. Make $\mathbf{B}$, $\mathbf{C}$ and the discretisation step size $\Delta$ **functions of the current token** rather than fixed parameters.
+
+Now the recurrence at each step is shaped by what is being read. The model can learn to make $\Delta$ large for an important token — writing it firmly into the state — and small for an unimportant one, effectively skipping it. It can decide, per token, what enters the state and what is read out.
+
+This is a gating mechanism, and it is closely related to what made LSTMs work. The difference is that it is embedded in a linear recurrence designed for hardware efficiency rather than in a nonlinear one that cannot be parallelised.
+
+Both synthetic tasks are solved once selectivity is added. That is the paper's central experiment: the failures were caused by fixed dynamics, and making the dynamics input-dependent removes them.
+
+## 4. The cost: the convolution is gone
+
+There is an immediate and severe problem. If the parameters change at every step, the recurrence is no longer a convolution — there is no single kernel. The entire reason SSMs were trainable at scale has just been destroyed.
+
+Solving this is the paper's second contribution, and it is a systems contribution rather than a modelling one. Three ideas together:
+
+**Parallel scan.** A linear recurrence, even with varying coefficients, is an *associative* operation. Associativity permits a parallel prefix scan — the same algorithm that computes a prefix sum in logarithmic depth rather than linear. So the sequence can still be processed in parallel, just by scan rather than convolution.
+
+**Kernel fusion.** The expanded state is large — much larger than the input — and materialising it in high-bandwidth memory would make the model memory-bound. So the scan is fused into a single kernel that keeps the state in fast on-chip SRAM, reads the inputs once, and writes only the outputs.
+
+**Recomputation.** The intermediate states needed for the backward pass are not stored. They are recomputed during backpropagation, trading arithmetic for memory traffic.
+
+Anyone who has read the FlashAttention paper will recognise all three moves, which is unsurprising given the shared author. The pattern is identical: profile the memory hierarchy, keep the large intermediate in SRAM, recompute rather than store.
+
+<Feedback variant="warning" title="This is a hardware-aware architecture, not just an architecture">
+Mamba's viability depends on a custom kernel. Written naively in framework operations, the selective scan materialises its expanded state in HBM and is slow enough to be uninteresting. The architecture and its implementation are not separable — which is a notable feature of modern architecture research generally.
+</Feedback>
+
+## 5. What it achieves
+
+From the abstract:
+
+- **5× higher inference throughput** than Transformers
+- **Linear scaling** in sequence length, with performance improving on sequences up to **million-length**
+- **Mamba-3B** outperforms Transformers of the same size and **matches Transformers twice its size**, in both pretraining and downstream evaluation
+- Validated across **language, audio and genomics**
+
+The architecture also simplifies: Mamba removes attention *and* the MLP blocks entirely, using a single homogeneous block type rather than the alternating structure of a Transformer.
+
+The multi-modality result deserves emphasis. Audio and genomics involve sequences far longer than text, where quadratic attention is simply not an option — these are domains where the linear cost profile is not a nice-to-have but the entire reason the model is applicable.
+
+## 6. What attention still does better
+
+Mamba compresses history into a **fixed-size state**. That is exactly why it is efficient, and exactly what it costs.
+
+Attention keeps every previous token available and can attend to any of them precisely. If you ask a Transformer to recall an arbitrary detail from 40,000 tokens ago, the KV entry for that token is still there. Ask Mamba, and the answer depends on whether that detail survived compression into the state — and if it did not, it is gone.
+
+This shows up as weaker performance on tasks demanding precise retrieval from long context, which is a real and commercially important category: retrieval-augmented generation over long documents, needle-in-a-haystack lookups, code that references a definition far above.
+
+Selectivity narrows the gap by letting the model choose what to keep. It cannot close it, because a fixed-size state has a fixed information capacity and no amount of cleverness in what to store changes how much fits.
+
+## 7. Where this actually landed
+
+The most interesting consequence has not been Mamba replacing Transformers. It has been **hybrids**.
+
+If attention is precise and expensive while state space layers are cheap and lossy, a model does not have to choose globally — it can interleave them, using a small number of attention layers for precise retrieval and SSM layers for the bulk of sequence processing. Several production models now do exactly this, and the reported results suggest the combination beats either pure architecture at a given cost.
+
+That outcome is more useful than a clean replacement would have been, and it reframes the question the paper opened. Not *is attention necessary* but *how much attention is necessary, and where* — which is an engineering question with a tunable answer rather than an architectural loyalty test.
+
+## 8. The idea worth carrying
+
+Mamba's real argument is that the two properties everyone assumed were coupled are separable. Content-dependent processing — the thing attention gives you — does not have to cost quadratic time. It costs quadratic time in *attention*, because attention implements it by comparing everything to everything. A recurrence that varies with its input achieves selectivity in linear time, provided you are willing to write the kernel that makes it fast.
+
+Whether the fixed-size state proves to be a fatal ceiling or an acceptable trade is still open. What is settled is that the quadratic cost was a property of one mechanism rather than a law about sequence modelling, and demonstrating that clearly is worth a great deal even if the specific architecture ends up as one component among several.
+
+## Sources
+
+- Gu, Dao — [*Mamba: Linear-Time Sequence Modeling with Selective State Spaces*](https://arxiv.org/abs/2312.00752), 2023
+- Gu, Goel, Ré — [*Efficiently Modeling Long Sequences with Structured State Spaces*](https://arxiv.org/abs/2111.00396) (S4), 2021
+- Dao, Gu — [*Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality*](https://arxiv.org/abs/2405.21060) (Mamba-2), 2024

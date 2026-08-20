@@ -1,0 +1,137 @@
+---
+title: "FlashAttention: Attention Was Never Compute-Bound"
+summary: "The quadratic cost of attention is real, but it was never the bottleneck. FlashAttention makes attention faster without approximating it — by counting memory traffic instead of arithmetic."
+publishedAt: "2026-08-24T09:00:00.000Z"
+image: ""
+tag: "Research Papers"
+topics: ["FlashAttention", "GPU", "Attention", "Inference"]
+status: "published"
+---
+
+For five years the field treated attention's quadratic cost as an arithmetic problem, and attacked it with arithmetic solutions. Sparse attention computed fewer entries. Low-rank attention approximated the matrix. Linear attention replaced the softmax with something cheaper to factor. Dozens of papers reported large reductions in FLOPs, and almost none of them made anything faster in wall-clock time on a real GPU.
+
+FlashAttention explained why. The bottleneck was never the arithmetic. It was the memory traffic the arithmetic implied, and once you count that instead, the fix is not a cheaper approximation of attention — it is the same attention, computed in a different order.
+
+<Button href="https://arxiv.org/abs/2205.14135" variant="primary" suffixIcon="arrowUpRight">See the research paper</Button>
+
+Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra and Christopher Ré published *FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness* in May 2022, and it appeared at NeurIPS that year. The word doing the most work in that title is **exact**.
+
+## 1. The number everyone was optimising was the wrong number
+
+Standard attention is three matrix operations. Given queries, keys and values for a sequence of length $N$ with head dimension $d$:
+
+$$
+S = QK^\top \qquad P = \mathrm{softmax}(S) \qquad O = PV
+$$
+
+The FLOP count is dominated by the two matrix multiplies, both $O(N^2 d)$. That is the number the efficiency literature spent years reducing.
+
+But look at what a GPU actually does to execute those three lines. It computes $S$, an $N \times N$ matrix, and **writes it to memory**. It reads $S$ back, computes the softmax, and **writes $P$ to memory**. It reads $P$ back, multiplies by $V$, and writes $O$. For a sequence of 4,096 tokens, $S$ and $P$ are each 16.7 million entries per head, per layer. They are written and read in full, twice.
+
+The arithmetic is $O(N^2 d)$. The memory traffic is $O(N^2)$ — and on modern hardware those two costs are not remotely comparable.
+
+## 2. The memory hierarchy is the whole story
+
+A GPU is not one memory. It is at least two, and they differ by an order of magnitude in the direction that matters. The paper's own framing, for an A100:
+
+| | Capacity | Bandwidth |
+|---|---|---|
+| On-chip SRAM | ~20 MB | ~19 TB/s |
+| High-bandwidth memory (HBM) | 40 GB | ~1.5 TB/s |
+
+SRAM is roughly **thirteen times faster** and about **two thousand times smaller**. Every intermediate that does not fit in SRAM lives in HBM, and every trip to HBM is paid at the slow rate.
+
+This gives you the concept the paper is built on: **arithmetic intensity**, the ratio of FLOPs performed to bytes moved. An operation with high arithmetic intensity is *compute-bound* — the chip's multipliers are the limit, and reducing FLOPs helps. An operation with low arithmetic intensity is *memory-bound* — the multipliers sit idle waiting for data, and reducing FLOPs helps not at all.
+
+Softmax is memory-bound. So is dropout. So is masking. So is the elementwise scaling. In a standard attention implementation these cheap operations, sandwiched between the two matrix multiplies, force $S$ and $P$ through HBM and end up dominating the runtime. The paper measured this directly: on GPT-2, the matrix multiplies account for most of the FLOPs and a minority of the time.
+
+<Feedback variant="info" title="Why FLOP-reduction papers kept disappointing">
+An approximation that cuts FLOPs by 10× on a memory-bound kernel cuts runtime by roughly nothing, because the kernel was never waiting on the multipliers. This is why so many efficient-attention variants looked excellent on paper and unremarkable in practice.
+</Feedback>
+
+## 3. The fix: never materialise the matrix
+
+If the problem is writing $N \times N$ intermediates to slow memory, the fix is to not write them at all. FlashAttention splits $Q$, $K$ and $V$ into blocks small enough that a block of each fits in SRAM together, then loops:
+
+1. Load a block of $K$ and a block of $V$ into SRAM.
+2. For each block of $Q$: load it, compute that tile of $QK^\top$ **inside SRAM**, apply the softmax numerator, multiply by the $V$ block, and accumulate into a running output.
+3. Discard the tile. Never write it to HBM.
+
+The full attention matrix is computed — every entry of it — but no entry ever exists in HBM. It is created in fast memory, consumed immediately, and thrown away. This is *kernel fusion* applied with the memory hierarchy in mind: the whole chain from $QK^\top$ through softmax to $PV$ becomes a single kernel with a single pass over the inputs.
+
+The HBM traffic drops from $O(N^2)$ to $O(N^2 d^2 / M)$, where $M$ is the SRAM size. Because $d^2$ is small — 64 or 128 squared — and $M$ is around 20 MB, that is a large constant-factor reduction in the thing that was actually costing time.
+
+## 4. The trick that makes tiling possible: online softmax
+
+There is an obstacle, and it is the reason this was not obvious. Softmax is not local. To normalise a row you need its sum, and to compute that sum stably you need its maximum — both of which require having seen the *entire* row. But tiling means you see the row a block at a time.
+
+The escape is a running-statistics formulation, adapted from the online normalizer calculation of Milakov and Gimelshein. Keep, for each row, a running maximum $m$ and a running sum $\ell$. When a new block arrives with its own maximum $m'$, rescale what you already have and fold in the new contribution:
+
+$$
+m_{\text{new}} = \max(m, m') \qquad
+\ell_{\text{new}} = e^{\,m - m_{\text{new}}}\,\ell + e^{\,m' - m_{\text{new}}}\,\ell'
+$$
+
+The accumulated output is rescaled by the same factor. Every block correction is exact, so after the final block the result is bit-for-bit the softmax you would have computed in one pass — with the same numerical-stability guarantee, since you never exponentiate anything above zero.
+
+This is the hinge of the entire paper. Without it, tiling attention would require either two passes over $K$ and $V$ or an approximation. With it, one pass suffices and the result is exact.
+
+## 5. Backward pass: recompute instead of remember
+
+Training needs the attention matrix again for gradients, and the forward pass deliberately threw it away. The standard answer would be to store it — which reintroduces exactly the $O(N^2)$ memory the design just eliminated.
+
+FlashAttention stores the output $O$ and the per-row softmax statistics — a vector of size $N$, not a matrix of size $N^2$ — and **recomputes** the needed tiles of $S$ and $P$ on the fly during the backward pass, in SRAM, block by block.
+
+This spends more FLOPs than the standard backward pass, and it is still faster. That is the paper's thesis stated as an experiment: on a memory-bound kernel, buying arithmetic to avoid memory traffic is a good trade. It also drops attention's memory footprint from quadratic to **linear** in sequence length, which is what actually made long-context training affordable.
+
+<Feedback variant="warning" title="Exact, not approximate">
+Sparse and low-rank attention change what the model computes; they trade quality for speed and you must re-validate the model. FlashAttention changes only the order of operations. Gradients are identical, the loss curve is identical, and there is nothing to re-validate. That is why it was adopted almost universally within a year while the approximation methods were not.
+</Feedback>
+
+## 6. What it bought, in the authors' numbers
+
+From the abstract, all measured against strong baselines:
+
+- **15%** end-to-end wall-clock speedup training BERT-large at sequence length 512
+- **3×** speedup on GPT-2 at sequence length 1K
+- **2.4×** on Long Range Arena at sequence lengths 1K–4K
+- **0.7** better perplexity on GPT-2, from the longer context the memory savings allow
+- **6.4** points of lift on long-document classification
+
+And two results that had not previously been achieved by any Transformer: **61.4%** on Path-X at sequence length 16K, and **63.1%** on Path-256 at sequence length 64K. Before this, Transformers performed at chance on those benchmarks — not because the architecture could not represent the task, but because nobody could fit the sequence in memory to try.
+
+The last two numbers are the ones I find most instructive. A systems optimisation did not merely make an existing capability cheaper; it produced a capability that did not exist.
+
+## 7. What FlashAttention-2 and -3 fixed
+
+The original algorithm removed the memory bottleneck and immediately ran into a different one: it was not using the GPU's own parallelism well. FlashAttention-2, published by Tri Dao in 2023, addresses three specific inefficiencies, and they are instructive because none of them is about memory traffic at all.
+
+**Fewer non-matmul operations.** Modern GPUs have dedicated tensor cores whose throughput on matrix multiplication is roughly an order of magnitude above their throughput on ordinary floating-point work. The rescaling in the online softmax is non-matmul work, and the first version did more of it than necessary. Deferring the division until the end of the loop — keeping unnormalised accumulators and correcting once — removes most of it.
+
+**Parallelise over sequence length, not just batch and heads.** The original parallelised across batch elements and attention heads, which is plenty of work when the batch is large. Long-context training has small batches and long sequences, so the GPU sat partly idle. Version 2 splits the sequence itself across thread blocks.
+
+**Better work partitioning within a block.** Reorganising which warp handles which slice reduces the shared-memory traffic and synchronisation between them.
+
+FlashAttention-3 goes further by targeting Hopper-generation hardware specifically — overlapping the matmul and softmax stages so the tensor cores are not idle during the non-matmul phase, and exploiting low-precision formats.
+
+The pattern across all three versions is worth naming: each one profiled the implementation, found the newly-dominant cost, and restructured around it. The algorithm did not change. The accounting did.
+
+<Feedback variant="info" title="You are almost certainly already using this">
+FlashAttention is the backend behind PyTorch's `scaled_dot_product_attention` when the inputs qualify, and it is standard in every serious inference engine. If you train or serve transformers on recent hardware, this paper is in your stack whether or not you invoked it by name — which is a large part of why long-context models became ordinary so quickly.
+</Feedback>
+
+## 8. Why this generalises beyond attention
+
+The transferable idea is not the tiling schedule. It is the discipline of profiling the memory hierarchy before optimising the arithmetic.
+
+The same reasoning shows up everywhere once you look for it. PagedAttention treats the KV cache as virtual memory because serving is capacity-bound, not compute-bound. Quantization is usually a bandwidth optimisation wearing a compute costume — smaller weights move faster, and the dequantize step is free because you were waiting anyway. Gradient checkpointing is FlashAttention's recomputation trade applied to whole layers.
+
+In each case the winning move was to ask which resource is actually saturated, and the answer was rarely the one in the complexity analysis.
+
+The habit worth stealing: before you optimise anything, measure the arithmetic intensity. If it is low, every FLOP you remove is a FLOP the machine was not waiting for.
+
+## Sources
+
+- Dao, Fu, Ermon, Rudra, Ré — [*FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness*](https://arxiv.org/abs/2205.14135), NeurIPS 2022
+- Milakov, Gimelshein — [*Online normalizer calculation for softmax*](https://arxiv.org/abs/1805.02867), 2018
+- Dao — [*FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning*](https://arxiv.org/abs/2307.08691), 2023

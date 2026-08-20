@@ -1,0 +1,82 @@
+---
+title: "I Fine-Tuned a 0.5B Model to Write Shell Commands"
+summary: "A half-billion-parameter model running on a laptop beat a frontier API for one narrow task. Here is what that actually proves, and the much larger thing it does not."
+publishedAt: "2026-08-20T09:00:00.000Z"
+image: ""
+tag: "Models"
+topics: ["Fine-tuning", "LoRA", "Small Models", "Qwen"]
+status: "published"
+---
+
+The model I use most often has 0.5 billion parameters. It does exactly one thing: it turns a sentence like *find every file over 100MB modified this week* into a shell command. It runs on my laptop, it answers before I finish reading the prompt, and for that one task it is more useful to me than a frontier model behind an API key.
+
+That sentence sounds like a claim about model efficiency. It is not. It is a claim about task scope, and the difference between those two things is the whole point of this post.
+
+## What I actually built
+
+The base is `qwen2.5-coder-0.5b-instruct`, loaded 4-bit through Unsloth, fine-tuned with TRL's supervised trainer on natural-language-to-shell pairs. Adapters only — the base weights never move. The result is on Hugging Face as [`shellm-qwen-0.5b-nl2sh-finetuned`](https://huggingface.co/Manas200/shellm-qwen-0.5b-nl2sh-finetuned), Apache-2.0, and the whole training run finished in the time it takes to make lunch.
+
+The setup is unremarkable, and that is the interesting part. Five years ago this would have been a research project. It is now an afternoon:
+
+```python
+from unsloth import FastLanguageModel
+from trl import SFTTrainer
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+    "unsloth/qwen2.5-coder-0.5b-instruct-bnb-4bit",
+    load_in_4bit=True,
+)
+model = FastLanguageModel.get_peft_model(model, r=16, lora_alpha=16)
+
+SFTTrainer(model=model, tokenizer=tokenizer, train_dataset=pairs).train()
+```
+
+Four lines of intent. The hard part was never the training loop.
+
+## The hard part was deciding what the task was
+
+My first attempt at a dataset was "shell commands", which is not a task. It is a category. Under that heading I collected `git` invocations, `awk` one-liners, `systemctl` incantations, Docker flags and `find` predicates, and the model got worse at all of them simultaneously — it learned the *shape* of a command without learning any particular command's grammar. It produced things that looked exactly like shell and did not run.
+
+The version that works answers a much smaller question: given a description of files, produce a `find`, `grep`, `ls`, `du`, `tar` or `rsync` invocation over the local filesystem. That is not "shell commands". That is one verb family, with a vocabulary of maybe forty flags, where the model can actually learn which flags co-occur and which are mutually exclusive.
+
+<Feedback variant="info" title="The scoping rule I now use">
+If you cannot write down the complete set of correct outputs' *shapes* on one page, the task is too broad for a small model. Narrow it until you can, then narrow it once more.
+</Feedback>
+
+Every gain I got came from cutting scope, not from adding parameters. I never tried a 1.5B or a 3B, because by the time the task was small enough to learn, 0.5B had already stopped being the constraint.
+
+## What a small model is actually buying you
+
+It is not accuracy. A frontier model writes better shell than mine does, on a wider range of requests, with better error messages when the request is ambiguous. If accuracy on arbitrary input is the metric, I lose, and it is not close.
+
+What I get instead is four things that no API can sell me:
+
+**Latency that feels local, because it is.** There is no network. The first token arrives faster than a round trip to any datacentre, and that changes how you use the tool — you start reaching for it mid-thought instead of deciding whether it is worth the wait.
+
+**A cost of zero at the margin.** Not "cheap". Zero. I can put it in a loop, call it on every keystroke, or run it a thousand times to build a dataset, and the bill does not exist.
+
+**Nothing leaves the machine.** Filenames and directory structures are, in aggregate, a fairly detailed description of what you are working on. That is not something I want to stream to a third party for the convenience of a `find` flag.
+
+**Behaviour that does not change under me.** The weights are a file. Nobody deprecates them, reprices them, or silently swaps the checkpoint on a Tuesday.
+
+Three of those four are systems properties, not model properties. That is the real lesson: the case for a small local model is almost never that it is smarter, and almost always that it sits somewhere in your architecture that a remote model cannot.
+
+## The part I got wrong
+
+I shipped it without an evaluation set.
+
+I had a training set and a vibe. I would type a request, read the output, decide it looked right, and move on. That works exactly until you change something — a new data batch, a different rank, one more epoch — and then you have no way to answer whether the change helped. I could tell you the model felt better after the second run. I could not tell you if it was.
+
+What I should have built first, before a single training step, is a hundred held-out pairs and a script that runs them and reports how many produce a command that is *correct*, not merely one that *parses*. That is an afternoon of unglamorous work that would have made every subsequent afternoon meaningful. Instead I spent the project's whole budget of attention on the fun part.
+
+<Feedback variant="warning" title="A parser is not a judge">
+For code generation the tempting metric is "does it parse". It is worthless. `rm -rf /` parses. Correctness for this task means the command produces the intended file set, which means your evaluation has to actually run it — in a sandbox, against a fixture tree, comparing output.
+</Feedback>
+
+## What I would tell someone starting one of these
+
+Fine-tuning a small model is now cheap enough that the cost is no longer the interesting variable. Your dataset is. A few hundred examples of a genuinely narrow task will beat a few thousand examples of a vague one, and you will find out which you have within the first hour of use.
+
+Pick the task by asking where a remote model *cannot* go — inside a hot loop, inside a private filesystem, inside an offline device, inside a latency budget measured in tens of milliseconds. Those are the places where a 0.5B model that is merely adequate beats a frontier model that is excellent, because the frontier model is not there at all.
+
+And build the eval first. I did not, and the only honest thing I can say about my own model is that I like using it.
