@@ -1,26 +1,12 @@
 "use client";
 
-import throttle from "lodash.throttle";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { person } from "@/resources";
-import { useReader } from "./ReaderProvider";
 import { SaveButton } from "./SaveButton";
+import { type ReaderTarget, useProgressReport, useScrollPercent } from "./ScrollProgress";
 
-export type ReaderTarget = {
-  slug: string;
-  href: string;
-  title: string;
-  minutes: number;
-  tag: string;
-};
-
-function scrollPercent(): number {
-  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-  if (scrollable <= 0) return 100;
-  return Math.min(100, Math.max(0, Math.round((window.scrollY / scrollable) * 100)));
-}
+export type { ReaderTarget };
 
 /**
  * The reader's sticky rule and header bar from screen 03 — one unit, because
@@ -36,42 +22,8 @@ export function ReaderHeader({
   sectionLabel: string;
   sectionHref: string;
 }) {
-  const { reportProgress, signedIn } = useReader();
-  const [percent, setPercent] = useState(0);
-
-  useEffect(() => {
-    const onScroll = () => setPercent(scrollPercent());
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!signedIn) return;
-
-    const send = () => reportProgress({ ...piece, percent: scrollPercent() });
-    const throttled = throttle(send, 5000, { leading: false, trailing: true });
-    const onScroll = () => throttled();
-    const flush = () => {
-      throttled.cancel();
-      send();
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("pagehide", flush);
-    document.addEventListener("visibilitychange", flush);
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("pagehide", flush);
-      document.removeEventListener("visibilitychange", flush);
-      flush();
-    };
-  }, [piece, reportProgress, signedIn]);
+  const percent = useScrollPercent();
+  useProgressReport(piece);
 
   const remaining = Math.max(0, Math.round(piece.minutes * (1 - percent / 100)));
 

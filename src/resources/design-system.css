@@ -1042,3 +1042,5 @@ select.ds-box option {
   color: var(--body);
 }
 .ds-bullets li { margin-bottom: 6px; }
+
+.ds-lesson-progress { padding: 12px 0 4px; border-bottom: 1px solid var(--rule); }

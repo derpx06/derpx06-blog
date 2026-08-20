@@ -1,18 +1,19 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import type { Metadata } from "next";
 
 import { CustomMDX } from "@/components";
 import { ArticleContents } from "@/components/site/ArticleContents";
 import { JsonLd } from "@/components/site/JsonLd";
 import { MarkLessonRead } from "@/components/site/MarkLessonRead";
+import { ScrollProgress } from "@/components/site/ScrollProgress";
+import { getContentBySlugs } from "@/lib/content-repository";
+import { getCourseBySlug, getCourses } from "@/lib/course-repository";
 import { extractHeadings } from "@/lib/headings";
 import { resolveImage } from "@/lib/images";
 import { generateMeta } from "@/lib/metadata";
-import { getContentBySlugs } from "@/lib/content-repository";
-import { getCourseBySlug, getCourses } from "@/lib/course-repository";
 import { courseLessons, readingMinutes } from "@/lib/site-data";
 import { about, baseURL, person } from "@/resources";
 import { formatDate } from "@/utils/formatDate";
@@ -96,12 +97,21 @@ export default async function CourseLesson({
         image={primary.metadata.image}
         author={{ name: person.name, url: `${baseURL}${about.path}`, image: person.avatar }}
       />
+      <ScrollProgress
+        piece={{
+          slug: `${courseSlug}/${lessonSlug}`,
+          href: `/learn/${courseSlug}/${lessonSlug}`,
+          title: link.title,
+          minutes,
+          tag: course.title,
+        }}
+      />
       <MarkLessonRead courseSlug={courseSlug} lessonSlug={lessonSlug} />
 
       <div className="ds-lesson-grid">
         <article id="main" className="ds-lesson-article">
           <span className="ds-kick" style={{ marginBottom: 14 }}>
-            {link.topic} · {minutes} min
+            {link.topic} · lesson {index + 1} of {lessons.length} · {minutes} min
             {primary.metadata.publishedAt ? ` · ${formatDate(primary.metadata.publishedAt)}` : ""}
           </span>
           <h1 className="ds-t-hero" style={{ marginBottom: 18 }}>
