@@ -1,22 +1,16 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
-
-import { Masthead } from "@/components/site/Masthead";
 import { CourseRail } from "@/components/site/CourseRail";
-import { RailBand } from "@/components/site/RailBand";
 import { JsonLd } from "@/components/site/JsonLd";
+import { Masthead } from "@/components/site/Masthead";
+import { RailBand } from "@/components/site/RailBand";
 import { ReadingQueue } from "@/components/site/ReadingQueue";
 import { ResumeStrip } from "@/components/site/ResumeStrip";
 import { SaveButton } from "@/components/site/SaveButton";
 import { resolveImage } from "@/lib/images";
 import { generateMeta } from "@/lib/metadata";
-import {
-  formatShortDate,
-  getSiteSummary,
-  tagCounts,
-  toRailCourses,
-} from "@/lib/site-data";
+import { formatShortDate, getSiteSummary, tagCounts, toRailCourses } from "@/lib/site-data";
 import { about, baseURL, home, person, routes } from "@/resources";
 
 export const revalidate = 300;
@@ -36,9 +30,7 @@ export default async function Home() {
 
   const [lead, ...rest] = writing;
   const listed = rest.slice(0, 4);
-  const startHere = [...writing]
-    .sort((a, b) => b.minutes - a.minutes)
-    .slice(0, 4);
+  const startHere = [...writing].sort((a, b) => b.minutes - a.minutes).slice(0, 4);
   const archiveTags = tagCounts([...writing, ...explainers]);
   const [leadExplainer, ...moreExplainers] = explainers;
   const railCourses = toRailCourses(courses);
@@ -198,27 +190,25 @@ export default async function Home() {
             {[leadExplainer, ...moreExplainers].slice(0, 3).map((piece) => {
               const image = resolveImage(piece.image);
               return (
-              <article key={piece.slug}>
-                <Link href={piece.href} className="ds-plain-link">
-                  <div className="ds-ph" style={{ height: 150, marginBottom: 14 }}>
-                    {image ? (
-                      <Image
-                        src={image}
-                        alt=""
-                        width={360}
-                        height={150}
-                        sizes="(max-width: 760px) 100vw, 33vw"
-                      />
-                    ) : (
-                      "diagram"
+                <article key={piece.slug}>
+                  <Link href={piece.href} className="ds-plain-link">
+                    {image && (
+                      <div className="ds-ph ds-ph-fit" style={{ height: 150, marginBottom: 14 }}>
+                        <Image
+                          src={image}
+                          alt=""
+                          width={360}
+                          height={150}
+                          sizes="(max-width: 760px) 100vw, 33vw"
+                        />
+                      </div>
                     )}
-                  </div>
-                  <span className="ds-kick" style={{ marginBottom: 7 }}>
-                    {piece.tag} · {piece.minutes} min
-                  </span>
-                  <h3 className="ds-t-s">{piece.title}</h3>
-                </Link>
-              </article>
+                    <span className="ds-kick" style={{ marginBottom: 7 }}>
+                      {piece.tag} · {piece.minutes} min
+                    </span>
+                    <h3 className="ds-t-s">{piece.title}</h3>
+                  </Link>
+                </article>
               );
             })}
           </div>

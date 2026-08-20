@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 260" width="480" height="260" role="img">
+<defs>
+<marker id="a-ink" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#8f8878"/></marker>
+<marker id="a-acc" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#c8502f"/></marker>
+</defs>
+<path d="M240 62 L302.76973007548014 107.60487837125348 L278.7938266513032 181.39512162874652 Z" fill="#c8502f" stroke="#c8502f" stroke-width="0" opacity="0.28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M278.7938266513032 181.39512162874652 L201.20617334869678 181.39512162874652 L177.23026992451986 107.60487837125348 Z" fill="#8f8878" stroke="#8f8878" stroke-width="0" opacity="0.22" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="240" cy="62" r="8" fill="none" stroke="#8f8878" stroke-width="1.5"/>
+<circle cx="302.76973007548014" cy="107.60487837125348" r="8" fill="none" stroke="#8f8878" stroke-width="1.5"/>
+<circle cx="278.7938266513032" cy="181.39512162874652" r="10" fill="#c8502f" stroke="#c8502f" stroke-width="2"/>
+<circle cx="201.20617334869678" cy="181.39512162874652" r="8" fill="none" stroke="#8f8878" stroke-width="1.5"/>
+<circle cx="177.23026992451986" cy="107.60487837125348" r="8" fill="none" stroke="#8f8878" stroke-width="1.5"/>
+<text x="304.7938266513032" y="185.39512162874652" fill="#c8502f" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="start" letter-spacing="1.4">IN BOTH</text>
+<text x="120" y="60" fill="#c8502f" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="middle" letter-spacing="1.4" opacity="0.9">MAJORITY A</text>
+<text x="370" y="200" fill="#8f8878" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="middle" letter-spacing="1.4" opacity="0.9">MAJORITY B</text>
+<text x="240" y="240" fill="#8f8878" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="middle" letter-spacing="1.4" opacity="0.85">ANY TWO MAJORITIES OF FIVE MUST OVERLAP</text>
+</svg>

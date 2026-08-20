@@ -17,7 +17,7 @@ const MIME: Record<string, string> = {
   png: "image/png",
   gif: "image/gif",
   webp: "image/webp",
-  svg: "image/svg+xml",
+  // svg deliberately absent: feed readers and social cards want raster.
 };
 
 /** Only enclose an image that is really on disk, with its real media type. */

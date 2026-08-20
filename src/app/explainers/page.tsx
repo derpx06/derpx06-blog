@@ -1,13 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
 
 import { JsonLd } from "@/components/site/JsonLd";
 import { Masthead } from "@/components/site/Masthead";
 import { RailBand } from "@/components/site/RailBand";
+import { getCourses } from "@/lib/course-repository";
 import { resolveImage } from "@/lib/images";
 import { generateMeta } from "@/lib/metadata";
-import { getCourses } from "@/lib/course-repository";
 import { getPieces, tagCounts, toRailCourses } from "@/lib/site-data";
 import { baseURL, explainers, person } from "@/resources";
 
@@ -65,8 +65,8 @@ export default async function Explainers() {
         {lead && (
           <article>
             <Link href={lead.href} className="ds-plain-link">
-              <div className="ds-ph ds-ph-fit" style={{ height: 250, marginBottom: 16 }}>
-                {leadImage ? (
+              {leadImage && (
+                <div className="ds-ph ds-ph-fit" style={{ height: 250, marginBottom: 16 }}>
                   <Image
                     src={leadImage}
                     alt=""
@@ -75,10 +75,8 @@ export default async function Explainers() {
                     priority
                     sizes="(max-width: 1080px) 100vw, 600px"
                   />
-                ) : (
-                  "diagram"
-                )}
-              </div>
+                </div>
+              )}
               <span className="ds-kick" style={{ marginBottom: 8 }}>
                 {lead.tag} · {lead.minutes} min
               </span>
@@ -100,34 +98,26 @@ export default async function Explainers() {
             {rest.map((piece) => {
               const image = resolveImage(piece.image);
               return (
-              <article key={piece.slug} className="ds-plate">
-                <Link href={piece.href} className="ds-ph ds-plate-media">
-                  {image ? (
-                    <Image
-                      src={image}
-                      alt=""
-                      width={340}
-                      height={260}
-                      sizes="170px"
-                    />
-                  ) : (
-                    "diagram"
-                  )}
-                </Link>
-                <div style={{ minWidth: 0 }}>
-                  <span className="ds-kick" style={{ marginBottom: 8 }}>
-                    {piece.tag} · {piece.minutes} min
-                  </span>
-                  <h3 className="ds-t-m" style={{ marginBottom: 8 }}>
-                    <Link href={piece.href} className="ds-plain-link">
-                      {piece.title}
+                <article key={piece.slug} className="ds-plate">
+                  {image && (
+                    <Link href={piece.href} className="ds-ph ds-ph-fit ds-plate-media">
+                      <Image src={image} alt="" width={340} height={260} sizes="170px" />
                     </Link>
-                  </h3>
-                  <p className="ds-dek" style={{ fontSize: 14 }}>
-                    {piece.summary}
-                  </p>
-                </div>
-              </article>
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <span className="ds-kick" style={{ marginBottom: 8 }}>
+                      {piece.tag} · {piece.minutes} min
+                    </span>
+                    <h3 className="ds-t-m" style={{ marginBottom: 8 }}>
+                      <Link href={piece.href} className="ds-plain-link">
+                        {piece.title}
+                      </Link>
+                    </h3>
+                    <p className="ds-dek" style={{ fontSize: 14 }}>
+                      {piece.summary}
+                    </p>
+                  </div>
+                </article>
               );
             })}
           </div>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 260" width="480" height="260" role="img">
+<defs>
+<marker id="a-ink" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#8f8878"/></marker>
+<marker id="a-acc" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#c8502f"/></marker>
+</defs>
+<line x1="60" y1="72" x2="420" y2="72" stroke="#8f8878" stroke-width="1.5" opacity="0.18" stroke-linecap="round"/>
+<circle cx="126.66666666666666" cy="72" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="240" cy="72" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="353.3333333333333" cy="72" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<text x="46" y="75" fill="#8f8878" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="end" letter-spacing="1.4" opacity="0.8">TOP</text>
+<line x1="60" y1="126" x2="420" y2="126" stroke="#8f8878" stroke-width="1.5" opacity="0.18" stroke-linecap="round"/>
+<circle cx="94.28571428571428" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="142.85714285714286" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="191.42857142857144" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="240" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="288.57142857142856" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="337.14285714285717" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="385.7142857142857" cy="126" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<text x="46" y="129" fill="#8f8878" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="end" letter-spacing="1.4" opacity="0.8">MID</text>
+<line x1="60" y1="180" x2="420" y2="180" stroke="#8f8878" stroke-width="1.5" opacity="0.18" stroke-linecap="round"/>
+<circle cx="80" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="100" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="120" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="140" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="160" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="180" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="200" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="220" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="240" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="260" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="280" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="300" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="320" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="340" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="360" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="380" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<circle cx="400" cy="180" r="3" fill="#8f8878" stroke="#8f8878" stroke-width="1.5" opacity="0.75"/>
+<text x="46" y="183" fill="#8f8878" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="end" letter-spacing="1.4" opacity="0.8">ALL</text>
+<line x1="240" y1="72" x2="128" y2="120" stroke="#c8502f" stroke-width="1.6" marker-end="url(#a-acc)" stroke-linecap="round"/>
+<line x1="128" y1="126" x2="174" y2="174" stroke="#c8502f" stroke-width="1.6" marker-end="url(#a-acc)" stroke-linecap="round"/>
+<line x1="174" y1="180" x2="214" y2="180" stroke="#c8502f" stroke-width="1.6" marker-end="url(#a-acc)" stroke-linecap="round"/>
+<circle cx="214" cy="180" r="5.5" fill="none" stroke="#c8502f" stroke-width="2"/>
+<text x="250" y="220" fill="#c8502f" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="middle" letter-spacing="1.4">BIG STEPS FIRST, THEN REFINE</text>
+<text x="240" y="42" fill="#8f8878" font-size="8.5" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="500" text-anchor="middle" letter-spacing="1.4" opacity="0.7">EACH LAYER IS A SAMPLE OF THE ONE BELOW</text>
+</svg>

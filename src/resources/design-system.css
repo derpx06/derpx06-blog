@@ -212,14 +212,15 @@ a:hover { color: var(--acc-h); }
 }
 .ds-last { border-bottom: 1px solid var(--rule-strong); }
 
+/* A plate is a frame for artwork and nothing else. It is only ever rendered
+   when there is an image to put in it, so it carries no caption styling — a
+   plate with a word in it was a placeholder leaking into the page. */
 .ds-ph {
   position: relative;
   background: var(--ph);
   border: 1px solid var(--rule-lt);
   display: grid;
   place-items: center;
-  font: 500 11px/1 var(--ds-sans);
-  color: var(--ph-lb);
   overflow: hidden;
 }
 /* The design fills every plate edge to edge, so covering is the default.
@@ -703,6 +704,9 @@ select.ds-box option {
   background: var(--ph); border: 1px solid var(--rule-lt); flex: none;
 }
 .ds-byline-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* The article's one diagram, sitting between the byline and the prose. */
+.ds-article-hero { margin: 0 0 34px; height: clamp(190px, 30vw, 300px); }
 
 .ds-prose-dropcap > p:first-child::first-letter {
   font-family: var(--ds-serif);

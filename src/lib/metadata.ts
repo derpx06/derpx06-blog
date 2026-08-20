@@ -42,11 +42,14 @@ export function generateMeta({
   alternates,
 }: MetaProps): Metadata {
   const url = canonical || absolute(baseURL, path);
-  // A path that is not on disk would be emitted as an absolute URL and 404 for
-  // every crawler that follows it. Fall through to the generated card instead.
+  // Two ways an image fails as a social card: a path that is not on disk 404s
+  // for the crawler, and an SVG is rejected outright by every major platform.
+  // Either way, fall through to the generated raster card.
+  const onDisk = resolveImage(image);
+  const shareable = onDisk && !/\.svgx?($|\?)/i.test(onDisk) ? onDisk : null;
   const ogImage = absolute(
     baseURL,
-    resolveImage(image) || `/api/og/generate?title=${encodeURIComponent(title)}`,
+    shareable || `/api/og/generate?title=${encodeURIComponent(title)}`,
   );
 
   return {

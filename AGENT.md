@@ -69,8 +69,14 @@ these because each one fails silently otherwise:
   `#` — the page already renders the title as its H1.
 - Fence code with a language from `src/lib/highlight.ts`; anything else silently
   degrades to plaintext.
-- Leave `image: ""` unless the file exists under `public/` — an empty value falls
-  through to the generated OG card, and a stale path 404s for crawlers.
+- Give every article a diagram. `npm run content:diagrams` regenerates them all
+  from `scripts/generate-diagrams.mjs`, keyed by slug. They are transparent SVG
+  drawn in two theme-neutral inks, so one file sits correctly on the light plate
+  and the dark one — never add a second copy for dark mode.
+- Never leave `image` pointing at a file that is not on disk. An empty value
+  falls through to the generated OG card; a stale path 404s for crawlers.
+  A `.ds-ph` plate renders **only** when there is an image, so an article with
+  none simply shows no plate — it must never show a caption in its place.
 - Reach for JSX only where it earns it: `<Feedback>`, `<CodeBlock>`, `<Button>`.
 
 Publication dates are set in the draft's frontmatter and imported directly;
@@ -83,7 +89,8 @@ and `getContentBySlug` if you want the stagger to act as a real schedule.
 - **Test**: `npm test` (pure logic over `scripts/*.test.ts`)
 - **Content**: `npm run content:check` (editorial lint over every document),
   `npm run content:import` (MDX drafts → Mongo, `-- --write` to commit),
-  `npm run content:export` (Mongo → `content-backup/`, run before migrations)
+  `npm run content:export` (Mongo → `content-backup/`, run before migrations),
+  `npm run content:diagrams` (redraw every article diagram)
 - **Lint**: `npm run lint` (Biome) · **Format**: `npm run biome-write`
 - **Build**: `npm run build`
 - **Images**: store in `public/images`; editor uploads land in `public/uploads`

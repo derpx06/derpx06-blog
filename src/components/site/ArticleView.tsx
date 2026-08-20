@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CustomMDX } from "@/components/mdx";
+import type { Heading } from "@/lib/headings";
+import { resolveImage } from "@/lib/images";
+import { formatLongDate, type Piece } from "@/lib/site-data";
+import { person } from "@/resources";
 import { ArticleContents } from "./ArticleContents";
 import { NewsletterBlock } from "./NewsletterBlock";
 import { ReaderHeader } from "./ReaderHeader";
-import type { Heading } from "@/lib/headings";
-import { formatLongDate, type Piece } from "@/lib/site-data";
-import { person } from "@/resources";
 
 export type ArticleViewProps = {
   piece: Piece;
@@ -32,6 +33,7 @@ export function ArticleView({
   sectionHref,
   startHere,
 }: ArticleViewProps) {
+  const hero = resolveImage(piece.image);
   const target = {
     slug: piece.slug,
     href: piece.href,
@@ -90,6 +92,19 @@ export function ArticleView({
             <span style={{ font: "600 13px/1 var(--ds-sans)" }}>{person.name}</span>
             <span className="ds-meta ds-meta-s">{piece.minutes} min read</span>
           </div>
+
+          {hero && (
+            <figure className="ds-ph ds-ph-fit ds-article-hero">
+              <Image
+                src={hero}
+                alt=""
+                width={720}
+                height={390}
+                priority
+                sizes="(max-width: 1080px) 100vw, 720px"
+              />
+            </figure>
+          )}
 
           <div className="ds-prose ds-prose-dropcap">
             <CustomMDX source={body} />
