@@ -1,6 +1,6 @@
 ---
 title: "Your Retry Made It Worse"
-summary: "Retrying a failed request is the most obvious reliability measure there is, and the easiest one to implement backwards. The difference is one idea: knowing whether the first attempt actually failed."
+summary: "Trying again after a failure is the most obvious safety net there is, and the easiest one to build backwards. It hinges on one question: did the first attempt actually fail?"
 publishedAt: "2026-09-24T09:00:00.000Z"
 image: ""
 tag: "Distributed Systems"
@@ -8,25 +8,35 @@ topics: ["Reliability", "Idempotency", "Retries", "Backpressure"]
 status: "published"
 ---
 
-A request times out, so the client tries again. This is such an obviously correct thing to do that it usually gets written without a design discussion, often as a wrapper someone adds on a Friday. It is also, done naively, one of the most reliable ways to turn a small outage into a large one and a slow endpoint into a duplicate-charging one.
+You post a letter and hear nothing back. Do you post a second one?
 
-The bug is not in the retry. It is in the assumption underneath it: that a request which did not return a response did not happen.
+If the first letter never arrived, yes — obviously. If it arrived and the *reply* got lost, then posting again means the other side receives your request twice. And standing at the postbox, you cannot tell which of those two things happened.
 
-## A timeout tells you nothing about the server
+That is the entire problem with retrying a failed request, and it is why the most obvious reliability measure in software is also one of the easiest to get exactly backwards.
 
-When a call fails with a connection error, you know the work was not done. When it fails with a timeout, you know almost nothing. The request may never have arrived. It may have arrived and been rejected. It may have arrived, executed completely, committed to the database, sent the email — and then the response was lost on the way back, or simply took longer than your client was willing to wait.
+## Silence is not the same as failure
 
-From the client's side these are indistinguishable. That is not a limitation of your HTTP library; it is a property of networks, and no amount of care on the client fixes it. A timeout is a statement about the client's patience, not about the server's outcome.
+When a request fails with "could not connect," you know the work did not happen. Nobody was home.
 
-So the naive retry — catch the exception, call again — is making a claim it cannot support. Most of the time the claim happens to be true and nobody notices. The rest of the time you get two of something that should exist once.
+When it fails with a **timeout** — meaning you gave up waiting — you know almost nothing. The request might never have arrived. It might have arrived and been refused. Or it might have arrived, run completely, saved to the database, charged the card, sent the email — and then the reply got lost coming back, or simply took longer than you were willing to wait.
 
-<Feedback variant="warning" title="The failure mode is silent and delayed">
-Duplicate writes from a retried timeout rarely surface as an error. They surface weeks later as a reconciliation mismatch, a customer with two subscriptions, or a support ticket nobody can reproduce — because the code did exactly what it was told, twice.
+From where you are standing, those look identical. That is not a shortcoming of your code. It is how networks are, and no amount of care on your side fixes it.
+
+A timeout is a statement about **your patience**, not about what the other side did.
+
+So the naive retry — catch the error, call again — is quietly making a claim it cannot back up. Most of the time the claim happens to be true and nobody notices. The rest of the time you get two of something that was meant to exist once.
+
+<Feedback variant="warning" title="This failure is silent, and it arrives late">
+Duplicates from a retried timeout almost never show up as an error. They show up weeks later as books that do not balance, a customer with two subscriptions, or a support ticket nobody can reproduce — because the code did exactly what it was told, twice.
 </Feedback>
 
-## Idempotency keys: make the second attempt provably free
+## Give each request a name tag
 
-The fix is to stop guessing about what happened and let the server tell you. The client generates a unique key per logical operation — not per attempt — and sends it with every attempt of that operation. The server stores it with the result.
+The fix is to stop guessing and let the other side tell you.
+
+Before sending, you generate a unique ID for the **operation** — not for the attempt. Every retry of that same operation carries the same ID. The server writes that ID down alongside the result.
+
+This is called an **idempotency key**. *Idempotent* is a fancy word for "doing it twice has the same effect as doing it once," like pressing a lift button.
 
 ```python
 def create_order(key: str, payload: dict) -> Order:
@@ -39,44 +49,52 @@ def create_order(key: str, payload: dict) -> Order:
     return order
 ```
 
-The crucial detail is in the comment: recording the key and performing the work must commit together. If the key is written in a separate transaction, there is a window where the work is done and the key is not, and you have rebuilt the original bug with more code. Same database, same transaction, or the guarantee does not exist.
+The important bit is that comment. Recording the key and doing the work must succeed or fail **together**. If the key is saved separately, there is a moment where the work is done and the key is not — and you have rebuilt the original bug with extra steps. Same database, same transaction, or the guarantee does not exist.
 
-With this in place the ambiguity stops mattering. The client retries freely; the server either does the work or hands back the result of having already done it. The retry is now safe not because it is careful, but because it is *provably* a no-op when it needs to be.
+Now the ambiguity stops mattering. Retry as often as you like; the server either does the work or hands back what it did last time. The retry is safe not because it is careful, but because it is *provably* a no-op when it needs to be.
 
-Note also what this is not: it is not deduplication by comparing payloads. Two genuinely separate orders for the same item at the same price are not duplicates. Only the client knows whether two attempts are the same logical operation, which is exactly why the client generates the key.
+One thing this is *not*: it is not spotting duplicates by comparing the contents. Two genuinely separate orders for the same item at the same price are not duplicates. Only the caller knows whether two attempts mean the same thing — which is exactly why the caller generates the ID.
 
-## Reads are not automatically safe either
+## Reading can hurt too
 
-`GET` is idempotent by specification, which leads people to retry reads without thinking. That is fine for correctness and often terrible for availability, because the read you are hammering is usually the expensive one — the report, the aggregation, the search. Retrying it three times during a slowdown triples the load on the component that is already the reason you are slow.
+Fetching data is naturally safe to repeat — reading a page twice changes nothing — so people retry reads without thinking.
 
-Which brings us to the second half of the problem.
+That is fine for correctness and often terrible for survival, because the read you are hammering is usually the expensive one: the report, the big search, the summary. Retrying it three times during a slowdown triples the load on the exact thing that is already struggling.
 
-## Retries amplify exactly when you can least afford it
+Which brings us to the second half.
 
-Consider a service that is degraded and answering at half its usual rate. Every client times out and retries. Offered load is now double what it was, against capacity that is already halved. The service gets slower, more requests time out, more retries fire. This is a retry storm, and it is a positive feedback loop: the system's own recovery mechanism is what prevents it from recovering.
+## Retries pile on at the worst possible moment
 
-Three things keep it bounded, and you need all three.
+Picture a service that is struggling and answering at half its normal speed.
 
-**Exponential backoff with jitter.** Backoff spaces the attempts out. Jitter — randomising each delay rather than using a fixed schedule — stops every client in the fleet from retrying in synchronised waves. Without jitter you do not remove the thundering herd, you just make it periodic.
+Every caller times out. Every caller retries. Now twice as much work is arriving at something with half its usual capacity. It gets slower. More requests time out. More retries fire.
 
-**A retry budget.** Cap retries as a fraction of total traffic, not per-call. A per-call limit of three still permits tripling the load fleet-wide. A budget — "retries may not exceed 10% of requests" — bounds the amplification no matter how many clients are failing at once.
+This is a **retry storm**, and it feeds itself: the system's own safety net is what stops it recovering.
 
-**A circuit breaker.** After enough consecutive failures, stop calling entirely for a while and fail fast. This is the one that feels wrong — you are deliberately not trying — and it is the one that lets the dependency recover, because it removes the load that is keeping it down.
+Three things keep it in check, and you need all three.
 
-<Feedback variant="info" title="Retry only what can succeed">
-A 400 will be a 400 next time. A 401 will be a 401. A 429 or a 503 with `Retry-After` is the server explicitly telling you when to come back — honour it. Retrying non-retryable errors is pure amplification with a guaranteed zero success rate, and it is astonishingly common in code that wraps everything in a generic `except`.
+**Wait longer each time, with a random wobble.** Backing off spreads the attempts out. The random part matters more than it sounds — without it, every caller in the fleet retries at the same instant, so you do not remove the stampede, you just make it rhythmic.
+
+**Cap retries as a share of all traffic.** "Three retries per call" sounds strict and still permits tripling the load across a whole fleet. A budget — *retries may not exceed 10% of requests* — puts a ceiling on the amplification no matter how many callers are failing at once.
+
+**Stop calling entirely for a while.** After enough failures in a row, give up and fail immediately for the next thirty seconds. This is the one that feels wrong, because you are deliberately not trying. It is also the one that lets the struggling service recover, because it removes the load holding it down. Engineers call it a **circuit breaker**, after the switch in your house that cuts the power before the wiring melts.
+
+<Feedback variant="info" title="Only retry things that could actually succeed">
+A "bad request" will still be bad next time. A "not logged in" will still be not-logged-in. But "too many requests" or "temporarily unavailable" often comes with a note saying when to come back — honour it. Retrying the hopeless ones is pure extra load with a guaranteed zero success rate, and it is remarkably common in code that catches every error the same way.
 </Feedback>
 
-## The LLM-shaped version of this
+## The AI version of all this
 
-Every one of these problems is sharper in front of a model, because the calls are slow, expensive and frequently rate-limited.
+Every one of these problems is sharper in front of an AI model, because the calls are slow, expensive and often rate-limited.
 
-Timeouts are common, so the ambiguity window is wide. Calls are expensive, so a duplicate is not just a correctness bug but a bill. Generation is slow, so retry storms build up much deeper queues before anyone notices. And rate limits mean the most likely error is precisely the one that a naive retry loop turns into a sustained denial of your own service.
+Timeouts are common, so the window of doubt is wide. Calls cost real money, so a duplicate is not just wrong, it is a bill. Answers take many seconds, so retry storms build much deeper queues before anyone notices. And the most likely error you will hit is "too many requests" — precisely the one a naive retry loop turns into a sustained self-inflicted outage.
 
-If a generation is expensive enough to be worth caching, it is expensive enough to deserve an idempotency key. Hash the prompt and parameters into one, store the completion against it, and a retried request costs a lookup instead of another generation. You get retry safety and a cache from the same mechanism, which is a rare thing in this business.
+Here is the neat part. If a generated answer is expensive enough to be worth saving, it is expensive enough to deserve an idempotency key. Turn the question and its settings into an ID, store the answer against it, and a repeated request costs a lookup instead of another generation.
 
-## The rule I would write on the wall
+You get retry safety and a cache out of the same mechanism, which is a rare bargain.
 
-Retry is not error handling. It is a load-generating mechanism that happens to improve availability when — and only when — three conditions hold: the operation is provably idempotent, the error is actually retryable, and the total volume is bounded.
+## The rule worth writing on the wall
 
-Miss any one and you have not built resilience. You have built an amplifier and pointed it at the thing that was already struggling.
+Retrying is not error handling. It is a way of *generating more load* that happens to improve reliability when — and only when — three things are true: doing it twice is provably harmless, the error could actually succeed next time, and the total volume is capped.
+
+Miss any one and you have not built a safety net. You have built an amplifier, and pointed it at the thing that was already in trouble.

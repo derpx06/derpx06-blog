@@ -1,6 +1,6 @@
 ---
 title: "Your RAG System Doesn't Have a Retrieval Problem"
-summary: "When retrieval-augmented generation gives bad answers, the reflex is to change the retriever. In every system I have debugged, the fault was upstream of it."
+summary: "When an AI answers badly from your own documents, everyone blames the search. In every system I have debugged, the search was fine. The documents were the problem."
 publishedAt: "2026-08-27T09:00:00.000Z"
 image: ""
 tag: "Retrieval"
@@ -8,72 +8,100 @@ topics: ["RAG", "Chunking", "Evaluation", "Vector Search"]
 status: "published"
 ---
 
-Every retrieval-augmented system I have worked on has gone through the same wrong week. The answers are bad, so someone swaps the embedding model. The answers are still bad, so someone adds a reranker. Then hybrid search, then multi-query expansion, then a bigger `k`. Each change is defensible in isolation, each one makes the pipeline slower, and the answers stay bad.
+Imagine you hire a very smart assistant who has never seen your company. You want them to answer customer questions, so you hand them a stack of pages torn from your handbook and say: read these, then answer.
 
-The reason is almost always the same, and it is uncomfortable: the retriever was returning the right chunks the entire time. The chunks were just not worth returning.
+If the pages you hand over are the wrong pages, it does not matter how smart the assistant is. And if the pages are the *right* pages but each one has been torn in half, it matters even less.
 
-## Read what the retriever actually gave you
+That is the whole idea behind RAG — retrieval-augmented generation. You search your documents for the relevant bits, you paste those bits in front of the AI's question, and the AI answers using them. It is the standard way to make a general-purpose model answer questions about *your* stuff.
 
-The first thing to do when a RAG answer is wrong is not to change anything. It is to print the retrieved context verbatim and read it as if you were the model.
+And when it goes wrong, almost everybody blames the searching. I want to argue that the searching is usually innocent.
 
-I put this off for far too long on AssistFlow AI, our support platform that crawls a customer's site and answers questions from it. Answers were vague in a way that felt like a model problem — the sort of hedging you get from a model that is not sure. When I finally dumped the context for a failing question, the top chunk was a navigation menu. The second was a cookie banner. The third was the correct paragraph, cut in half at the exact sentence that contained the answer.
+## The wrong week
 
-The retriever did its job. Given the corpus it was handed, those were genuinely the nearest neighbours. The corpus was the problem, and no amount of reranking fixes a corpus.
+Every one of these systems I have worked on has had the same bad week.
 
-<Feedback variant="info" title="The diagnostic that costs ten minutes">
-Log the full retrieved context alongside every generated answer. Not the scores, not the chunk IDs — the text. Read twenty failures. You will know within an afternoon whether you have a retrieval problem or a corpus problem, and it is nearly always the second.
+The answers are poor, so somebody swaps the search model. Still poor, so somebody adds a re-ranker — a second pass that reorders the results. Then keyword search alongside the AI search. Then rewriting the question three different ways. Then just fetching more results.
+
+Each change is reasonable on its own. Each one makes the system slower. The answers stay bad.
+
+The reason is almost always the same, and it stings: the search was returning the right pages the whole time. The pages were just not worth returning.
+
+## Read what it actually found
+
+When an answer is wrong, the first thing to do is not to change anything. It is to print out exactly what got handed to the AI, and read it yourself as if you were the one who had to answer.
+
+I put this off far too long on AssistFlow AI, a support tool we built that crawls a customer's website and answers questions from it. The answers were vague in a way that felt like an AI problem — that hedging you get from a model that is not sure.
+
+Then I finally printed the pages it had been given for a failing question. The top result was a navigation menu. The second was a cookie banner. The third was the correct paragraph, chopped in half at exactly the sentence containing the answer.
+
+The search did its job. Given the pile it was searching, those genuinely were the closest matches. The pile was the problem, and no amount of re-ranking fixes a pile.
+
+<Feedback variant="info" title="The ten-minute diagnosis">
+Log the actual text handed to the AI next to every answer it produces. Not scores, not IDs — the text. Read twenty failures. You will know by the end of the afternoon whether you have a search problem or a document problem, and it is nearly always the second.
 </Feedback>
 
-## Chunking is a semantic decision disguised as a parameter
+## Cutting documents up is a decision, not a setting
 
-`chunk_size=1000, chunk_overlap=200` looks like a tuning knob. It is not. It is a claim that meaning in your documents comes in thousand-character units that survive being cut at an arbitrary boundary, and for most real documents that claim is false.
+Documents are too big to hand over whole, so you cut them into pieces first. These pieces are called **chunks**, and almost everyone starts with something like *cut every thousand characters, overlapping a bit*.
 
-A reference table cut in half is worse than useless — it retrieves confidently and answers wrongly, because the header row went into a different chunk from the values. A step-by-step procedure split at step four gives the model half a procedure with no signal that it is incomplete. A page where the heading says *Refund policy* and the body says *this does not apply to annual plans* becomes two chunks, one of which now asserts the opposite of the truth.
+That looks like a setting you tune. It is not. It is a claim — that meaning in your documents arrives in thousand-character lumps that survive being cut at an arbitrary point. For most real documents that claim is simply false.
 
-The fix is not a better splitter. It is deciding, per document type, what the smallest self-contained unit of meaning is, and refusing to split below it. For a FAQ that is a question-and-answer pair. For an API reference it is an endpoint. For a policy document it is a section with its heading attached. Sometimes the right chunk is an entire short page, and the right `chunk_size` is "don't".
+Picture what goes wrong:
 
-## Retrieval quality is a property of what you stored
+A **price table** cut in half is worse than useless. The header row lands in one chunk and the numbers land in another, so the search confidently returns numbers with nothing to say what they mean.
 
-Two things reliably do more for answer quality than any retriever change, and both happen at write time.
+A **step-by-step guide** split at step four hands the AI half a procedure, with nothing to signal that the rest exists.
 
-**Keep the context that the chunk lost.** A chunk pulled out of a document has been stripped of everything that told you where it was. Prepend the document title and the heading path before you embed it. The vector now encodes *Refund policy → Annual plans → text* instead of an anonymous paragraph, and questions that mention refunds start matching the thing that is actually about refunds. This one change has moved more systems from unusable to usable, in my experience, than every reranker I have added.
+A page headed **"Refund policy"** whose body says *this does not apply to annual plans* becomes two chunks. One of them now cheerfully asserts the opposite of the truth.
 
-**Store metadata you can filter on, then filter.** Semantic similarity has no opinion about whether a document is current. If you have three versions of a pricing page in the index, the retriever will happily hand the model the one from two years ago, because obsolescence has no direction in embedding space. Product, version, date, language, access level — these are cheap to store and turn a whole class of "the model hallucinated" reports into a `where` clause.
+The fix is not a cleverer cutting tool. It is deciding, for each kind of document, what the smallest complete thought is — and refusing to cut smaller. For a FAQ that is one question with its answer. For an API reference it is one endpoint. For a policy it is one section with its heading still attached. Sometimes the right chunk is a whole short page, and the right setting is *don't cut this at all.*
 
-## The eval you don't have is why you can't tell
+## Two things that help more than any search upgrade
 
-Here is the part that makes the wrong week possible: without an evaluation set, every change *feels* like it might have helped. You try a reranker, you spot-check four questions, two look better, you ship it. You have learned nothing, and you have added a hundred milliseconds and a dependency.
+Both happen when you *store* the documents, not when you search them.
 
-The minimum viable version is thirty questions with known-correct source chunks. Thirty. Written by hand, in an afternoon, from real user questions if you have them and from reading your own corpus if you do not. Then measure two things separately:
+**Put back the context the chunk lost.** A paragraph pulled out of a document has been stripped of everything that told you where it lived. So paste the document title and heading trail on top before you store it. Now the stored piece says *Refund policy → Annual plans → the text*, instead of an anonymous paragraph. Questions about refunds start matching the thing that is actually about refunds.
 
-- **Retrieval recall** — was the correct chunk anywhere in the top `k`?
-- **Answer correctness** — given that context, was the final answer right?
+This single change has rescued more systems, in my experience, than every re-ranker I have ever added.
 
-Splitting those two numbers is the entire value of the exercise, because it tells you which half of the system to fix. High recall and low correctness means retrieval is fine and your prompt, your context window budget or your model is the problem. Low recall means stop touching the prompt.
+**Store labels, then actually filter on them.** AI search has no opinion about whether something is current. If three versions of your pricing page are in there, it will happily hand over the one from two years ago, because being out of date is not a direction in AI-search-space. Product, version, date, language, customer — these are cheap to store and they turn a whole category of "the AI made something up" reports into a simple filter.
 
-Almost every team I have watched debug RAG has been optimising the half that was already working, because they only ever measured the number at the end.
+## Why you cannot tell what is working
 
-<Feedback variant="warning" title="Recall at k is not a vanity metric">
-It is tempting to report only end-to-end answer quality, because that is what users experience. But a single blended number cannot tell you where to spend your next day. Measure the stages separately even when you only report the total.
+Here is what makes the bad week possible. Without a set of test questions, every change *feels* like it might have helped. You try a re-ranker, you spot-check four questions, two look nicer, you ship it. You have learned nothing and added a delay.
+
+The smallest useful version is thirty questions where you already know which document holds the answer. Thirty. Written by hand in an afternoon, from real customer questions if you have them, from reading your own documents if you do not.
+
+Then measure two separate things:
+
+- **Did the right chunk show up at all** in what the search returned?
+- **Given those chunks, was the final answer right?**
+
+Splitting those two numbers is the entire point, because it tells you which half of the system to fix. Right chunk found but wrong answer means the search is fine — go look at your prompt or your model. Right chunk *not* found means stop fiddling with the prompt.
+
+Nearly every team I have watched debug one of these has been busy improving the half that already worked, because they only ever looked at the number at the end.
+
+<Feedback variant="warning" title="One blended score cannot tell you where to spend tomorrow">
+It is tempting to track only "was the answer good," because that is what customers feel. But that single number cannot point at a cause. Measure the stages separately even if you only report the total.
 </Feedback>
 
-## When it really is retrieval
+## When it really is the search
 
-Sometimes it is. Two symptoms are honest signals.
+Sometimes it is, and there are two honest signals.
 
-Exact identifiers failing — part numbers, error codes, function names — is a real limitation of dense embeddings, which map lexically distinct but semantically similar strings close together and therefore cannot reliably distinguish `ERR_4021` from `ERR_4012`. That is what hybrid search with a lexical index is genuinely for.
+**Exact codes failing.** Part numbers, error codes, function names. AI search works by meaning, and by meaning `ERR_4021` and `ERR_4012` are practically identical — they are the same kind of thing. This is exactly what old-fashioned keyword search is for, and running both together is the real fix.
 
-The other is a query that means several things at once: *how do I migrate from the free plan and what happens to my existing exports*. One vector cannot sit near two unrelated regions of the space, and the answer needs both. Decomposing into sub-queries and retrieving separately is the right tool, and it is worth its latency here in a way it is not as a blanket default.
+**Questions that are secretly two questions.** *How do I move off the free plan, and what happens to my old exports?* The system turns your question into a single point and looks for nearby documents — but this question lives in two unrelated places at once, and the answer needs both. Splitting it into two searches is the right tool here, and worth its cost here specifically.
 
-Both of these are diagnoses, not defaults. You reach for them when a measurement points at them.
+Both of those are diagnoses. You reach for them when a measurement points at them, not as a default.
 
-## The order I would work in now
+## The order I would work in
 
-1. Read twenty failing contexts verbatim before changing a line.
-2. Write thirty evaluation questions with known source chunks.
-3. Fix chunking so no chunk is a fragment of a thought.
-4. Prepend title and heading path to every chunk before embedding.
-5. Add metadata filters for recency, version and tenant.
-6. Only now, measure whether a reranker earns its latency.
+1. Read twenty failing examples word for word before changing a line.
+2. Write thirty test questions with known correct sources.
+3. Fix the chunking so no chunk is half a thought.
+4. Paste title and headings onto every chunk before storing it.
+5. Add filters for date, version and customer.
+6. *Now* check whether a re-ranker earns its delay.
 
-The retriever is the most visible component in a RAG pipeline and the least likely to be the one that is broken. It is the last thing you should reach for and, in my experience, the first thing everyone touches — including me, for most of a week I would like back.
+The search is the most visible part of the system and the least likely to be broken. It should be the last thing you touch. It is, in my experience, the first thing everybody reaches for — me included, for most of a week I would like back.

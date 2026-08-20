@@ -1,6 +1,6 @@
 ---
 title: "Mobile Apps Are Distributed Systems With Terrible Networks"
-summary: "A phone is a replica that goes offline without warning, holds writes for hours and rejoins with a conflicting view of the world. Most mobile bugs are distributed-systems bugs that nobody labelled as such."
+summary: "A phone is a copy of your data that vanishes without warning, holds changes for hours, and comes back disagreeing with everyone else. Most mobile bugs are really that problem, unlabelled."
 publishedAt: "2026-10-08T09:00:00.000Z"
 image: ""
 tag: "Distributed Systems"
@@ -8,62 +8,78 @@ topics: ["Mobile", "Offline-First", "Sync", "React Native"]
 status: "published"
 ---
 
-A field salesperson opens a CRM app in a basement showroom, updates three deals, adds a note, and puts the phone away. Ninety minutes later they surface, the app reconnects, and everything they did has to be reconciled with a server that meanwhile accepted changes from two colleagues and a nightly import.
+A salesperson opens a property app in a basement showroom. They update three deals, add a note, and put the phone back in their pocket. Ninety minutes later they come up for air, the app reconnects, and everything they did has to be reconciled with a server that has meanwhile accepted changes from two colleagues and an overnight import.
 
-Nothing in that paragraph is a mobile problem. It is replication, partition tolerance and conflict resolution — the same problems a distributed database has — and the only unusual thing is that one of the replicas is in someone's pocket and its network partition is called "a lift". We do not usually describe mobile work this way, and I think that is precisely why so much of it goes wrong.
+Nothing in that paragraph is really a *mobile* problem. It is the problem of keeping several copies of the same data in agreement when they cannot always talk to each other — the exact thing that databases spread across data centres are built to handle.
 
-## The network is not slow. It is absent, intermittently, without telling you.
+The only unusual part is that one of the copies is in somebody's pocket, and the loss of connection is called "a lift."
 
-Backend engineers work with networks that are fast, reliable and fail loudly. Mobile networks are none of those, and the third is the one that causes the damage.
+We do not normally describe mobile work this way. I think that is precisely why so much of it goes wrong.
 
-`isConnected` returns true on a train that has signal and no throughput. A request succeeds and its response never arrives because the radio slept. The OS suspends your process mid-flight and resumes it, from the app's perspective, instantly — but four minutes have passed and the token has expired. A captive portal at an airport returns HTTP 200 with a login page to every request your app makes, and your JSON parser is now the error handler.
+## The network is not slow. It is absent, on and off, without telling you.
 
-Each of these produces a bug report that says "sometimes it doesn't save", which is unreproducible on a desk with office Wi-Fi. They are not flaky. They are correct behaviour of a system whose assumptions do not match the environment.
+Server engineers work with networks that are fast, reliable, and fail loudly. Phone networks are none of those, and the third one does the damage.
 
-<Feedback variant="warning" title="Connectivity is not a boolean and never was">
-The only reliable evidence that a request succeeded is a response you received and validated. Anything derived from a connectivity API is a guess about the future, and mobile is where that guess is wrong most often.
+Your "are we connected?" check says yes on a train that has a signal and no actual throughput. A request succeeds and its reply never arrives, because the radio went to sleep. The phone freezes your app and thaws it later — from the app's point of view, instantly — but four minutes have passed and the login has expired. And an airport WiFi hotspot cheerfully answers *every* request with a login page, so your code that expected data is now handling HTML.
+
+Each of these produces a report that says "sometimes it doesn't save," which nobody can reproduce at a desk on office WiFi.
+
+They are not flaky. They are the correct behaviour of a system whose assumptions do not match where it is running.
+
+<Feedback variant="warning" title="Connected is not a yes-or-no question">
+The only real evidence that something saved is a reply you received and checked. Anything based on a connectivity indicator is a guess about the near future, and mobile is where that guess is wrong most often.
 </Feedback>
 
-## Offline-first is a data model, not a cache
+## Offline-first is a design, not a cache
 
-The usual first attempt is to add a cache: keep the last response, show it when the network is down. This makes the app feel better and changes nothing structurally, because the write path still assumes the server is reachable.
+The usual first attempt is to keep a copy of the last answer and show it when the network is down. This makes the app feel nicer and changes nothing underneath, because *saving* still assumes the server is reachable.
 
-Offline-first means something stronger — that the local store is the source of truth for the UI, and the network is a background process that reconciles it. The user's action writes locally and returns immediately. Sync happens later, possibly much later, possibly in a different process lifetime.
+**Offline-first** means something stronger: the copy on the phone is the truth as far as the screen is concerned, and talking to the server is a background chore that catches up later — possibly much later, possibly after the app has been closed and reopened.
 
-That inversion has consequences you have to design for rather than discover:
+That flip has consequences you have to design for rather than discover.
 
-**Identity has to be local.** If the server assigns the id, a record created offline has no id, and anything referencing it — a note attached to a new contact — cannot be expressed. Generate a UUID on the device at creation time and let the server accept it. This one decision removes an entire category of sync bug.
+**The phone must name things itself.** If the server assigns the ID, then something created offline has no ID — and anything referring to it, like a note attached to a brand new contact, cannot even be expressed. Generate a unique ID on the device at the moment of creation and let the server accept it. This one decision deletes an entire family of sync bugs.
 
-**Every record needs sync state.** Not a boolean. At minimum: `pending`, `syncing`, `synced`, `failed`. The UI has to be able to show a row as not-yet-saved, because the honest thing to tell the user is that their change is safe on the device and not yet on the server. Hiding that distinction is how you get a user who thinks work is saved when it is queued behind a permanent failure.
+**Every record needs a status.** Not a yes-or-no flag. At minimum: waiting, sending, saved, failed. The screen has to be able to show a row as *not yet on the server*, because that is the honest thing to tell somebody — your change is safe on this phone and has not reached us yet. Hiding that distinction is how you get a person who believes their work is saved when it is stuck behind a permanent error.
 
-**The queue must survive process death.** The OS will kill your app while a sync is pending. If the queue is in memory, the work is gone and the user was told it was fine. It belongs in the same durable store as the data — ideally in the same transaction that wrote it.
+**The waiting list must survive the app being killed.** The phone's operating system *will* shut your app down mid-sync. If the list of pending changes lives only in memory, that work is gone and the person was told it was fine. It belongs in durable storage — ideally saved in the very same step that saved the data.
 
-## Conflicts are a product question wearing an engineering costume
+## Disagreements are a product question in engineering clothing
 
-Two people edited the same deal. One was offline. Something has to give, and the engineering literature offers a menu: last-write-wins, vector clocks, CRDTs, server-authoritative merge.
+Two people edited the same deal. One of them was offline. Something has to give.
 
-Choosing from that menu first is the mistake. The right question is what the *user* expects to happen, and the answer varies by field within a single record.
+The engineering world offers a menu of answers: last one wins, merge automatically, keep both, let the server decide. Picking from that menu first is the mistake.
 
-On a CRM record, a deal's stage is a workflow position where the most recent deliberate change should win, and a stale offline update overwriting a colleague's advance is a genuine bug. The notes field is append-only in spirit — two people adding notes should produce both notes, and last-write-wins silently destroys one. The assigned-owner field probably should not merge at all; it should surface a conflict, because a record with two people who each believe they own it is a real-world problem that no algorithm resolves.
+The right question is what a *person* expects to happen — and the answer changes field by field within a single record.
 
-So: field-level resolution, chosen per field, from what the field means. Last-write-wins on a timestamp is fine for values that are genuinely single-valued and low-stakes. Append semantics for anything that is a log. Explicit conflict surfacing for the small set of fields where silently picking a winner is worse than asking.
+A deal's **stage** is a position in a process, so the most recent deliberate change should win, and a stale offline update quietly undoing a colleague's progress is a genuine bug.
 
-<Feedback variant="info" title="Last-write-wins needs a clock you can trust">
-Device clocks are wrong, sometimes by hours, occasionally on purpose. If you resolve by timestamp, stamp on the server at receipt, or use a logical clock. Resolving by device time means a user with a misconfigured phone can overwrite everyone.
+The **notes** field is append-only in spirit. Two people adding notes should produce both notes. "Last one wins" silently destroys one of them.
+
+The **owner** field probably should not merge at all. It should raise its hand and ask, because two people each believing they own the same account is a real-world problem no algorithm can settle.
+
+So: decide per field, based on what that field means. Last-one-wins for genuinely single values where the stakes are low. Append for anything that behaves like a log. Ask a human for the small set where quietly choosing a winner is worse than pausing.
+
+<Feedback variant="info" title="If you decide by time, use a clock you trust">
+Phone clocks are wrong, sometimes by hours, occasionally on purpose. If "most recent wins" is your rule, stamp the time when the server receives the change, not when the phone sent it. Otherwise one person with a misconfigured phone can overwrite everybody.
 </Feedback>
 
-## Idempotency, again
+## The same name-tag trick, again
 
-A phone retries constantly — the OS retries, the HTTP layer retries, the sync queue retries after a crash. Which means the server will receive the same logical write more than once, routinely, as normal operation rather than as an edge case.
+A phone retries constantly. The operating system retries. The network layer retries. Your own sync queue retries after a crash. Which means the server will receive the same change more than once as a matter of *routine*, not as a rare edge case.
 
-If the create-deal endpoint is not idempotent, that basement showroom produces three deals. The fix is the same as anywhere else: the client generates a key per logical operation, the server records it with the result, and repeated attempts return the original outcome. On mobile this is not a nicety for rare failures. It is load-bearing, because duplicate delivery is the expected case.
+If creating a deal is not safe to repeat, that basement showroom produces three deals.
 
-The device-generated UUID from earlier does double duty here, which is a pleasant accident of good design.
+The fix is the one from anywhere else: the phone generates a unique ID per logical change, the server records it with the result, and a repeat gets handed back the original outcome instead of doing the work again. On mobile this is not a nicety for rare failures. It is load-bearing, because duplicate delivery is the *expected* case.
 
-## What this reframing buys you
+The device-generated ID from earlier does double duty here, which is a pleasant accident of good design.
 
-Once you accept that a phone is a replica, the mobile-specific bug reports stop looking like a random assortment and start looking like a small number of known problems with known answers. "Sometimes it doesn't save" is a durable queue problem. "It saved but then reverted" is a conflict-resolution problem. "It created two" is an idempotency problem. "It showed old data" is a cache-invalidation problem.
+## What the reframe buys you
 
-None of those are solved by a better HTTP client or a stricter connectivity check. They are solved by admitting that you are running a replicated system where one replica is unreliable, occasionally lies about its clock, and is being carried into a basement — and then applying the ordinary, well-understood answers to that situation.
+Once you accept that a phone is just another copy of the data, the mobile bug reports stop looking like a random assortment and start looking like a short list of known problems with known answers.
 
-The network is not going to get better. The model of what you are building can.
+*Sometimes it doesn't save* is a durable-queue problem. *It saved and then went back* is a disagreement-resolution problem. *It made two* is a repeat-delivery problem. *It showed me old data* is a cache problem.
+
+None of those is fixed by a better network library or a stricter connectivity check. They are fixed by admitting you are running a system with several copies of the truth, one of which is unreliable, occasionally lies about the time, and is being carried into a basement — and then applying the ordinary, well-understood answers to that situation.
+
+The network is not going to get better. Your model of what you are building can.

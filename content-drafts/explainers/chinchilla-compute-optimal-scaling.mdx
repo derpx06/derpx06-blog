@@ -1,6 +1,6 @@
 ---
 title: "Chinchilla: Everyone Was Training the Wrong-Shaped Model"
-summary: "For three years the field made models bigger and fed them the same amount of data. DeepMind trained over 400 models to show that this was leaving most of the compute on the floor."
+summary: "For three years the field built bigger and bigger AI models and fed them the same amount of reading. DeepMind trained over 400 models to show that this was throwing most of the effort away."
 publishedAt: "2026-08-31T09:00:00.000Z"
 image: ""
 tag: "Research Papers"
@@ -8,107 +8,129 @@ topics: ["Scaling Laws", "Chinchilla", "Training", "Compute"]
 status: "published"
 ---
 
-Between 2020 and 2022 the largest language models grew from 175 billion parameters to 530 billion, and the amount of data they were trained on barely moved. GPT-3, Gopher, Jurassic-1 and Megatron-Turing NLG were all trained on roughly 300 billion tokens. The parameter count was the headline; the token count was a constant nobody was varying.
+Say you have exactly one hour of oven time. You can bake one big cake, or two small ones. You cannot have both, because the oven is the oven.
 
-DeepMind's *Training Compute-Optimal Large Language Models* showed that this was not a reasonable default but a systematic error, and that the models everyone was celebrating were substantially undertrained. The correction was not subtle: given the compute that trained the 280-billion-parameter Gopher, you should have trained a model four times smaller on four times more data, and it would have been better at almost everything.
+Training an AI model works the same way. You have a fixed budget — money, electricity, weeks of machine time — and you spend it on two things: how big the model is, and how much text it reads. Spend more on one, and you have less for the other.
+
+Between 2020 and 2022, everyone chose the big cake. The largest models grew from 175 billion parameters to 530 billion, while the amount of text they read barely moved — all of them read roughly the same 300 billion words' worth. Size was the headline. Reading was a constant nobody thought to vary.
+
+Then DeepMind ran the experiment properly and found that everybody had it backwards.
 
 <Button href="https://arxiv.org/abs/2203.15556" variant="primary" suffixIcon="arrowUpRight">See the research paper</Button>
 
-Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, Laurent Sifre and colleagues published it in March 2022. The model they trained to prove the point is called Chinchilla, and the paper's argument is now the default assumption underneath essentially every training run.
+*Training Compute-Optimal Large Language Models*, by Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, Laurent Sifre and colleagues, appeared in March 2022. The model they trained to prove the point is called Chinchilla, and its argument is now the default assumption behind essentially every training run.
 
-## 1. The question, stated precisely
+## 1. Two words you need
 
-Training compute is roughly the product of model size and data volume. For a transformer, a good approximation is
+**Parameters** are the adjustable numbers inside the model — its capacity to store patterns. More parameters means more room to learn. This is the size of the cake.
+
+**Tokens** are chunks of text, roughly three-quarters of a word each. The number of tokens is how much the model reads during training. This is the baking time.
+
+Now the budget. For a model like this, the total work required is close to:
 
 $$
 C \approx 6ND
 $$
 
-where $C$ is floating-point operations, $N$ is parameters and $D$ is training tokens. The factor of six comes from counting the forward and backward passes over each parameter for each token.
+where $C$ is the total computing effort, $N$ is the parameters and $D$ is the tokens. The six comes from counting the work done for each parameter on each token, going forwards and then backwards through the model.
 
-That equation is the entire setup. If your compute budget $C$ is fixed — and it always is, because it is money and calendar time — then $N$ and $D$ trade off against each other directly. Double the parameters and you must halve the tokens.
+That equation is the whole setup. If $C$ is fixed — and it always is, because it is money and calendar time — then $N$ and $D$ trade directly against each other. Double the size, halve the reading.
 
-So the question is not "how big should the model be". It is: **for a given $C$, which $(N, D)$ pair produces the lowest loss?** Everything else in the paper is machinery for answering that empirically.
+So the real question is not "how big should the model be." It is: **for a fixed budget, which combination of size and reading gives the best model?** Everything else in the paper is machinery for answering that.
 
-## 2. What the field believed before
+## 2. What everyone believed before
 
-The prevailing guidance came from Kaplan et al. (2020), the paper that established scaling laws in the first place and which remains one of the most influential results in the field. Its analysis suggested that when compute increases, most of it should go into parameters: model size should grow much faster than dataset size.
+The prevailing advice came from Kaplan and colleagues in 2020 — a landmark paper that established this whole way of thinking and remains hugely influential. Its analysis suggested that when your budget grows, most of the extra should go into making the model bigger.
 
-Practitioners followed it, reasonably. That is why the frontier models of that era all sit in a narrow band of data volume with wildly different parameter counts — everyone was scaling the dimension the scaling law told them to scale.
+People followed it, reasonably. That is exactly why the leading models of the era all read roughly the same amount while varying wildly in size. Everyone was turning the dial the advice told them to turn.
 
-The Chinchilla authors' contribution was to re-run the experiment with a broader sweep and one methodological difference that turned out to matter enormously: they adjusted the learning-rate schedule to match the number of training steps for each run. In the earlier work, models trained for fewer steps were still using a schedule set for a longer run, which systematically understated how well a smaller model *could* do with more data. The apparent advantage of parameters over data was, in part, an artefact of the schedule.
+The Chinchilla team re-ran the experiment much more broadly, and found one methodological detail that turned out to matter enormously.
 
-<Feedback variant="info" title="Why the hyperparameter detail is the crux">
-A cosine learning-rate schedule that decays over the full planned run leaves a model stopped early at a high learning rate, and therefore worse than it should be. If you compare "small model trained longer" against "large model" using mismatched schedules, you have handicapped exactly the option you are trying to evaluate.
+When you train a model, you gradually reduce how big its learning steps are, on a schedule set in advance for the planned length of the run. In the earlier work, models trained for a shorter time were still using a schedule built for a longer one — so they were stopped while still taking large, clumsy steps, and ended up worse than they should have been.
+
+Which means the comparison was rigged without anyone intending it. "Small model that reads more" was handicapped against "big model," and the apparent advantage of size was, in part, an artefact of the schedule.
+
+<Feedback variant="info" title="Why this detail is the crux">
+If you compare two options and one of them is quietly running with the wrong settings, you have not measured which option is better. You have measured which one you set up correctly.
 </Feedback>
 
-## 3. Three independent routes to the same answer
+## 3. Three separate routes to the same answer
 
-The paper's credibility rests on not answering the question once. The authors trained **over 400 models**, ranging from 70 million to over 16 billion parameters, on 5 to 500 billion tokens, and analysed them three separate ways.
+The paper's credibility comes from not answering the question once. The team trained **over 400 models**, from 70 million to more than 16 billion parameters, reading anywhere from 5 to 500 billion tokens — and analysed the results three independent ways.
 
-**Approach 1 — fix model sizes and vary the number of training tokens.** Take a family of models, train each for many different durations, and read off the loss achieved at each compute level. The lower envelope of all those curves is the compute-optimal frontier.
+**Route one — fix the sizes, vary the reading.** Take a family of models and train each for many different durations. Plot how good each got against how much it cost. The line hugging the bottom of all those curves is the best you can do at each budget.
 
-**Approach 2 — IsoFLOP profiles.** Fix a compute budget and vary the model size within it, so that bigger models automatically get fewer tokens. Plot final loss against model size for that budget and it forms a clear valley — too small is bad, too large is bad, and the minimum is the optimum for that budget. Repeat for nine budgets from $6 \times 10^{18}$ to $3 \times 10^{21}$ FLOPs, and join the minima.
+**Route two — fix the budget, vary the size.** Pick a budget and try many model sizes within it, so bigger models automatically get less reading. Plot the results and you get a clear **valley** — too small is bad, too big is bad, and the bottom is the best choice for that budget. Repeat for nine different budgets and join up the low points.
 
-**Approach 3 — fit a parametric loss function.** Model the final loss of every run as a function of $N$ and $D$ with a form that separates irreducible entropy from the finite-model and finite-data penalties, then minimise it analytically subject to the compute constraint.
+**Route three — fit a formula.** Describe every run's result as a mathematical function of size and reading, then solve for the best combination directly.
 
-The three methods differ in what they assume and where they could go wrong. They agree. That agreement is what makes the conclusion hard to dismiss, and it is a template worth stealing for any empirical claim that matters.
+These three differ in what they assume and where they could go wrong. They agree with each other. That agreement is what makes the conclusion hard to argue with, and it is a template worth copying for any claim that matters.
 
-## 4. The result: scale both, equally
+## 4. The answer: grow both, equally
 
-The finding is stated in one line in the abstract: for compute-optimal training, **model size and the number of training tokens should be scaled equally**. Double your compute, and you should get roughly $\sqrt{2}$ times the parameters and $\sqrt{2}$ times the data — not twice the parameters and the same data.
+Stated in one line in the paper: for the best use of a budget, **model size and reading should be scaled equally.** Double your budget, and you should get about 1.4 times the parameters and 1.4 times the reading — not twice the parameters and the same reading.
 
-Applied to the models of the day, the implication was blunt. Gopher, at 280 billion parameters trained on 300 billion tokens, was the wrong shape for the compute it consumed. The right shape was around 70 billion parameters and four times the data.
+Applied to the models of the day, that was blunt. Gopher — 280 billion parameters, 300 billion tokens — was the wrong shape for what it cost. The right shape was about four times smaller, reading about four times more.
 
-So they trained exactly that. **Chinchilla: 70 billion parameters, 1.4 trillion tokens**, the same compute budget as Gopher. The ratio is worth noting because it became the field's rule of thumb — 1.4 trillion divided by 70 billion is **20 tokens per parameter**.
+So they built exactly that. **Chinchilla: 70 billion parameters, 1.4 trillion tokens**, on the same budget as Gopher.
 
-## 5. What Chinchilla actually did
+That ratio became the field's rule of thumb, and it is just division: 1.4 trillion divided by 70 billion is **20 tokens per parameter**.
 
-It outperformed Gopher, which is four times its size, and it did so broadly rather than on a cherry-picked subset. It also beat GPT-3 (175B), Jurassic-1 (178B) and Megatron-Turing NLG (530B) — a model more than seven times larger.
+## 5. What Chinchilla did
 
-On MMLU it reached **67.5% accuracy**, a **7% improvement over Gopher**, and at the time a state-of-the-art result.
+It beat Gopher, a model four times its size — and beat it broadly, not on a cherry-picked test. It also beat GPT-3 (175B), Jurassic-1 (178B) and Megatron-Turing NLG (530B), which is more than seven times larger.
 
-The second consequence is the one that reshaped the industry, and the paper calls it out explicitly: a smaller model is cheaper to serve. Gopher and Chinchilla cost the same to train once. Chinchilla costs a quarter as much per token to run, every time anyone uses it, forever. When a model is trained once and queried billions of times, the inference bill dwarfs the training bill — so the compute-optimal model is not merely as good, it is dramatically cheaper to own.
+On MMLU, a broad general-knowledge exam, it scored **67.5%** — a **7% improvement over Gopher** and, at the time, the best result anyone had.
 
-<Feedback variant="warning" title="Compute-optimal is a claim about training, not about deployment">
-The paper answers "what is the best model I can train with this budget". If you also care about serving cost — and you should — the optimum shifts further toward smaller models trained on even more data. Training past the Chinchilla point is compute-*inefficient* and can still be the correct business decision. This is precisely why the Llama family and most open models since are trained far beyond 20 tokens per parameter.
+The second consequence is the one that reshaped the industry, and the paper says it plainly: a smaller model is cheaper to *run*. Gopher and Chinchilla cost the same to train, once. Chinchilla costs a quarter as much every single time anyone uses it, forever. When a model is trained once and used billions of times, the running bill dwarfs the training bill — so the better-shaped model is not merely as good, it is dramatically cheaper to own.
+
+<Feedback variant="warning" title="Best-to-train is not the same as best-to-own">
+This paper answers "what is the best model I can train for this budget." If you also care about the cost of running it — and you should — the answer shifts even further toward smaller models that read even more. Training past the Chinchilla point is *wasteful* and can still be the right business decision. That is exactly why open models like Llama are trained far beyond 20 tokens per parameter.
 </Feedback>
 
-## 6. Running the arithmetic yourself
+## 6. Doing the arithmetic yourself
 
-The value of $C \approx 6ND$ is that you can sanity-check a training plan on paper before spending anything.
+The value of $C \approx 6ND$ is that you can sanity-check a plan on paper before spending anything.
 
-Suppose you have a budget of $10^{22}$ FLOPs. Compute-optimal says split it so that $D \approx 20N$. Substituting:
+Suppose your budget is $10^{22}$ units of work. The rule says aim for $D \approx 20N$. Substitute it in:
 
 $$
 10^{22} = 6N(20N) = 120N^2 \quad \Rightarrow \quad N \approx 9.1 \times 10^{9}
 $$
 
-So roughly a 9-billion-parameter model on about 180 billion tokens.
+So: roughly a 9-billion-parameter model reading about 180 billion tokens.
 
-Now check the two ways of getting it wrong with the same budget. A 30B model gets $D = C / 6N \approx 56$ billion tokens — under 2 tokens per parameter, deep in undertrained territory, and it will underperform the 9B despite being three times the size. A 1B model gets 1.7 trillion tokens, which is 1,700 tokens per parameter; it will be thoroughly trained and simply lack the capacity to use the data.
+Now look at the two ways to get it wrong with the *same* budget.
 
-Both are on the same isoFLOP curve, and both sit up the sides of the valley. That valley is the paper's central picture, and the fact that it is a valley rather than a slope is the entire finding — there is a wrong answer in *both* directions, and the field had spent three years walking steadily up one side of it.
+Build a 30-billion model instead, and it only gets about 56 billion tokens — under 2 tokens per parameter. Badly under-read. It will lose to the 9-billion model despite being three times the size.
 
-<Feedback variant="info" title="Estimate before you commit">
-This calculation takes a minute and is the single highest-leverage thing to do before a training run. The most expensive mistake in machine learning is not a bad hyperparameter; it is spending a month of cluster time on a model that was the wrong shape from the first step.
+Build a 1-billion model, and it gets 1.7 trillion tokens — 1,700 tokens per parameter. Extremely well-read and simply too small to use what it read.
+
+Both sit on the same budget line, and both are up the sides of the valley. That it is a *valley* rather than a slope is the whole finding: there is a wrong answer in **both** directions, and the field had spent three years walking steadily up one side.
+
+<Feedback variant="info" title="One minute, before you spend a month">
+This calculation is the highest-value thing to do before a training run. The most expensive mistake in machine learning is not a bad setting. It is spending a month of machine time on a model that was the wrong shape from the first step.
 </Feedback>
 
 ## 7. What the ratio does and does not mean
 
-The 20:1 figure has been repeated so often that it has hardened into a law, and it is not one. It is the arithmetic of one model, derived from a fit over a particular architecture family, a particular dataset and a particular training recipe, at compute scales that are now modest.
+The 20-to-1 number has been repeated so often that it has hardened into a law. It is not one. It is the arithmetic of a single model, from a study of one model family, one dataset and one recipe, at scales that now look modest.
 
-Several things move it. Better data raises the value of each token. Repeating data lowers it, since a second epoch is worth less than the first. Distillation, mixture-of-experts and different attention layouts all change the parameter-to-compute relationship the estimate assumes.
+Several things move it. Better text raises the value of each token. Re-reading the same text lowers it, because a second pass is worth less than the first. Newer model designs change the relationship the estimate assumes.
 
-What survives all of that is the structural finding, which is more valuable than the constant: **there is an optimum, it is not at the edge, and the pre-2022 field was far off it in a consistent direction.** Anyone doing a serious training run should re-derive the frontier for their own setup, using the IsoFLOP method, which is the most practical of the three.
+What survives all of that is the *structural* finding, which is worth far more than the constant: **there is a best answer, it is not at either extreme, and the field before 2022 was a long way off it in a consistent direction.**
 
-## 8. Why it mattered so much
+Anyone doing a serious training run should work out their own valley, using route two — the most practical of the three.
 
-Chinchilla ended the parameter-count era. Before it, model size was the number in the press release; after it, the interesting questions became data quality, data volume and how far past compute-optimal you should push for serving economics. The subsequent open-weights models — trained small, trained long, trained on trillions of tokens — are downstream of this paper.
+## 8. Why it mattered
 
-It is also a rare instance of the field correcting itself cleanly. A widely-adopted result was wrong in an identifiable way, someone ran the experiment carefully enough to find the flaw, published the correction with three independent analyses, and trained a model to demonstrate it. That is how the process is supposed to work and does not always.
+Chinchilla ended the parameter-count era. Before it, size was the number in the press release. After it, the interesting questions became the quality of the text, the quantity of it, and how far past the best-to-train point you should go for cheaper running. Every open model since — trained small, trained long, trained on trillions of tokens — comes downstream of this paper.
 
-The lesson that generalises past language models: when you have a scaling knob and a fixed budget, the interesting question is never how far you can turn the knob. It is which knob, and in what proportion — and that is an empirical question you have to actually run.
+It is also a rare case of a field correcting itself cleanly. A widely-adopted result was wrong in an identifiable way. Somebody ran the experiment carefully enough to find the flaw, published the correction with three independent analyses, and trained a model to prove it.
+
+That is how the process is meant to work, and it does not always.
+
+The transferable lesson: when you have a dial and a fixed budget, the interesting question is never how far you can turn it. It is *which* dial, and in what proportion — and that is a question you have to actually go and measure.
 
 ## Sources
 

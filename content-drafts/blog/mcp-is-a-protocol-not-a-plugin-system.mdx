@@ -1,6 +1,6 @@
 ---
 title: "MCP Is a Protocol, Not a Plugin System"
-summary: "The Model Context Protocol looks like a way to give a model plugins. Treating it that way produces tools that work in a demo and fail in a loop."
+summary: "The Model Context Protocol looks like a way to hand an AI some plugins. Treat it that way and you get tools that shine in a demo and go round in circles in real use."
 publishedAt: "2026-09-17T09:00:00.000Z"
 image: ""
 tag: "Agents"
@@ -8,59 +8,87 @@ topics: ["MCP", "Agents", "Tool Design", "Protocols"]
 status: "published"
 ---
 
-The first thing almost everyone does with the Model Context Protocol is wrap an existing API. You have a service with fifteen endpoints, you expose fifteen tools, you point a model at it, and the demo works. It feels like a plugin system, and plugin systems are a solved shape — register a capability, the host calls it, done.
+An AI on its own can only write words. To let it actually *do* things — look up an order, send an email, search a database — you give it **tools**. A tool is a small described action the AI can choose to use.
 
-That framing is what makes the second week hard. A plugin is invoked by a program that knows exactly what it wants. A tool over MCP is invoked by a model that is *inferring* what it wants from a text description you wrote, then reading the result and deciding what to do next. Those are not the same contract, and the difference shows up as an agent that loops.
+The Model Context Protocol, or MCP, is an agreed standard for describing those tools, so any AI can use any tool without custom glue. It is genuinely useful and it is spreading fast.
 
-## The consumer is a reader, not a caller
+And the first thing nearly everyone does with it is wrap an existing web service. You have fifteen endpoints, you expose fifteen tools, you point an AI at it, and the demo works. It feels like a plugin system, and plugin systems are a familiar shape — register a capability, the host calls it, done.
 
-A conventional API's job is to be unambiguous to a compiler. A tool's job is to be unambiguous to a reader who has seen only its description and has to choose it over eleven similar-looking siblings, with no ability to ask you a question.
+That feeling is exactly what makes the second week hard.
 
-This changes what "good design" means. `search(query, filters, options)` is a perfectly reasonable function signature and a poor tool. What are valid filters? What happens if I pass none? Is `options` where the pagination lives? A human integrating against it reads your docs once and remembers. A model re-derives the answer from your description on every single call, and where the description is thin it guesses.
+## Your tool is read, not called
 
-The rewrite that fixes this is usually decomposition. Not one `search` with a mode parameter, but `search_customers_by_name` and `search_orders_by_date`, each with a description that says what it is for, what it returns, and — the part everyone omits — **when not to use it**. Fewer parameters, more tools, each one obvious in isolation.
+A plugin gets invoked by a program that knows precisely what it wants. A tool gets chosen by an AI that is *guessing* what it wants from a short description you wrote — and then reading whatever comes back and deciding what to do next.
 
-<Feedback variant="info" title="The test I apply to a tool description">
-Could a competent new colleague, given only this description and no access to me, pick the right tool for a task and construct a valid call on the first attempt? If not, the model will not either — it just fails more confidently.
+Those are not the same contract. And the difference shows up as an agent that goes round in circles.
+
+This changes what "good design" means. Consider a tool called `search(query, filters, options)`. That is a perfectly respectable function signature and a bad tool. What counts as a filter? What happens if you leave it out? Is the page number inside `options`?
+
+A human integrating with it reads your documentation once and remembers. An AI works it out afresh from your description on *every single call* — and where the description is thin, it guesses.
+
+The fix is usually to split things up. Not one `search` with a mode switch, but `search_customers_by_name` and `search_orders_by_date`. Fewer inputs each, more tools overall, every one obvious on its own. And each description should say what it is for, what it gives back, and — the part almost everyone leaves out — **when not to use it**.
+
+<Feedback variant="info" title="The test I apply to a description">
+Could a capable new colleague, given only this description and no way to ask me a question, pick the right tool and get the call right first time? If not, the AI will not either. It will just fail more confidently.
 </Feedback>
 
-## Errors are a control-flow instruction
+## Error messages are instructions now
 
-In an ordinary integration, an error is something a human reads in a log. In an agent loop, the error string goes straight back into the model's context and becomes the sole basis for its next decision. It is not a diagnostic. It is an instruction, and you are writing it.
+Normally, an error message is something a human reads in a log later.
 
-`400 Bad Request` tells the model nothing, so it retries the identical call, gets the identical error, and you have built a loop. `Error: invalid date format` is better but still incomplete, because it does not say what the model should do instead.
+Inside an AI agent, the error goes straight back into the AI's reading and becomes the *entire* basis for its next decision. It is not a diagnostic. It is an instruction, and you are the one writing it.
 
-What actually breaks the loop is an error that contains the correction: *invalid date format "next tuesday" — this parameter takes ISO 8601, e.g. 2026-09-17*. Now the failure is self-correcting on the next turn, and the difference between those two strings is the difference between a tool that recovers and a tool that burns a context window.
+`400 Bad Request` tells the AI nothing. So it tries the identical call again, gets the identical error, and you have built a loop that will happily run until something stops it.
 
-The same logic applies to empty results. `[]` is ambiguous — did the query fail, or is the answer genuinely nothing? A model faced with that ambiguity tends to assume it made a mistake and retry with variations. *No orders found for customer 4021 in the last 30 days. The customer exists.* ends the sequence, because it distinguishes "no data" from "wrong call".
+`Error: invalid date format` is better, but still incomplete — it says what went wrong, not what to do.
 
-## Every response is a bill against the context window
+What actually breaks the loop is an error containing the correction:
 
-A REST endpoint that returns forty fields is being thorough. A tool that returns forty fields has spent several hundred tokens of the model's finite working memory, and it will do it again on the next call, and the one after.
+> `invalid date format "next tuesday" — this field wants a date like 2026-09-17`
 
-This inverts a habit. The right default for a tool response is the *smallest* payload that answers the question, not the most complete representation of the resource. Return the five fields that matter. Offer a separate tool for the full record, so the expensive version is opt-in and the model can choose it when it needs to.
+Now the failure fixes itself on the next attempt. The difference between those two messages is the difference between a tool that recovers and a tool that burns through the AI's entire working memory.
 
-The compounding case is worse than the single case. An agent that makes six tool calls before answering has spent the sum of six responses, and if each is verbose, the model is now reasoning over a context that is mostly stale JSON from four steps ago. Truncating tool output is not a hack — it is the responsible default for a resource that is shared across the whole trajectory.
+The same logic applies to empty results. Returning nothing is ambiguous — did the search break, or is the answer genuinely "none"? An AI facing that ambiguity tends to assume *it* made a mistake and retry with variations. Whereas:
 
-<Feedback variant="warning" title="Pagination is a tool-design problem, not an API problem">
-Returning 500 rows because that is what the underlying query returned will blow the context and produce worse answers than returning 10 with a note that more exist. The tool layer is where that judgement belongs; do not pass the database's opinion straight through.
+> `No orders found for customer 4021 in the last 30 days. This customer does exist.`
+
+ends the sequence, because it separates "no data" from "wrong question."
+
+## Every reply is a bill
+
+An AI can only hold so much text in mind at once. That space is finite and shared by everything: the conversation, the instructions, and every reply your tools have sent back.
+
+A web endpoint returning forty fields is being thorough. A *tool* returning forty fields has just spent a chunk of the AI's limited attention, and it will do it again on the next call, and the one after.
+
+This flips a habit. The right default for a tool is the **smallest** reply that answers the question, not the most complete description of the thing. Return the five fields that matter. Offer a separate tool for the full record, so the expensive version is something the AI asks for when it needs it.
+
+And the problem compounds. An agent making six tool calls before answering has paid for all six replies. If each is bloated, the AI is now trying to reason while most of what it can see is stale data from four steps ago.
+
+Trimming what a tool returns is not a hack. It is the responsible default for something shared across the whole task.
+
+<Feedback variant="warning" title="Deciding how much to return is your job, not the database's">
+Returning 500 rows because that is what the query produced will flood the AI and give worse answers than returning 10 with a note that more exist. Do not pass the database's opinion straight through.
 </Feedback>
 
-## Statelessness is what makes it composable
+## Never rely on what happened before
 
-The strongest argument for MCP being a protocol rather than a plugin API is that it forces a discipline plugin systems usually skip: each call has to make sense on its own.
+The strongest argument that MCP is a protocol rather than a plugin API is that it forces a discipline plugin systems usually skip: **every call has to make sense on its own.**
 
-An agent's trajectory is not guaranteed. It may call your tool, wander off to three others, come back, or be interrupted and resumed in a different process. A tool that quietly depends on having been called before — an implicit session, a cursor held in memory, a "current directory" — works perfectly in the happy path and produces baffling behaviour the moment the sequence varies. And the sequence always varies, because a model chose it.
+You do not control the order. The AI might call your tool, wander off to three others, come back, or get interrupted and resumed in a completely different process an hour later.
 
-Make state explicit in the arguments. If the tool needs a session, the session identifier is a parameter, returned by whatever created it. This looks more verbose and is the reason the tool still works when the agent does something you did not anticipate.
+A tool that quietly depends on having been called before — an invisible session, a remembered position in a list, a "current folder" — works beautifully in the happy path and produces baffling behaviour the moment the order changes. And the order always changes, because an AI chose it.
 
-## What I would tell someone wiring up their first server
+So put the state in the arguments. If your tool needs a session, the session ID is an input, handed back by whatever created it. This looks more verbose. It is the reason the tool still works when the agent does something you never imagined.
 
-- Expose fewer tools than you have endpoints. One tool per *task*, not per route.
-- Write the description for a reader who cannot ask questions, and say when not to use it.
-- Make every error message contain the correction, not just the complaint.
-- Return the smallest useful payload; make the full record a separate call.
+## If you are wiring up your first server
+
+- Expose fewer tools than you have endpoints. One per *task*, not one per route.
+- Write descriptions for someone who cannot ask questions — and say when not to use it.
+- Put the fix inside every error message, not just the complaint.
+- Return the smallest useful reply; make the full version a separate tool.
 - Never depend on call order. Put the state in the arguments.
 - Read your own agent's transcripts. The loops are obvious once you look, and invisible until you do.
 
-MCP standardises the transport, which is genuinely valuable and also the least interesting part. The design work it does not do for you is the part that decides whether your agent finishes the task or spends thirty turns rediscovering the date format. That work is not plugin registration. It is API design for a consumer that reads.
+MCP standardises how tools are described and delivered. That is genuinely valuable, and it is the easy half. The design work it does not do for you is what decides whether your agent finishes the job or spends thirty turns rediscovering your date format.
+
+That work is not plugin registration. It is writing for a reader.

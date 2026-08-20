@@ -1,6 +1,6 @@
 ---
 title: "HNSW: How a Vector Database Really Searches"
-summary: "Nearest-neighbour search in high dimensions defeats every classical index. The structure that won is a graph you navigate by greedy descent — built out of skip lists and small-world networks."
+summary: "Finding the closest match among millions of AI-generated points defeats every classical index. The structure that won works like a friend-of-a-friend network, and you navigate it by always stepping closer."
 publishedAt: "2026-09-28T09:00:00.000Z"
 image: ""
 tag: "Retrieval"
@@ -8,105 +8,117 @@ topics: ["HNSW", "Vector Search", "ANN", "Qdrant"]
 status: "published"
 ---
 
-A vector database answers one question: given this 768-dimensional point, which of my ten million stored points are closest to it? The naive answer is to measure the distance to all ten million and sort, which is correct, trivially parallel, and far too slow — and every serious system does something else entirely.
+Modern AI search works by turning meaning into position. Every document becomes a point in space, arranged so that things meaning similar things sit near each other. To find documents about refunds, you turn "refunds" into a point and look for its neighbours.
 
-What it does is almost certainly HNSW, a structure that gets the right answer nearly always, in logarithmic time, by walking a graph rather than searching an index. Understanding it changes how you tune a retrieval system, because every parameter it exposes is a position on a curve you should be choosing deliberately.
+The catch is that the space has hundreds of dimensions, not two, and there may be ten million points in it.
 
-## 1. Why the obvious data structures fail
+The obvious approach — measure the distance to all ten million and sort — is correct, easy, and far too slow. Every serious system does something else, and that something else is almost certainly HNSW. Understanding it changes how you tune a search system, because every setting it exposes is a position on a curve you should be choosing deliberately.
 
-For one-dimensional data, sorting solves this. For two or three, spatial partitioning works: a k-d tree splits space by alternating axes and prunes whole regions during search. It is a beautiful structure and it is why computer graphics is possible.
+## 1. Why the normal tricks fail
 
-It also stops working around ten dimensions, and embeddings have hundreds. The reason is the **curse of dimensionality**, and the specific mechanism is worth stating because it is not obvious.
+For a sorted list, finding things is easy. For a map — two dimensions — it is still easy: chop the map into quarters, then quarters of quarters, and to find something near a point you only look in nearby squares and ignore the rest. That is how computer graphics works, and the structures are beautiful.
 
-Space-partitioning search works by proving that an entire region cannot contain a better answer than the one you have, and skipping it. That proof requires the query's distance to the region's boundary to be large relative to the distance to your current best candidate. In high dimensions it never is: as dimension grows, the distances from a random query to *all* points concentrate into a narrow band. The nearest neighbour is only slightly nearer than the median one, so the pruning condition fails almost everywhere and the tree degenerates into a full scan with extra bookkeeping.
+They stop working around ten dimensions. Embeddings have hundreds.
 
-This is not a flaw in k-d trees. It is a property of high-dimensional geometry, and it applies to every method that partitions space into regions.
+The reason has a name — the **curse of dimensionality** — and a specific mechanism worth stating, because it is not obvious.
 
-<Feedback variant="info" title="The concession that makes it tractable">
-Every practical system gives up on exactness. **Approximate** nearest neighbour search returns the true nearest neighbours *most* of the time, and the fraction it gets right is called **recall**. Accepting 95% recall instead of 100% buys orders of magnitude in speed — and for semantic search, where the embedding itself is an approximation of meaning, the last 5% is usually noise anyway.
+Chopping space into regions only helps if you can *prove* an entire region is too far away to bother with, and skip it. That proof needs the region to be clearly further than your current best candidate.
+
+In high dimensions it never is. As dimensions increase, the distances from any point to *all* the others bunch up into a narrow band. The nearest neighbour is only slightly nearer than a typical one. So the skipping condition almost never holds, and your elegant structure quietly degrades into checking everything, with extra bookkeeping.
+
+That is not a flaw in the structure. It is a property of high-dimensional space, and it defeats every method built on carving space into regions.
+
+<Feedback variant="info" title="The concession that makes it work">
+Every practical system gives up on being exactly right. **Approximate** nearest-neighbour search returns the true closest matches *most* of the time, and the share it gets right is called **recall**. Accepting 95% instead of 100% buys orders of magnitude in speed — and for meaning-based search, where the point itself is already an approximation of meaning, the last 5% is usually noise anyway.
 </Feedback>
 
-## 2. Small worlds: navigate, don't partition
+## 2. Stop carving. Start connecting.
 
-The idea that works comes from network science. In a **navigable small world** graph, each node connects to a handful of near neighbours plus a few distant ones, and the striking property is that you can route from any node to any other in a small number of hops using only *local* decisions — at each step, move to whichever neighbour is closest to the destination.
+The idea that works comes from social networks.
 
-You already know this as six degrees of separation. Nobody has a map of the social graph; everyone just forwards to whoever seems closer to the target, and it works.
+You have probably heard that any two people are connected by about six handshakes. The remarkable part is not that a short path exists. It is that **you can find it without a map.** Nobody knows the global social graph. You just forward the message to whoever you know who seems closest to the target, and it gets there.
 
-Applied to vector search: build a graph where each stored vector is a node connected to its approximate nearest neighbours. To search, start somewhere and greedily walk to whichever neighbour is closer to the query. Stop when no neighbour improves.
+That works because your friends are a mix: mostly people nearby, plus a few far away. The nearby ones let you home in; the far ones let you cross huge distances in one step.
 
-The long-range links are what make this fast. Without them, greedy walking follows the local structure and takes a number of steps proportional to the distance across the dataset. With them, early steps cover enormous ground.
+Apply that to search. Build a network where each stored point is connected to a handful of its near neighbours. To search, start anywhere and repeatedly step to whichever neighbour is closer to what you are looking for. Stop when no neighbour is an improvement.
 
-But a flat small-world graph has a problem: the walk spends most of its steps in the early, coarse phase, and the hop lengths are not well controlled.
+The long-distance links are what make this fast. Without them, you shuffle along local structure and it takes forever to cross the dataset.
 
-## 3. The hierarchy, borrowed from skip lists
+But a flat network like this has a problem: most of your steps get spent in the early, coarse phase, and the step sizes are not well controlled.
 
-Yu. A. Malkov and D. A. Yashunin's contribution, in *Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs* (2016), was to impose structure on those hop lengths — by explicitly separating them into layers.
+## 3. The layers, borrowed from express trains
 
-HNSW builds a **stack of graphs**. The bottom layer contains every point. Each layer above contains a random subset of the layer below, with the probability of promotion decaying exponentially — so layer 0 has everything, layer 1 has a fraction, layer 2 a fraction of that, and the top layer holds a handful of nodes.
+Yu. A. Malkov and D. A. Yashunin's contribution, in *Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs* (2016), was to organise those step sizes by separating them into **layers**.
 
-This is a skip list generalised from one dimension to many. A skip list gives logarithmic search over a sorted list by keeping express lanes with progressively fewer stops; HNSW gives logarithmic search over a metric space by the identical trick.
+Think of a metro system. The bottom layer is the local line stopping at every station. Above it, an express line stopping at every fifth station. Above that, an intercity line with four stops in the whole country.
 
-Search runs top-down:
+To travel, you start on the fastest line, ride until you overshoot, drop down a level, repeat. Coarse to fine.
 
-1. Enter at the single node in the top layer.
-2. Greedily walk that layer until no neighbour is closer to the query.
-3. Drop to the next layer down, starting from where you stopped.
-4. Repeat to layer 0, where you do a wider search and collect the best $k$.
+HNSW builds exactly this. The bottom layer contains every point. Each layer above holds a random sample of the one below, getting sparser fast — so the top layer has a handful of points and the bottom has all ten million.
 
-The upper layers are sparse, so their edges span long distances and each hop covers a lot of ground. The lower layers are dense and refine. Coarse-to-fine, with the hop length falling by roughly a constant factor per layer — which is exactly what produces the paper's **logarithmic complexity scaling**.
+Searching runs top-down:
 
-## 4. Construction is the same algorithm, recursively
+1. Enter at the single point in the top layer.
+2. Step greedily through that layer until no neighbour is closer.
+3. Drop to the next layer, starting from where you stopped.
+4. Repeat down to the bottom, where you search a bit wider and collect your results.
 
-Inserting a point:
+The upper layers are sparse, so their links span huge distances and each step covers a lot of ground. The lower layers are dense and refine. Step size falls by roughly a constant factor per layer — which is exactly what produces the paper's **logarithmic scaling**: ten times more data costs you only a couple more steps.
 
-1. Pick its maximum layer randomly, from an exponentially decaying distribution.
-2. Search from the top down to that layer to find good entry points.
-3. In each layer from its maximum down to 0, find the $\mathrm{efConstruction}$ nearest candidates and connect to the best $M$ of them.
-4. Because edges are bidirectional, neighbours gain a connection too — and if any now exceeds its budget, prune its worst edge.
+## 4. Building it is the same algorithm
 
-Step 4 is where the quality comes from, and the pruning rule is more subtle than "drop the farthest". HNSW uses a **heuristic** that prefers a diverse set of neighbours over a merely close one: a candidate is kept if it is closer to the node than to any already-selected neighbour. The effect is to keep edges pointing in different *directions* rather than clustering them all on one side.
+Adding a point:
 
-That diversity is what preserves navigability. A node whose every edge points the same way is a dead end for a greedy walk arriving from elsewhere — and in clustered data, which is what real embeddings are, naive nearest-neighbour edges produce exactly that.
+1. Roll dice to pick its top layer — most points get only the bottom, a few get high.
+2. Search from the very top down to that layer to find where it belongs.
+3. In each layer from its top down to the bottom, find the best candidates nearby and connect to the closest $M$ of them.
+4. Links go both ways, so the neighbours gain a connection too. If any now has too many, drop its worst.
 
-## 5. The three parameters you actually set
+Step 4 is where the quality lives, and the rule is subtler than "drop the furthest."
 
-Every vector database exposes these, usually under these names, and each is a point on a trade-off curve.
+HNSW prefers a **spread-out** set of neighbours over a merely close one: a candidate is kept if it is closer to this point than to any neighbour already chosen. The effect is to keep links pointing in different *directions* rather than bunching them all on one side.
 
-**$M$ — edges per node.** Higher $M$ means better recall and more memory, since the graph itself must be resident. Typical values are 16 to 64. Memory for the index scales with $M$, and for large collections the graph can rival the vectors in size.
+That spread is what keeps the network navigable. A point whose every link goes the same way is a dead end for anyone arriving from elsewhere — and in real data, which comes in clumps, naive nearest-neighbour links produce exactly that.
 
-**$\mathrm{efConstruction}$ — candidate list size while building.** Higher means a better-quality graph and slower indexing. It costs nothing at query time — this is build-time effort that pays off on every subsequent search, so it is usually worth setting generously.
+## 5. The three settings you actually tune
 
-**$\mathrm{ef}$ — candidate list size while searching.** The runtime dial. Higher means better recall and slower queries, and it can be changed per query without rebuilding. This is the knob to expose to your application: an interactive autocomplete and an offline batch job want different values.
+Every vector database exposes these, usually under these names.
 
-<Feedback variant="warning" title="Deletion is the weak point">
-HNSW has no clean delete. Removing a node from the graph can disconnect regions and break navigability, so most implementations mark the node deleted and filter it out of results — the memory and the edges remain. A collection with heavy churn accumulates tombstones and degrades until it is rebuilt. If your workload deletes frequently, plan the rebuild; do not discover it.
+**$M$ — links per point.** Higher gives better recall and uses more memory, because the network itself has to be held in memory. Typical values are 16 to 64. For large collections the links can rival the data in size.
+
+**$\mathrm{efConstruction}$ — how hard to look while building.** Higher gives a better network and slower building. It costs nothing at search time — this is effort spent once that pays off on every future search, so it is usually worth setting generously.
+
+**$\mathrm{ef}$ — how hard to look while searching.** The live dial. Higher gives better recall and slower searches, and you can change it per query without rebuilding anything. This is the one to expose to your application: an as-you-type suggestion box and an overnight batch job want very different values.
+
+<Feedback variant="warning" title="Deleting is the weak spot">
+There is no clean way to remove a point. Taking it out can strand whole regions of the network, so most systems just mark it deleted and filter it from results — the memory and the links stay. A collection with heavy churn accumulates these until it is rebuilt. If your data changes constantly, plan the rebuild rather than discovering it.
 </Feedback>
 
 ## 6. Filtering is harder than it looks
 
-The single most common production requirement — *find similar documents, but only from this tenant, in English, published this year* — is genuinely awkward for a graph index, and it is worth knowing why before you design around it.
+The single most common real requirement — *find similar documents, but only this customer's, in English, from this year* — is genuinely awkward here, and it is worth knowing why before you design around it.
 
-**Post-filtering** searches first, then discards non-matching results. Simple, and it fails badly when the filter is selective: ask for 10 results, retrieve 100, find that 3 match. You cannot know in advance how far to over-fetch.
+**Filter afterwards.** Search normally, then throw away non-matching results. Simple, and it collapses when the filter is picky: you ask for 10, fetch 100, and 3 match. You cannot know in advance how much to over-fetch.
 
-**Pre-filtering** finds the matching subset first, then searches within it. Correct, but the graph's edges connect the full dataset. Restricting to a subset means the greedy walk keeps trying to step through excluded nodes, and if the subset is small the graph is effectively disconnected — at which point a brute-force scan of the subset is genuinely faster, and good implementations switch to exactly that.
+**Filter first.** Work out the matching subset, then search within it. Correct, but the network's links connect *everything*. Restricted to a subset, your walk keeps trying to step through excluded points — and if the subset is small, the network is effectively broken into islands. At that point simply checking every point in the subset is genuinely faster, and good implementations switch to exactly that.
 
-**Filterable graph traversal** is what mature systems do: consult the filter during the walk and only traverse to permitted nodes, with heuristics to maintain connectivity. Qdrant, for instance, builds additional payload-aware links so that heavily-filtered searches stay navigable.
+**Filter while walking.** What mature systems do: consult the filter during the walk and only step to permitted points, with extra tricks to keep things connected. Qdrant, for example, builds additional links based on the labels so that heavily-filtered searches stay navigable.
 
-The practical consequence: if you know your queries are always scoped to a tenant, separate collections per tenant often beat one collection with a filter. The filter is a runtime cost on every query; the partition is free.
+The practical consequence: if every search is always scoped to one customer, separate collections per customer often beat one collection with a filter. The filter costs you on every query; the separation is free.
 
 ## 7. What this changes about using one
 
-Four things follow directly from the structure.
+Four things follow directly.
 
-The index is a **graph in memory**, not a file on disk you page into. Capacity planning must include vectors plus edges, and the edges are not a rounding error.
+**The index is a network held in memory**, not a file you read from disk. Capacity planning must count the data plus the links, and the links are not a rounding error.
 
-Recall is a **dial, not a property**. If retrieval quality is poor, `ef` is the first thing to check — it is possible you are running a default tuned for speed.
+**Recall is a dial, not a fact.** If search quality is poor, check `ef` first — you may be running a default tuned for speed.
 
-**Range queries are not supported.** HNSW answers "nearest $k$", not "everything within distance $d$". Implementations that offer a radius search do it by over-fetching and filtering, with no guarantee of completeness.
+**"Everything within this distance" is not supported.** HNSW answers "the nearest handful." Systems offering a radius search do it by over-fetching and filtering, with no guarantee of completeness.
 
-And **build time is not wasted time**. A generous `efConstruction` produces a graph that is better on every query for the life of the index.
+**Build time is not wasted time.** A generous build setting produces a network that is better on every single search for the life of the index.
 
-The idea underneath is one worth carrying: when partitioning space stops working, stop partitioning and start connecting. Navigation succeeds where subdivision fails, because a good graph does not need to understand the geometry — it only needs enough well-chosen edges that greedy local decisions add up to a global one.
+The idea underneath is worth carrying beyond search: when dividing a space stops working, stop dividing it and start connecting it. Navigation succeeds where subdivision fails, because a good network does not need to understand the geometry. It only needs enough well-chosen links that always-step-closer adds up to arriving.
 
 ## Sources
 

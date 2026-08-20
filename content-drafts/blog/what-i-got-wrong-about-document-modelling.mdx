@@ -1,6 +1,6 @@
 ---
 title: "What I Got Wrong About Document Modelling"
-summary: "Choosing MongoDB is a five-minute decision. Deciding what a document is takes months to get wrong and is expensive to undo."
+summary: "Picking MongoDB takes five minutes. Deciding what one record should contain takes months to get wrong and is painful to undo."
 publishedAt: "2026-10-01T09:00:00.000Z"
 image: ""
 tag: "Databases"
@@ -8,66 +8,92 @@ topics: ["MongoDB", "Data Modelling", "Schema Design", "NoSQL"]
 status: "published"
 ---
 
-The pitch that sells a document database is that you do not need a schema. The reality is that you always have a schema; the only question is whether it is written down where a machine can enforce it, or scattered across the application code that reads the collection. I spent a long time believing the first version of that sentence, and every modelling mistake I have made since traces back to it.
+There are two broad ways to store data, and the difference is easiest to see as furniture.
 
-None of what follows is an argument against document databases. It is a list of the things I had to learn the hard way about using one, most of which are really the same lesson from different angles.
+The old way is a **filing cabinet**. Every drawer holds one kind of card, every card has exactly the same printed fields, and if you want a customer and their orders together you pull from two drawers and match them up. This is a relational database — Postgres, MySQL. Matching the drawers is called a *join*, and these systems are extremely good at it.
 
-## Model on access patterns, not on entities
+The newer way is a **folder**. One customer, one folder, and whatever belongs to them goes inside — orders, notes, addresses. No matching required, because it is already together. This is a document database, and MongoDB is the one most people meet first.
 
-The instinct carried over from relational design is to enumerate the nouns and give each one a collection. Users, orders, products, comments. It feels principled and it is exactly backwards for this kind of database.
+The pitch that sells the folder is that you do not need to decide what goes in it. That is the sentence I believed for far too long, and every modelling mistake I have made traces back to it.
 
-Relational modelling normalises first and lets the query planner reassemble things at read time — that is what joins are for, and they are very good. A document database has no equivalent, so a shape that requires assembling five collections per request is not a neutral design choice; it is a decision to do the join in application code, over the network, once per request, forever.
+You always have a shape. The only question is whether it is written down somewhere a machine can check, or scattered across whatever code happens to read the folder.
 
-The question that produces better models is not *what are my entities* but *what do I read together, and how often*. On a CRM I worked on, contacts and their activity timeline were separate collections because they are obviously separate things. Every screen in the product showed them together. Every page load was two round trips and a merge, and the merge code was where the bugs lived. They were separate because a diagram said so, not because anything in the application ever wanted them apart.
+None of this is an argument against document databases. It is the list of things I had to learn the hard way, which are mostly one lesson from different angles.
 
-<Feedback variant="info" title="The heuristic that has held up">
-Embed what is read together and written together, and where the embedded side has a natural bound. Reference what is large, unbounded, shared between parents, or written on a different rhythm than its parent.
+## Design for the questions, not the nouns
+
+The instinct you carry over from filing cabinets is to list the nouns and give each one a drawer. Users, orders, products, comments. It feels tidy. For folders it is precisely backwards.
+
+Relational design deliberately splits things up and lets the database reassemble them when you ask. That is what joins are for. A document database has no equivalent — so a shape needing five folders opened per screen is not a neutral choice. It is a decision to do the reassembling yourself, in your own code, over the network, on every single request, forever.
+
+The better question is not *what are my things* but **what do I read together, and how often?**
+
+On a CRM I worked on, contacts and their history of interactions lived in separate collections, because they are obviously separate things. Every screen in the product showed them together. Every page load was two trips to the database and a merge, and the merge code is where the bugs lived.
+
+They were separate because a diagram said so, not because anything in the application ever wanted them apart.
+
+<Feedback variant="info" title="The rule that has held up">
+Put it inside the folder when it is read together, written together, and cannot grow forever. Keep it in its own drawer when it is big, unbounded, shared between folders, or changes on a different rhythm than its parent.
 </Feedback>
 
-## Embedding is not free, and unbounded arrays are the trap
+## Lists that grow forever are the trap
 
-Embedding solves the read problem so cleanly that it becomes the default answer, and then you hit the case it does not fit.
+Putting things inside the folder solves the reading problem so neatly that it becomes the automatic answer — and then you meet the case where it does not fit.
 
-The failure is the array with no natural limit. Comments on a post. Events on a session. Messages in a conversation. Each looks like a child that belongs to exactly one parent — textbook embedding. But the parent document now grows without bound, and three unpleasant things follow.
+The trouble is any list with no natural end. Comments on a post. Events in a session. Messages in a conversation. Each looks like a textbook child: it belongs to exactly one parent, so tuck it inside.
 
-Every read of the parent pulls the entire array over the wire, even when you wanted one field. Every append rewrites the document, and once it outgrows its allocated space the storage engine relocates it. And there is a hard document size limit waiting at the end, which you will discover in production, on your most active record — because the biggest document is by definition the one belonging to your best customer.
+But now the folder grows without limit, and three unpleasant things follow.
 
-The tell is a question: *can a user, by using the product normally, make this array arbitrarily long?* If yes, it is a separate collection with an index on the parent id, and you have accepted a second query in exchange for a system that does not have a cliff in it.
+**Every read drags the whole list along**, even when you wanted one field off the front.
 
-## Denormalisation is a write-path commitment
+**Every addition rewrites the whole folder**, and once it outgrows the space set aside for it, the database has to pick it up and move it somewhere roomier.
 
-Copying a customer's name into every order makes the read trivial. It also means the customer's name now exists in an unknown number of places, and changing it is a fan-out write you have to design, execute and monitor.
+**There is a hard size limit** waiting at the end, which you will meet in production, on your busiest record — because the biggest folder is by definition the one belonging to your best customer.
 
-I am not against this — for genuinely read-heavy data it is often correct, and there are cases where the copy is *more* correct than the reference. The invoice should record the address at the time it was issued, not the address the customer has today. That is not denormalisation, that is capturing a historical fact, and joining to get it would be a bug.
+The test is one question: *can somebody, just by using the product normally, make this list as long as they like?* If yes, it belongs in its own collection with a pointer back. You have accepted a second query in exchange for a system with no cliff in it.
 
-The mistake is failing to distinguish the two. A cached copy is a performance optimisation with a consistency obligation attached. A recorded fact is data. Writing them the same way, and remembering which is which by intuition, is how you end up with an update path that fixes four of the five places a name appears.
+## Copying data is a promise you have to keep
 
-If you denormalise a mutable field, write down where the copies live at the moment you create the second one. That comment will be worth more than most of the code around it.
+Writing a customer's name into every order makes reading an order trivial. It also means their name now lives in an unknown number of places, and changing it becomes a job you have to design, run and check.
 
-## Schemaless is a deployment strategy, not a modelling one
+I am not against this. For data that is read constantly and changed rarely, copying is often right. And sometimes the copy is *more* correct than a pointer would be.
 
-The freedom to write any shape into a collection is genuinely valuable, and its value is almost entirely in *migration*. You can deploy code that writes a new field before backfilling. You can support two shapes during a rollout. That is real and it is a lot better than a locked table.
+An invoice should record the address it was sent to at the time. Not the address the customer has today. That is not a performance shortcut — that is the truth, and looking up the current address would be a bug.
 
-What it is not is permission to skip deciding the shape. Without a decision you get drift: some documents have `email`, some have `emailAddress`, some have both and disagree. Every read path grows a fallback. Six months later, nobody can tell you what a document in that collection contains without reading it, and the answer is "it depends when it was written".
+The mistake is failing to tell those two cases apart. A copy-for-speed is an optimisation carrying an obligation. A copy-for-history is simply the data. Writing them the same way, and remembering which is which by instinct, is how you end up with an update that fixes four of the five places a name appears.
 
-Which is why I now turn on schema validation for every collection that matters. This site's content collection has a JSON Schema validator that rejects a malformed insert outright — required fields, enums on the status and section, dates that must be real dates rather than ISO strings that merely look like them. It cost half an hour, it has caught several bad writes from my own scripts, and it did not take away a single thing I actually wanted from a document database.
+If you copy something that can change, write down where the copies live the moment there are two. That comment will be worth more than most of the code around it.
 
-<Feedback variant="warning" title="Validation at the boundary, or it does not exist">
-Enforcing shape in the application layer works right up until the second writer — a migration script, an admin tool, a colleague's notebook. The database is the only place every writer has to pass through.
+## "No fixed shape" is a deployment trick
+
+The freedom to put any shape into a folder is genuinely valuable, and its value is almost entirely about **changing things safely**.
+
+You can ship code that writes a new field before you have filled it in on the old records. You can support two shapes at once while a release rolls out. That is real, and much better than a locked-down table.
+
+What it is not is permission to skip deciding. Without a decision you get drift. Some records have `email`. Some have `emailAddress`. Some have both, and they disagree. Every piece of reading code grows a fallback. Six months later nobody can tell you what a record contains without opening one, and the honest answer is "it depends when it was written."
+
+So I now switch on **validation** for every collection that matters — a rule the database itself enforces, rejecting anything malformed at the door.
+
+This site's articles live in a collection with exactly that: required fields, a fixed list of allowed statuses and sections, dates that must be real dates rather than text that merely looks like a date. It took half an hour. It has caught bad writes from my own scripts. And it did not remove a single thing I actually wanted from a document database.
+
+<Feedback variant="warning" title="Check at the door, or you are not checking">
+Enforcing shape in your application works right up until the second writer appears — a migration script, an admin tool, a colleague's notebook. The database is the only place every writer must pass through.
 </Feedback>
 
-## Indexes decide whether the model works
+## Indexes decide whether any of it works
 
-A document model is a hypothesis about access patterns, and indexes are how you find out whether the hypothesis was right. The failure is invisible in development, where a collection scan over 200 documents is instant, and obvious in production, where it is not.
+Your folder design is a guess about which questions get asked. **Indexes** — the database's equivalent of a book's index — are how you find out whether the guess was right.
 
-Two habits have paid for themselves repeatedly. Check the query plan for anything on a hot path — a full scan where you expected an index lookup is a five-second check that saves a five-hour incident. And index on the shape the query actually uses: for a compound index, the field order determines which prefixes it can serve, and an index on the wrong prefix order is dead weight that still costs you on every write.
+The failure is invisible in development, where scanning 200 records is instant, and extremely visible in production, where scanning two million is not.
 
-## What I would do differently from the start
+Two habits pay for themselves over and over. Ask the database to explain how it plans to answer any query on a busy path — if it says it is going to read everything, that is a five-second check saving a five-hour incident. And build the index to match the question: when an index covers several fields, the *order* of those fields decides which questions it can help with, and an index in the wrong order is dead weight that still slows down every write.
 
-- Write the queries the application needs before designing a single document.
-- Embed what is bounded and read together; reference everything that can grow.
-- Turn on schema validation immediately, and treat it as documentation that executes.
-- Record where every denormalised copy lives, the moment there is more than one.
-- Check the plan for hot queries before shipping, not after profiling.
+## What I would do differently
 
-The database was never the decision. The decision is what a document is, and unlike the database, it is not a thing you can swap out on a Tuesday.
+- Write down the questions the app needs to ask, before designing a single record.
+- Tuck in what is bounded and read together; keep out anything that can grow.
+- Switch on validation immediately, and treat it as documentation that runs.
+- Record where every copy lives, the moment there is more than one.
+- Check the query plan on busy paths before shipping, not after complaints.
+
+The database was never the decision. The decision is what one record contains — and unlike the database, that is not a thing you can swap out on a Tuesday.

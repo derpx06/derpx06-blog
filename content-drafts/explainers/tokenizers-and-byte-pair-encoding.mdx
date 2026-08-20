@@ -1,6 +1,6 @@
 ---
 title: "BPE, and Why the Model Can't Count the R's in Strawberry"
-summary: "Language models do not read text. They read integers assigned by a compression algorithm from 1994, and a surprising number of their strangest failures are that algorithm's fault, not the model's."
+summary: "AI models do not read letters. They read numbers handed to them by a compression trick from 1994 — and a surprising share of their strangest failures are that trick's fault, not the model's."
 publishedAt: "2026-09-14T09:00:00.000Z"
 image: ""
 tag: "Foundations"
@@ -8,132 +8,138 @@ topics: ["Tokenization", "BPE", "Vocabulary", "Preprocessing"]
 status: "published"
 ---
 
-A language model asked how many times the letter *r* appears in "strawberry" will often say two. This gets shared as evidence that the model does not really understand anything, and that reading is fair enough as far as it goes. But the more precise explanation is more interesting and more useful: the model was never shown the letters. It was shown two or three integers, and nothing in those integers records that one of them contains two *r*s.
+Ask a language model how many times the letter *r* appears in "strawberry" and it will often say two. This gets passed around as proof that AI does not really understand anything, and as far as it goes that is fair.
 
-The tokenizer is the least glamorous component in the stack and the source of a startling share of its weirdness. It is worth understanding on its own terms.
+But there is a more precise explanation, and it is much more useful: **the model never saw the letters.** It saw two or three numbers, and nothing about those numbers records that one of them contains a double *r*.
 
-## 1. The problem tokenization solves
+Here is the picture. Before a model reads anything, the text passes through a translator that chops it into pieces and replaces each piece with a number. The model only ever sees the numbers. That translator is the **tokenizer**, and it is the least glamorous part of the whole stack and the source of a startling share of its weirdness.
 
-A model needs a finite vocabulary, because the output layer is a probability distribution over that vocabulary and its size is a fixed dimension of the network. So text has to become a bounded set of symbols. There are two obvious ways to do it, and both fail.
+## 1. Why chopping is necessary at all
 
-**Words.** Natural and useless. Vocabulary is unbounded — every proper noun, typo, compound and neologism is a new word — so you cap it and everything beyond the cap becomes `<UNK>`. The model then cannot read, write or reason about any rare word, which includes most of the words that carry the actual information in a technical document.
+A model needs a fixed, finite list of pieces it knows about, because its final step is a score for every piece on that list, and that list has to have a size.
 
-**Characters.** Bounded and complete: nothing is out of vocabulary, ever. But sequences become five to ten times longer, and attention cost is quadratic in sequence length. You have also handed the model the job of relearning that `c-a-t` is a unit, spending capacity on something you could have told it for free.
+So text must become a bounded set of symbols. There are two obvious ways, and both fail.
 
-The escape is to make the vocabulary *learned* rather than chosen — frequent sequences become single tokens, rare ones decompose into pieces. Common text is short; unusual text is still representable. Nothing is ever out of vocabulary.
+**One number per word.** Natural and useless. There is no end to words — every name, typo, invention and mashed-together compound is a new one. So you cap the list, and everything past the cap becomes a shrug. The model then cannot read, write or reason about any rare word, which is most of the words carrying actual information in a technical document.
 
-## 2. Byte pair encoding, borrowed from compression
+**One number per letter.** Complete: nothing is ever unknown. But now sequences are five to ten times longer, and the cost of relating everything to everything grows with the *square* of the length. You have also handed the model the extra job of relearning that `c-a-t` is one thing, spending its capacity on something you could have told it for free.
 
-BPE was published by Philip Gage in 1994 as a data-compression method. Rico Sennrich, Barry Haddow and Alexandra Birch adapted it for neural machine translation in *Neural Machine Translation of Rare Words with Subword Units*, presented at ACL 2016, and it has been the dominant approach ever since.
+The escape is to **learn** the list from real text. Frequent chunks become single pieces; rare ones break into smaller pieces. Common text is short. Unusual text is still spellable. Nothing is ever unknown.
 
-The training algorithm is short enough to state completely:
+## 2. A compression trick, borrowed
 
-1. Start with the vocabulary as individual characters (or bytes).
-2. Count every adjacent pair in the corpus.
-3. Merge the most frequent pair into a single new symbol; add it to the vocabulary.
-4. Repeat until the vocabulary reaches the target size.
+Philip Gage published byte pair encoding in 1994 as a way of compressing files. Rico Sennrich, Barry Haddow and Alexandra Birch adapted it for machine translation in *Neural Machine Translation of Rare Words with Subword Units* at ACL 2016, and it has dominated ever since.
 
-That is all of it. Run on English, the early merges produce `th`, `he`, `in`, `er`; a few thousand merges later you have whole common words and productive suffixes like `ing`, `tion`, `ness`.
+The whole training algorithm is four lines:
 
-The output is an **ordered list of merge rules**, and the order is the algorithm. Encoding new text means applying those rules in the same sequence they were learned. The tokenizer is not a dictionary lookup; it is a replay of a training history.
+1. Start with the list containing only individual characters.
+2. Count every pair of neighbours in your text.
+3. Glue the most common pair into a single new piece. Add it to the list.
+4. Repeat until the list is as big as you wanted.
+
+That is genuinely all of it. Run on English, the first glued pairs are things like `th`, `he`, `in`, `er`. A few thousand steps later you have whole common words and useful endings like `ing`, `tion`, `ness`.
+
+The output is an **ordered list of glue instructions**, and the order *is* the algorithm. Chopping up new text means replaying those instructions in the same sequence they were learned. It is not a dictionary lookup. It is a replay of a history.
 
 ### Watching it run
 
-Take a tiny corpus: `low low low lower lowest`. Split into characters, with a marker for word ends:
+Take a tiny text: `low low low lower lowest`. Split into characters, with `_` marking where a word ends:
 
 ```text
 l o w _   l o w _   l o w _   l o w e r _   l o w e s t _
 ```
 
-Count adjacent pairs. `l o` appears five times, more than anything else, so merge it:
+Count neighbouring pairs. `l o` appears five times, more than anything else. Glue it:
 
 ```text
 lo w _   lo w _   lo w _   lo w e r _   lo w e s t _
 ```
 
-Now `lo w` appears five times. Merge:
+Now `lo w` appears five times. Glue it:
 
 ```text
 low _   low _   low _   low e r _   low e s t _
 ```
 
-Then `low _` — the complete word — appears three times and becomes one token, while `e r _` and `e s t _` eventually merge into suffix tokens. After five merges the vocabulary contains `low`, `low_`, `er_`, `est_` and the original characters.
+Then `low _` — the complete word — appears three times and becomes one piece, while `e r _` and `e s t _` eventually become ending-pieces.
 
-Notice what the algorithm discovered without being told: a stem and two suffixes. Nobody encoded morphology; it fell out of frequency counting. That is why BPE generalises — a word it has never seen, `lowness`, still decomposes into `low` + something rather than into unrelated fragments.
+Notice what the algorithm discovered without being told: **a stem and two endings.** Nobody taught it grammar. It fell out of counting. That is why this generalises — a word it has never seen, `lowness`, still breaks into `low` plus something, rather than into unrelated rubble.
 
-Notice also what it did **not** discover. The merges are driven purely by co-occurrence counts, so they are only as good as the corpus. A stem that is rare in training gets no merges and stays fragmented forever, no matter how meaningful it is.
+Notice also what it did *not* discover. The glue is driven purely by counting, so it is only as good as the text it counted. A stem that is rare in the training text never gets glued and stays fragmented forever, however meaningful it is.
 
-<Feedback variant="info" title="Why byte-level BPE is now standard">
-Starting from raw bytes rather than Unicode characters gives a base vocabulary of exactly 256 and makes the tokenizer total: any byte sequence in any language, plus emoji, plus binary, encodes without an unknown token. GPT-2 introduced this and essentially every model since has followed.
+<Feedback variant="info" title="Why modern tokenizers start from raw bytes">
+Starting from raw bytes rather than letters gives a starting list of exactly 256 and makes the tokenizer complete: any text in any language, plus emoji, plus binary junk, can be represented. GPT-2 introduced this and essentially everything since has followed.
 </Feedback>
 
-## 3. Why "strawberry" defeats it
+## 3. Why "strawberry" wins
 
-Run a typical tokenizer over `strawberry` and you get something like `str` + `aw` + `berry` — three integers. The model receives roughly `[2536, 707, 15717]`.
+Run a typical tokenizer over `strawberry` and you get something like `str` + `aw` + `berry`. The model receives roughly `[2536, 707, 15717]`.
 
-Now consider what counting *r*s would require. The model must know that token 2536 contains one *r*, that 707 contains none, and that 15717 contains two — facts that exist nowhere in the input. There is no character-level structure in an integer. The model can only know spelling to the extent that it has *memorised*, during training, which tokens contain which letters, from text that happened to discuss spelling.
+Now think about what counting *r*s would require. The model must know that 2536 contains one *r*, that 707 contains none, and that 15717 contains two.
 
-It does memorise some of this, which is why the failure is inconsistent rather than total. But it is memorised trivia, not perception, and it degrades exactly where you would expect: rare words, unusual capitalisation, and words whose tokenization varies with surrounding whitespace.
+Those facts appear nowhere in the input. There is no letter-structure inside a number. The model can only know spelling to the extent it has **memorised** which pieces contain which letters — from text that happened to discuss spelling.
 
-The same mechanism explains several other reliable failures. **Reversing a string** requires character access the model does not have. **Arithmetic** is erratic partly because numbers tokenize inconsistently — `1234` might be one token while `1235` is two, so the model cannot rely on positional structure. **Rhyming** in some languages is hard because rhyme is a property of final phonemes and tokens do not align to them.
+It has memorised some, which is why the failure is inconsistent rather than total. But that is remembered trivia, not seeing, and it falls apart exactly where you would expect: rare words, odd capitalisation, and words that get chopped differently depending on what is next to them.
 
-## 4. Tokenization is a fairness problem
+The same mechanism explains several other reliable failures. **Reversing a word** needs letter access the model does not have. **Arithmetic** is erratic partly because numbers get chopped inconsistently — `1234` might be one piece while `1235` is two, so the model cannot rely on the structure. **Rhyming** is hard in some languages because rhyme is about final sounds and the pieces do not line up with them.
 
-Vocabularies are learned from a corpus, and corpora are mostly English. The consequences are concrete and rarely mentioned in model cards.
+## 4. Chopping is a fairness problem
 
-English text runs at roughly four characters per token. Languages written in other scripts fare far worse — the merges that would compress them were never learned, so text falls back toward per-character or per-byte tokens, sometimes several tokens per character.
+The list is learned from a pile of text, and that pile is mostly English. The consequences are concrete and almost never mentioned in model documentation.
 
-Three real costs follow, all of them borne by non-English users:
+English runs at roughly four characters per piece. Languages in other scripts do far worse — the glue instructions that would have compressed them were never learned, so the text falls back toward one piece per character, sometimes several.
 
-- **Money.** APIs bill per token. The same sentence costs multiples more in Hindi, Thai or Burmese than in English.
-- **Context.** A fixed context window holds far less actual content.
-- **Quality.** Longer sequences mean more positions between related words, and attention has more work to do to connect them.
+Three real costs follow, all of them paid by people not writing English:
 
-None of this is a deliberate design decision. It is an emergent property of where the training text came from, which is exactly why it goes unnoticed.
+- **Money.** These services bill per piece. The same sentence costs several times more in Hindi, Thai or Burmese.
+- **Room.** A model can only hold so many pieces at once, so it fits far less actual content.
+- **Quality.** Longer sequences mean more distance between related words, so the model has more work to do to connect them.
 
-## 5. The operational details that bite
+None of this was a decision anyone made. It emerged from where the training text came from, which is exactly why it goes unnoticed.
 
-**Whitespace is inside the token.** In most modern tokenizers `" the"` and `"the"` are different tokens. This is why a prompt ending in a trailing space can produce noticeably worse output — you have forced the model to continue from a token that rarely appears in that position. Do not end prompts with a space.
+## 5. The practical details that bite
 
-**Token counts are not portable.** Every model family has its own vocabulary. A prompt that is 1,000 tokens for one model may be 1,300 for another. Cost and context estimates must use the tokenizer of the model you are actually calling.
+**The space is inside the piece.** In most tokenizers `" the"` and `"the"` are different pieces. This is why a prompt ending in a trailing space can produce noticeably worse output — you have forced the model to continue from a piece that rarely appears in that position. Do not end prompts with a space.
 
-**Structured formats are expensive.** JSON spends tokens on braces, quotes and repeated field names, and those tokens are billed and occupy context like any other. A response format with short field names is meaningfully cheaper than one with descriptive ones, at scale.
+**Counts do not transfer.** Every model family has its own list. A prompt that is 1,000 pieces for one model may be 1,300 for another. Estimate cost and room using the tokenizer of the model you are actually calling.
 
-**The vocabulary is frozen at pre-training.** Terminology invented after the cutoff decomposes into awkward fragments, and the model must handle it without ever having had a dedicated symbol for it.
+**Structured formats are expensive.** JSON spends pieces on braces, quotes and repeated field names, and every one is billed and takes up room. Short field names are meaningfully cheaper at scale.
 
-<Feedback variant="warning" title="Never estimate tokens by dividing characters by four">
-The four-characters-per-token rule of thumb is an average over English prose. It is badly wrong for code, for JSON, for other scripts, and for anything with unusual formatting. Use the real tokenizer; every provider ships one and it takes two lines to call.
+**The list is frozen forever.** Any word invented after training breaks into awkward fragments, and the model has to cope without ever having had a piece of its own for it.
+
+<Feedback variant="warning" title="Never estimate by dividing characters by four">
+That rule of thumb is an average over English prose. It is badly wrong for code, for JSON, for other scripts, and for anything oddly formatted. Use the real tokenizer — every provider ships one and calling it takes two lines.
 </Feedback>
 
-## 6. BPE is not the only option
+## 6. Other ways of doing it
 
-Three alternatives are in wide use, and the differences are worth knowing because they change the failure modes.
+Three alternatives are in wide use, and the differences change the failure modes.
 
-**WordPiece**, used by BERT, differs from BPE in the selection criterion. Rather than merging the most frequent pair, it merges the pair that most increases the likelihood of the training data under a unigram language model — roughly, it prefers pairs whose joint frequency is high *relative to* the product of their individual frequencies. In practice this favours merges that are genuinely a unit rather than merges of two independently common pieces.
+**WordPiece**, used by BERT, changes *which* pair gets glued. Instead of the most frequent pair, it picks the pair whose gluing best explains the text — roughly, it prefers pairs that appear together *more often than you would expect by chance*. In practice this favours gluings that are genuinely one thing rather than two common pieces that happen to be adjacent.
 
-**Unigram**, from Kudo, works backwards. Start with a large candidate vocabulary and iteratively *remove* the tokens whose deletion hurts the corpus likelihood least, until the target size is reached. Because it keeps a probability for every token, it can produce several valid segmentations of the same string with associated likelihoods — which enables **subword regularisation**, sampling different segmentations during training as a data-augmentation strategy.
+**Unigram**, from Kudo, works backwards. Start with a huge list of candidate pieces and repeatedly *remove* whichever ones you would miss least, until the list is the right size. Because it keeps a probability for each piece, it can produce several valid ways to chop the same word — which lets you deliberately vary the chopping during training as a kind of practice.
 
-**SentencePiece** is often listed alongside these but is a different kind of thing: an implementation that runs BPE or Unigram directly on raw text, treating the space character as an ordinary symbol (usually rendered `▁`). Its real contribution is removing the pre-tokenization step. Traditional pipelines split on whitespace first, which quietly assumes a language that uses whitespace — false for Chinese, Japanese and Thai. SentencePiece is language-agnostic and reversible: decoding returns the original string exactly, including its spacing.
+**SentencePiece** is often listed alongside these but is a different sort of thing: a tool that runs either method directly on raw text, treating the space character as just another symbol. Its real contribution is removing the "split on spaces first" step, which quietly assumes a language that uses spaces — false for Chinese, Japanese and Thai. It is language-agnostic and perfectly reversible: decoding gives you back the original text exactly, spacing included.
 
-<Feedback variant="info" title="Reversibility is not a given">
-Older pipelines that lower-cased, stripped accents or normalised whitespace before tokenizing cannot reconstruct the input. For a model that generates text, that is a correctness problem, not an aesthetic one — you cannot faithfully echo a user's string you were never shown.
+<Feedback variant="info" title="Getting the text back is not automatic">
+Older pipelines that lower-cased, stripped accents or tidied whitespace before chopping cannot reconstruct what you gave them. For a model that generates text, that is a correctness problem, not a cosmetic one — it cannot faithfully echo a string it was never shown.
 </Feedback>
 
-## 7. What happens if we remove it
+## 7. What if we removed it?
 
-There is active work on making tokenization disappear — models that read raw bytes and learn their own chunking, sometimes dynamically, rather than inheriting a fixed merge table.
+There is active work on making the tokenizer disappear — models that read raw bytes and learn their own chunking as they go.
 
-The appeal is obvious: no vocabulary bias, no spelling blindness, no cross-language cost asymmetry, no frozen terminology. The obstacle is equally obvious and is the same one from section 1: byte sequences are long, and attention is quadratic. That is why this line of work tends to appear alongside architectures with better long-sequence behaviour — the two problems are the same problem.
+The appeal is obvious: no bias in the list, no spelling blindness, no unfair cost across languages, no frozen vocabulary. The obstacle is the one from section 1: byte sequences are long, and the cost grows with the square of the length.
 
-For now, tokenization remains, and so does its long tail of consequences.
+That is why this line of work tends to appear alongside architectures that handle long sequences better. The two problems are the same problem.
 
-## 8. The framing that makes this useful
+## 8. The framing that makes this click
 
-The tokenizer is a lossy compression scheme sitting between your text and the model, and it was optimised for average sequence length on a mostly-English corpus — not for preserving the properties you might want.
+The tokenizer is a lossy compression scheme sitting between your text and the model, tuned to make average English short — not to preserve anything you might care about.
 
-Read the failure list again with that in mind and it stops being a list of quirks. Spelling, character counting, reversal, digit arithmetic, cross-language cost, prompt-boundary sensitivity: every one is a direct consequence of a compression decision made before the model saw a single example.
+Read the failure list again with that in mind and it stops being a list of quirks. Spelling, counting letters, reversing words, arithmetic on digits, cross-language cost, sensitivity to a trailing space: every one is a direct consequence of a compression decision made before the model saw a single example.
 
-The model is not failing to count. It is answering a question about letters using an input that does not contain any.
+The model is not failing to count. It is answering a question about letters using an input that contains none.
 
 ## Sources
 

@@ -1,6 +1,6 @@
 ---
 title: "Raft: Consensus Explained by Getting It Wrong First"
-summary: "Getting several machines to agree on one ordered log, while any of them may fail at any moment, is the hardest easy-sounding problem in distributed systems. Raft's contribution was making the solution explicable."
+summary: "Getting several computers to agree on one ordered list of events, when any of them might crash at any moment, is the hardest easy-sounding problem in computing. Raft's contribution was making the answer explainable."
 publishedAt: "2026-10-19T09:00:00.000Z"
 image: ""
 tag: "Distributed Systems"
@@ -8,109 +8,125 @@ topics: ["Raft", "Consensus", "Replication", "Paxos"]
 status: "published"
 ---
 
-Consensus is what you need when several machines must agree on a sequence of decisions and any of them might crash, restart with stale state, or be cut off by a network partition at the least convenient moment. Every strongly-consistent distributed system contains one — etcd, Consul, CockroachDB, TiKV, Kafka's newer controller — and all of them exist to answer a question that sounds trivial until you try it: what, exactly, happened, and in what order?
+Five people are keeping a shared diary. Everyone must end up with exactly the same entries, in exactly the same order. People occasionally fall asleep mid-sentence, wake up hours later with no idea what they missed, or get locked in a room where they cannot hear anyone else.
 
-Paxos solved this correctly in 1989 and has been famously difficult ever since. Diego Ongaro and John Ousterhout's contribution at Stanford was to observe that a correct algorithm nobody can implement confidently is a partial solution, and to design for understandability as an explicit goal. Their paper is titled *In Search of an Understandable Consensus Algorithm*, and it appeared at USENIX ATC in 2014.
+Write down the rules that guarantee everybody still ends up with an identical diary.
 
-The best way to see why Raft looks the way it does is to try to design it yourself and watch each obvious idea fail.
+That is **consensus**, and it is much harder than it sounds. It sits inside every system that promises your data is really saved — the coordination services behind Kubernetes, the databases that survive a machine dying, the systems that decide which server is in charge.
 
-## 1. First attempt: just write to all of them
+Paxos solved it correctly in 1989 and has been famously baffling ever since. Diego Ongaro and John Ousterhout at Stanford observed that a correct algorithm nobody can implement confidently is only half a solution — and designed for *understandability* as an explicit goal.
 
-Send every write to all five servers. Wait for all five to acknowledge.
+Their paper is called *In Search of an Understandable Consensus Algorithm*, from USENIX ATC 2014. The best way to see why Raft looks the way it does is to try designing it yourself and watch each obvious idea fail.
 
-This is correct and useless. Availability is now *worse* than a single machine — five servers that must all respond fail more often than one, and you have added latency while subtracting reliability. Any single crash stops the system entirely.
+## 1. First try: tell everybody, wait for everybody
 
-The fix is **majority quorums**. Require agreement from more than half, so a five-node cluster tolerates two failures. The property that makes this work is that any two majorities of the same set must overlap in at least one member — so a decision made by one majority cannot be forgotten by a later one, because someone in the second group was in the first.
+Send every diary entry to all five people. Wait for all five to confirm.
 
-Everything else in Raft is machinery to exploit that overlap correctly.
+Correct, and useless. You have made things *worse* than one person keeping a diary — five people who must all respond fail more often than one, so you have added delay and subtracted reliability. Any single nap stops everything.
 
-## 2. Second attempt: let anyone accept writes
+The fix is a **majority**. Require three of five to confirm, and the system survives two people being asleep.
 
-Any server accepts a write and propagates it to a majority.
+Why a majority specifically? Because any two majorities of the same group must **share at least one member**. Three from five, and another three from five — they overlap. So a decision made by one majority cannot be forgotten by a later one, because somebody in the second group was also in the first and remembers.
 
-This breaks immediately. Two clients write to different servers concurrently; each reaches a different majority; the two orderings disagree. Now you have two logs claiming to be the truth, and no way to reconcile them without discarding somebody's committed data.
+Everything else in Raft is machinery for exploiting that overlap correctly.
 
-Raft's response is decisive and is the single decision that makes it comprehensible: **one leader at a time**, and all writes go through it. The leader assigns the order. Followers accept it.
+## 2. Second try: anyone can write
 
-This trades some theoretical elegance for an enormous simplification. There is exactly one place where ordering is decided, so ordering conflicts cannot arise.
+Let any of the five accept an entry and pass it around.
 
-## 3. Third attempt: elect a leader by asking
+This breaks immediately. Two people write different entries at the same time. Each convinces a different majority. Now there are two versions of the diary claiming to be the truth, and no way to reconcile them without throwing away somebody's confirmed work.
 
-Nodes vote. Whoever gets the most votes leads.
+Raft's answer is decisive, and it is the single choice that makes the whole thing comprehensible: **one leader at a time.** All writes go through the leader. The leader decides the order. Everyone else copies.
 
-This fails on the partition case, which is the case that matters. A network split leaves two halves, each electing a leader, each accepting writes — the **split brain** that consensus exists to prevent.
+This trades some theoretical elegance for an enormous simplification. There is exactly one place where order is decided, so conflicting orders cannot arise.
 
-Raft closes it with two mechanisms working together.
+## 3. Third try: vote for a leader
 
-**Terms.** Time is divided into numbered terms, each with at most one leader. Every message carries its sender's term. A server seeing a higher term than its own immediately steps down and updates — so an old leader that was partitioned away and returns discovers it is stale on its very first exchange and defers without any special reconciliation logic.
+Everyone votes. Most votes wins.
 
-**Majority votes, with a majority-sized restriction.** A candidate needs votes from more than half the cluster, and each server votes at most once per term. Since two majorities overlap, two candidates cannot both win the same term. A minority partition can hold an election, but it cannot reach a majority, so it simply cannot elect anyone — and correctly becomes unavailable rather than incorrectly available.
+This fails on the case that matters. The network splits in two — three people in one room, two in another, neither able to hear the other. Each side elects its own leader. Each accepts entries. Now you have two diaries again, which is precisely the thing consensus exists to prevent. Engineers call it **split brain**.
 
-<Feedback variant="info" title="Unavailability is the correct behaviour">
-The minority side of a partition stops serving writes. That is not a bug being tolerated; it is the design working. A system that keeps accepting writes on both sides of a partition is not consistent, and the choice between the two is what CAP is actually about.
+Raft closes this with two mechanisms working together.
+
+**Numbered terms.** Time is divided into numbered periods, each with at most one leader. Every message carries its sender's number. Anyone who sees a *higher* number than their own immediately steps down and updates.
+
+This is elegant: an old leader who was cut off and comes back discovers they are stale on their very first exchange, and steps aside. No special reconciliation logic needed.
+
+**Majority votes.** A candidate needs more than half the group, and each person votes at most once per period. Since two majorities must overlap, two candidates cannot both win the same period.
+
+And the smaller side of a split can hold an election all it likes — it simply cannot reach a majority, so it elects nobody and correctly becomes unavailable rather than incorrectly available.
+
+<Feedback variant="info" title="Refusing to work is the correct behaviour">
+The minority side stops accepting writes. That is not a bug being tolerated — it is the design working. A system that keeps accepting writes on both sides of a split is not consistent, and choosing between those two outcomes is what the famous CAP trade-off is actually about.
 </Feedback>
 
-## 4. Fourth attempt: elections that never finish
+## 4. Fourth try: elections that never end
 
-If every server starts an election the moment it stops hearing from the leader, they all become candidates simultaneously, split the vote evenly, and nobody wins — repeatedly.
+If everyone starts an election the moment they stop hearing from the leader, all five become candidates at once, split the vote evenly, and nobody wins. Then they all try again, simultaneously, forever.
 
-Raft's answer is almost embarrassingly simple: **randomised election timeouts**. Each server waits a random duration in a range — typically 150–300 ms — before starting an election. One server almost always times out first, requests votes, and wins before the others wake up.
+Raft's answer is almost embarrassingly simple: **wait a random amount of time first.** Each server picks a random delay in a range — typically 150 to 300 milliseconds — before starting an election. One almost always wakes first, asks for votes, and wins before the others stir.
 
-It is not a proof of termination, it is a probabilistic argument, and it works reliably in practice. It is also a good example of the paper's philosophy: a simple mechanism that is easy to reason about, chosen over a cleverer one that is not.
+That is not a proof. It is a probability argument, and it works reliably in practice. It is also a good example of the paper's philosophy: a simple mechanism that is easy to reason about, chosen over a cleverer one that is not.
 
-## 5. The three server states
+## 5. The three states
 
-Raft servers are in exactly one of three states, which is the whole state machine:
+Every server is in exactly one of three states, and that is the whole state machine:
 
-- **Follower** — passive. Responds to leaders and candidates. All servers start here.
-- **Candidate** — has timed out and is soliciting votes.
-- **Leader** — handles all client requests and drives replication.
+- **Follower** — passive. Answers the leader and any candidates. Everyone starts here.
+- **Candidate** — has stopped hearing from a leader and is asking for votes.
+- **Leader** — handles all requests and pushes entries to everyone else.
 
-A follower that stops hearing heartbeats becomes a candidate. A candidate that wins becomes leader. Any server that sees a higher term reverts to follower. That is the entire lifecycle.
+A follower who stops hearing heartbeats becomes a candidate. A candidate who wins becomes leader. Anyone who sees a higher term number drops back to follower. That is the entire lifecycle.
 
-The paper decomposes the problem into three subproblems and treats them separately, which is itself much of the reason it is followable: **leader election**, **log replication**, and **safety**.
+The paper splits the problem into three parts and handles them separately — **leader election**, **log replication**, and **safety** — and that decomposition is much of why it is followable.
 
-## 6. Log replication, and the matching property
+## 6. Copying entries, and the trick that keeps them identical
 
-Each entry in the log holds a command, an index, and the term in which it was created. The leader appends locally, then sends `AppendEntries` to followers.
+Each diary entry records what happened, its position in the list, and which term it was created in. The leader writes it down, then sends it to everyone.
 
-The mechanism that keeps logs consistent is a small consistency check with a large consequence. Every `AppendEntries` includes the index and term of the entry immediately *preceding* the new ones. A follower rejects the request unless it has an entry matching that index and term.
+The mechanism that keeps every copy identical is a small check with a large consequence. Every message includes the position and term of the entry *immediately before* the new ones. A follower **refuses** the message unless their own diary has a matching entry at that position.
 
-From this follows the **Log Matching Property**: if two logs contain an entry with the same index and term, then the logs are identical in all entries up to that point. One induction step, and it means agreeing on a single position implies agreement on the entire prefix.
+From that one rule follows the **Log Matching Property**: if two diaries agree on any single entry, they agree on *everything before it too*.
 
-When a follower rejects, the leader decrements its guess of where they agree and retries, walking backwards until it finds the last common entry, then overwriting everything after it. Followers do not negotiate; the leader's log is authoritative, and conflicting follower entries are discarded.
+That is a lovely result. Checking one position proves agreement on the entire history, and it means the leader never has to compare whole diaries.
 
-An entry is **committed** once it is stored on a majority. At that point it is permanent, and the leader tells followers the commit index on subsequent messages so they can apply it to their state machines.
+When a follower refuses, the leader steps its guess back one position and tries again, walking backwards until it finds the last point of agreement — then overwrites everything after. Followers do not negotiate. The leader's diary is authoritative.
 
-## 7. The safety restriction that is easy to miss
+An entry is **committed** once a majority have stored it. At that point it is permanent, and the leader mentions how far along it is in later messages so everyone else knows it is safe to act on.
 
-There is one more rule, and it is the one that most naive implementations get wrong.
+## 7. The safety rule that is easy to miss
 
-Suppose a leader commits an entry to a majority, then crashes. A server that was not in that majority — and so lacks the entry — becomes a candidate. If it wins, it would overwrite committed data.
+There is one more rule, and it is the one naive implementations get wrong.
 
-Raft prevents this in the **voting rule**: a server refuses its vote to any candidate whose log is less up to date than its own, where "more up to date" means a higher last term, or an equal last term and a longer log.
+Suppose the leader gets an entry onto a majority, so it is committed, and then crashes. Somebody who was *not* in that majority — and so does not have the entry — becomes a candidate. If they won, they would overwrite committed data.
 
-Because a committed entry is on a majority, and a winning candidate needs a majority, the two sets must overlap. That overlapping server holds the committed entry and will refuse to vote for a candidate lacking it. **A candidate missing committed data cannot win.**
+Raft prevents it in the **voting rule**: refuse your vote to any candidate whose diary is less up to date than yours.
 
-<Feedback variant="warning" title="A leader may not commit an old entry by counting replicas">
-A subtle related rule: a new leader must not consider an entry from a *previous* term committed merely because it is now on a majority — that situation can still be reversed. It commits an entry from its own term, and the Log Matching Property carries the earlier entries along with it. This is the corner where hand-rolled implementations most often go wrong.
+Now trace the logic. The committed entry is on a majority. A winning candidate needs a majority. Those two majorities must overlap. That overlapping person *has* the entry and will refuse to vote for a candidate missing it.
+
+**So a candidate missing committed data cannot win.** The overlap property from step one, doing its job again.
+
+<Feedback variant="warning" title="A new leader cannot commit an old entry just by counting">
+A subtle related rule: a new leader must not treat an entry from a *previous* term as committed merely because it is now on a majority — that situation can still be reversed. It commits an entry from its own term instead, and the Log Matching Property drags the earlier ones along with it. This is the corner where hand-rolled implementations most often go wrong.
 </Feedback>
 
-## 8. The parts the abstract skips
+## 8. The parts the summary skips
 
-**Snapshots.** A log that only grows eventually exhausts disk and makes restart arbitrarily slow. Servers periodically snapshot their state machine and discard the prefix. A follower too far behind receives a snapshot instead of entries.
+**Snapshots.** A diary that only grows eventually fills the disk and makes restarting take forever. So servers periodically save a summary of the current state and throw away the entries before it. A follower who is too far behind gets sent the summary rather than ten million entries.
 
-**Membership changes.** Adding and removing servers changes what a majority *is*, and switching directly risks a moment where two different majorities exist. Raft handles it with joint consensus — a transitional configuration requiring majorities of both old and new — or, more commonly in practice, by changing one server at a time, which cannot create disjoint majorities.
+**Changing the group.** Adding or removing a server changes what "a majority" means — and switching straight from one definition to the other risks a moment where two different majorities exist, which is the split-brain problem wearing a disguise. Raft handles it with a transitional period requiring majorities of *both* the old and new groups, or more commonly in practice by changing one server at a time, which cannot create two disjoint majorities.
 
-**Read consistency.** Reads seem safe from the leader, but a partitioned leader that does not yet know it has been replaced would serve stale data. Real systems confirm leadership before answering — via a heartbeat round or a lease — and this is a routine source of bugs in reimplementations.
+**Reading.** Reads seem obviously safe from the leader — but a leader who has been cut off and does not yet know they have been replaced would hand you stale data. Real systems confirm they are still the leader before answering, and this is a routine source of bugs in reimplementations.
 
 ## 9. Why understandability was the right goal
 
-Raft is not faster than Paxos and does not tolerate more failures. It offers the same guarantees. Its advantage is entirely that engineers can hold it in their heads, and that turned out to matter more than any performance property — because a consensus implementation that its maintainers do not fully understand is a liability regardless of its asymptotics.
+Raft is not faster than Paxos. It does not survive more failures. It offers the same guarantees.
 
-The paper backed the claim with an unusual experiment: they taught both algorithms to students and quizzed them, and Raft scored significantly higher. Treating comprehensibility as a measurable design objective rather than a matter of taste is, I think, the most transferable thing about the work.
+Its advantage is entirely that engineers can hold it in their heads — and that turned out to matter more than any performance property, because a consensus implementation whose maintainers do not fully understand it is a liability no matter how elegant.
 
-It is also the reason essentially every consensus system built since 2014 chose Raft. The correctness was available in 1989. The ability to implement it confidently was not.
+The paper backed the claim with an unusual experiment: they taught both algorithms to students and tested them. Raft scored significantly higher.
+
+Treating comprehensibility as a measurable design goal, rather than a matter of taste, is the most transferable thing about the work. It is also why essentially every system built since 2014 chose Raft. The correctness was available in 1989. The ability to implement it confidently was not.
 
 ## Sources
 

@@ -1,6 +1,6 @@
 ---
 title: "Evals Are the Only Moat"
-summary: "Everything else in an AI product can be copied in a weekend. The one thing that cannot is knowing, precisely, whether your system got better."
+summary: "Anyone can copy your prompts in a weekend. Nobody can copy the thing that tells you, precisely, whether your last change made the product better."
 publishedAt: "2026-09-03T09:00:00.000Z"
 image: ""
 tag: "Evaluation"
@@ -8,66 +8,88 @@ topics: ["Evaluation", "Agents", "Testing", "LLMOps"]
 status: "published"
 ---
 
-Someone can clone your prompts by asking your product enough questions. Someone can rebuild your RAG pipeline from a blog post in an afternoon. Someone can switch to the same model you use by changing one string. Every visible part of an LLM product is, to a competent engineer with a free weekend, a copying exercise.
+A moat is the water around a castle. It is the thing that makes the castle hard to take. In business people use the word for whatever advantage a competitor cannot simply copy.
 
-The part that does not copy is the answer to a boring question: *did that change make it better?* Not "does the demo still work" — better, measurably, on the cases you care about. Teams that can answer it improve every week. Teams that cannot are performing improvement, and the difference compounds quietly until it is enormous.
+Now look at an AI product and ask what its moat is. Your prompts? Someone can work those out by asking your product enough questions. Your document pipeline? Someone can rebuild it from a blog post in an afternoon. Your model? Someone switches to the same one by changing a single line of configuration.
 
-## Why the usual instinct fails here
+Every visible part of an AI product is, to a decent engineer with a free weekend, a copying exercise.
 
-For ordinary software, correctness is mostly local and mostly binary. The function returns 7 or it does not. You write a test, it passes forever, and the test suite is a ratchet — behaviour that works today cannot silently stop working tomorrow.
+The part that does not copy is your answer to a boring question: **did that change make it better?** Not "does the demo still work" — better, measurably, on the cases you actually care about. Teams who can answer that improve every week. Teams who cannot are *performing* improvement, and the gap between those two grows quietly until it is enormous.
 
-LLM systems break that in two ways at once. Output is non-deterministic, so a passing run proves less than it used to. And correctness is graded, not binary: an answer can be accurate but unhelpfully terse, or helpful but subtly wrong in a way that only matters to one kind of user. `assertEqual` has nothing to say about either.
+The tests that answer it are called **evals**. This is an argument that they are the whole castle.
 
-The reasonable-sounding response is to test the parts that *are* deterministic — that the JSON parses, that the tool was called, that the schema validates — and to check the rest by looking at it. This is where the trap closes. Those assertions all pass while the system gets worse, because none of them is measuring the thing anybody cares about.
+## Why your normal testing instinct fails here
 
-## What building an agent taught me about this
+In ordinary software, correctness is local and it is yes-or-no. The function returns 7 or it does not. You write a test, it passes forever, and your test suite becomes a ratchet — a thing that only turns one way. Behaviour that works today cannot silently stop working tomorrow.
 
-WebGenie, a browser-automation agent I built, runs a loop of three roles: a planner that decides the next step, a navigator that executes it against the page, and a validator that decides whether the step achieved what the plan intended. The validator exists because the navigator lies — not maliciously, but because "I clicked the button" and "the thing the button was supposed to do happened" are different claims, and only the second one matters.
+AI breaks that in two ways at once.
 
-That structure was the most useful thing in the project, and it took me an embarrassingly long time to notice why. The validator is an evaluation harness that happens to run in production. It is the component that turns "the agent did something" into "the agent did the right thing", and every improvement I made to the agent came from first improving the validator's ability to tell the two apart.
+**The output changes every time.** Ask the same question twice, get two different sentences. So a test passing once proves less than it used to.
 
-<Feedback variant="info" title="The generalisation">
-For any agentic system, the quality ceiling is set by how precisely you can state what success looks like. A vague success criterion produces a vague agent, because you cannot optimise toward a target you cannot describe.
+**Correctness has degrees.** An answer can be accurate but so terse it is unhelpful. Or helpful but subtly wrong in a way that only matters to one kind of customer. "Is this string equal to that string" has nothing useful to say about either.
+
+So people do the reasonable thing: they test the parts that *are* yes-or-no. Does the JSON parse? Did the right function get called? Does the shape match? And they check everything else by looking at it.
+
+This is where the trap closes. All those checks keep passing while the product gets worse, because none of them is measuring the thing anyone cares about.
+
+## What building an agent taught me
+
+I built WebGenie, a browser agent that clicks around websites to do tasks for you. It runs a loop of three roles.
+
+A **planner** decides the next step. A **navigator** carries it out on the actual page. A **validator** decides whether that step achieved what the plan meant.
+
+The validator exists because the navigator lies. Not on purpose — but "I clicked the button" and "the thing the button was supposed to do actually happened" are two different claims, and only the second one matters.
+
+That third role turned out to be the most valuable thing in the project, and it took me embarrassingly long to see why. **The validator is a test harness that happens to run in production.** It is the piece that converts "the agent did something" into "the agent did the right thing," and every improvement I made to the agent came from first improving the validator's ability to tell those apart.
+
+<Feedback variant="info" title="The general version">
+For any agent, the ceiling on quality is set by how precisely you can describe what success looks like. A vague definition of success produces a vague agent, because you cannot aim at a target you cannot describe.
 </Feedback>
 
-Once I had made the validator strict, the agent's real failure rate stopped being a mystery and became a number, and the number was much worse than my impression of it had been. That is the normal outcome. It is also the point.
+When I finally made the validator strict, the agent's real failure rate stopped being a feeling and became a number. The number was considerably worse than my impression had been.
 
-## Start with thirty rows and a spreadsheet
+That is the normal outcome. It is also the point.
 
-The reason most teams do not have evals is that "build an eval suite" sounds like a quarter of work. It is not. The first useful version is thirty cases and a script, and you can have it before lunch.
+## Start with thirty rows
 
-Take thirty real inputs — from logs if you have them, from your own hands if you do not. For each, write what a correct output must contain, in whatever form is checkable: an exact string, a required substring, a set of facts, an expected tool call, a rubric. Run them, count. That number is now the only opinion in the room that is allowed to settle arguments.
+Most teams do not have evals because "build an evaluation suite" sounds like a quarter of work. It is not. The first useful version is thirty examples and a script, and you can have it before lunch.
 
-Thirty cases is not statistically impressive. It does not need to be. It needs to catch the regression where a prompt tweak that fixed one thing broke six others, and thirty cases catch that reliably, because the failure modes of these systems are not subtle once you are actually looking.
+Take thirty real inputs — from your logs if you have them, from your own hands if you do not. For each, write down what a correct answer must contain, in whatever form you can check: an exact phrase, a set of facts, a specific function call, a short checklist. Run them. Count.
 
-## Grading without pretending
+That number is now the only opinion in the room allowed to settle an argument.
 
-Three ways to grade, in descending order of trustworthiness, and you should reach for them in that order:
+Thirty is not statistically impressive and does not need to be. It needs to catch the case where a prompt tweak that fixed one thing quietly broke six others — and thirty examples catch that every time, because these failures are not subtle once somebody is actually looking.
 
-**Programmatic.** Did the correct tool get called with the correct arguments? Does the generated command produce the intended file set when run in a sandbox? Does the extracted JSON contain the right values? Anything you can assert, assert. This is exact, fast and free — and far more of your system is assertable than feels true at first.
+## Three ways to grade, best first
 
-**Reference-based.** Compare against a known-good answer for facts that must appear. Not string equality — a checklist of claims the answer has to contain, and claims it must not.
+**Let a program check it.** Was the right tool called with the right inputs? Does the generated command produce the intended files when run somewhere safe? Does the extracted data contain the right values? Anything a program can check, let a program check. It is exact, instant and free — and far more of your system is checkable this way than feels true at first.
 
-**Model-graded.** A stronger model judges the output against a rubric. This is the flexible one and the one to be most suspicious of. It is biased toward verbose, confident, well-formatted answers; it will happily rate a fluent wrong answer above a terse right one. If you use it, calibrate it: grade fifty outputs by hand, grade the same fifty with the model, and measure how often they agree. If agreement is poor, your rubric is the problem, and you have learned something before trusting a single automated score.
+**Compare against a known-good answer.** Not word-for-word — a checklist of facts the answer has to include, and facts it must not.
 
-<Feedback variant="warning" title="An uncalibrated LLM judge is a random number generator with good manners">
-The failure is not that the judge is wrong sometimes. It is that its errors correlate with exactly the properties you are trying to optimise, so it rewards the model for sounding better rather than being better.
+**Ask a stronger AI to judge it.** This is the flexible one and the one to distrust most. It leans toward answers that are long, confident and nicely formatted. It will happily rate a fluent wrong answer above a blunt right one.
+
+If you use it, calibrate it first: grade fifty answers by hand, grade the same fifty with the AI, and see how often they agree. If they often disagree, your instructions to the judge are the problem — and you have learned that *before* trusting a single automated score.
+
+<Feedback variant="warning" title="An uncalibrated AI judge is a random number generator with good manners">
+The danger is not that it is sometimes wrong. It is that its mistakes line up with exactly the qualities you are trying to improve, so it rewards your model for *sounding* better rather than *being* better.
 </Feedback>
 
-## The failures worth collecting
+## The examples worth keeping
 
-The highest-value eval cases are not the representative ones. They are the ones that already broke.
+The most valuable test cases are not the typical ones. They are the ones that already broke.
 
-Every time a user reports a bad answer, every time you notice a wrong output, that case goes into the suite with the correct answer written next to it. This costs two minutes and does something no amount of synthetic coverage can: it guarantees that a specific, real, observed failure cannot come back silently. Do it for six months and you have an asset that describes your product's actual failure surface — which is not knowledge anybody can copy from the outside, because it was earned by having users.
+Every time somebody reports a bad answer, every time you spot a wrong output — that case goes into the suite with the correct answer written beside it. Two minutes of work, and it does something no amount of invented test data can: it guarantees that one specific, real, observed failure can never come back unnoticed.
+
+Do that for six months and you own something describing your product's actual failure surface. Nobody can copy that from the outside, because you only got it by having real users hit real problems.
 
 That is the moat, stated plainly. Not the prompts. The accumulated, verified record of every way your system has been wrong.
 
-## What I would do on day one now
+## What I would do on day one
 
-- Thirty cases before any prompt tuning. Not after. Before.
-- Split retrieval accuracy from generation accuracy so a number tells you where to work.
-- Assert everything assertable; use a model judge only for what is left, and calibrate it.
-- Every reported failure becomes a permanent case, the same day.
+- Thirty cases *before* any prompt tuning. Not after.
+- Measure "did we find the right information" separately from "was the answer good."
+- Let programs check whatever programs can check; use an AI judge only for the rest, and calibrate it.
+- Every reported failure becomes a permanent test case, the same day.
 - Run the suite on every change, and let the number end the argument.
 
-Models will keep getting better, and every improvement will be available to your competitors on the same morning it is available to you. The compounding advantage is not in the model. It is in knowing, faster than anyone else, which of your changes were real.
+Models will keep getting better, and every improvement lands for your competitors on the same morning it lands for you. The advantage that compounds is not the model. It is knowing, faster than anyone else, which of your own changes were real.

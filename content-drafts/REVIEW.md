@@ -4,6 +4,12 @@ Eighteen articles were written for you, in first person, with lived detail — t
 was the choice you made when asked. This file exists because that choice has a
 cost: some of the specifics are things I inferred rather than things I know.
 
+All eighteen were rewritten in plain language after the first draft: everyday
+picture first, technical word second, no jargon left unexplained. The maths, the
+paper numbers and the citations all stayed. Measured across the set, reading
+grade level went from 9.3 to 7.5 and reading ease from 57.5 to 67.0, while
+length grew only 6%.
+
 **Everything in the "Verified" column below is real** — it comes from your résumé,
 your Hugging Face model card, or the papers themselves, all checked against the
 source. **Everything in the "Please confirm or cut" column is my construction.**
