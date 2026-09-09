@@ -24,7 +24,9 @@ function loadEnv() {
 
 /** Quote-safe YAML scalar. */
 function yaml(value) {
-  return `"${String(value ?? "").replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  return `"${String(value ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')}"`;
 }
 
 function frontmatter(document) {

@@ -106,9 +106,9 @@ function variantStyle(variant?: string, onBackground?: string): CSSProperties {
         : group === "danger"
           ? "var(--acc)"
           : group === "warning"
-            ? "#8a6a12"
+            ? "var(--warn)"
             : group === "success"
-              ? "#3f6b3f"
+              ? "var(--ok)"
               : "var(--acc)";
   }
 
@@ -148,12 +148,7 @@ export function Column({ children, vertical, horizontal, className, ...rest }: B
   );
 }
 
-export function Grid({
-  children,
-  columns,
-  className,
-  ...rest
-}: BoxProps & { columns?: Spacing }) {
+export function Grid({ children, columns, className, ...rest }: BoxProps & { columns?: Spacing }) {
   const count = Math.max(1, Number(columns) || 2);
   return (
     <div
@@ -167,7 +162,12 @@ export function Grid({
   );
 }
 
-export function Card({ children, direction, className, ...rest }: BoxProps & { direction?: string }) {
+export function Card({
+  children,
+  direction,
+  className,
+  ...rest
+}: BoxProps & { direction?: string }) {
   return (
     <div
       className={`ds-card ${className ?? ""}`.trim()}
@@ -183,7 +183,13 @@ export function Card({ children, direction, className, ...rest }: BoxProps & { d
   );
 }
 
-export function Text({ children, variant, onBackground, className, ...rest }: BoxProps & {
+export function Text({
+  children,
+  variant,
+  onBackground,
+  className,
+  ...rest
+}: BoxProps & {
   variant?: string;
   onBackground?: string;
 }) {
@@ -204,7 +210,11 @@ export function Heading({
   onBackground,
   className,
   ...rest
-}: BoxProps & { as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6"; variant?: string; onBackground?: string }) {
+}: BoxProps & {
+  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  variant?: string;
+  onBackground?: string;
+}) {
   const Tag = as;
   return (
     <Tag

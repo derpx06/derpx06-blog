@@ -13,6 +13,10 @@ export function NewsletterBlock({
   copy?: string;
   stacked?: boolean;
 }) {
+  // No configured provider means the form would post to nowhere. Rendering
+  // nothing is honest; a form that silently discards an address is not.
+  if (!mailchimp.action || !mailchimp.action.startsWith("https://")) return null;
+
   return (
     <div>
       <span className="ds-kickq" style={{ marginBottom: 14 }}>

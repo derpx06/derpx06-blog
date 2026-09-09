@@ -1,16 +1,17 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 
+import { AdminEdit } from "@/components/site/AdminEdit";
 import { CourseProgressHeader } from "@/components/site/CourseProgressHeader";
 import { CourseSyllabus } from "@/components/site/CourseSyllabus";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Masthead } from "@/components/site/Masthead";
 import { RailBand } from "@/components/site/RailBand";
+import { getCourseBySlug, getCourses } from "@/lib/course-repository";
 import { resolveImage } from "@/lib/images";
 import { generateMeta } from "@/lib/metadata";
-import { getCourseBySlug, getCourses } from "@/lib/course-repository";
 import { courseLessonCount, courseLessons, toRailCourses } from "@/lib/site-data";
 import { baseURL, person } from "@/resources";
 
@@ -38,11 +39,7 @@ export async function generateMetadata({
   });
 }
 
-export default async function CoursePage({
-  params,
-}: {
-  params: Promise<{ courseSlug: string }>;
-}) {
+export default async function CoursePage({ params }: { params: Promise<{ courseSlug: string }> }) {
   const { courseSlug } = await params;
   const [course, courses] = await Promise.all([getCourseBySlug(courseSlug), getCourses()]);
   if (!course) notFound();
@@ -70,7 +67,7 @@ export default async function CoursePage({
         author={{ name: person.name, url: `${baseURL}/learn`, image: person.avatar }}
       />
 
-      <Masthead current="learn" />
+      <Masthead current="learn" trailing={<AdminEdit href={`/admin/courses/${courseSlug}`} />} />
 
       <div className="ds-split">
         <div className="ds-course-main">

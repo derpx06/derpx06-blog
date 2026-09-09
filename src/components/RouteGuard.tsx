@@ -3,33 +3,23 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import NotFound from "@/app/not-found";
-import { protectedRoutes, routes } from "@/resources";
+import { PageAccessForm } from "@/components/site/PageAccessForm";
+import { isRouteEnabled, isRouteProtected } from "@/resources/route-policy";
 
 /**
- * `routes` switches whole sections off; anything it does not mention — /saved,
- * /signin, the editor — is a real page. The decision is pure config, so it is
- * made during render: every public page ships its real HTML, and only the
- * password-protected ones wait on a network check.
+ * The client-side half of the route policy. `src/proxy.ts` is what
+ * actually enforces it — it rewrites a disabled or locked route before the
+ * page is rendered, so the HTML never leaves the server. This keeps the
+ * in-browser behaviour (client navigations, the password form) consistent with
+ * that, reading the same config from `@/resources/route-policy`.
  */
-function isRouteEnabled(pathname: string | null): boolean {
-  if (!pathname) return false;
-  if (pathname in routes) return routes[pathname as keyof typeof routes];
-
-  for (const [route, enabled] of Object.entries(routes)) {
-    if (route !== "/" && pathname.startsWith(`${route}/`) && !enabled) return false;
-  }
-  return true;
-}
-
 const RouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const enabled = isRouteEnabled(pathname);
-  const needsPassword = Boolean(protectedRoutes[pathname as keyof typeof protectedRoutes]);
+  const needsPassword = isRouteProtected(pathname);
 
   const [authenticated, setAuthenticated] = useState(false);
   const [checking, setChecking] = useState(needsPassword);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     if (!needsPassword) {
@@ -41,6 +31,7 @@ const RouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setChecking(true);
     setAuthenticated(false);
 
+    // Re-verifies the cookie's signature, which the proxy cannot do.
     fetch("/api/check-auth")
       .then((response) => {
         if (!cancelled) setAuthenticated(response.ok);
@@ -53,23 +44,7 @@ const RouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [needsPassword, pathname]);
-
-  const submitPassword = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const response = await fetch("/api/authenticate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
-
-    if (response.ok) {
-      setAuthenticated(true);
-      setError(undefined);
-    } else {
-      setError("Incorrect password");
-    }
-  };
+  }, [needsPassword]);
 
   if (!enabled) return <NotFound />;
 
@@ -82,34 +57,7 @@ const RouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   if (needsPassword && !authenticated) {
-    return (
-      <main id="main" style={{ padding: "96px var(--gut) 120px", maxWidth: "44ch" }}>
-        <h1 className="ds-t-page" style={{ marginBottom: 20 }}>
-          This page is password protected
-        </h1>
-        <form className="ds-stack" style={{ gap: 10 }} onSubmit={submitPassword}>
-          <label className="ds-kickq" htmlFor="page-password">
-            Password
-          </label>
-          <input
-            id="page-password"
-            className="ds-field"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            style={{ flex: "none" }}
-          />
-          {error && (
-            <span className="ds-meta ds-meta-s" style={{ color: "var(--acc)" }} role="alert">
-              {error}
-            </span>
-          )}
-          <button type="submit" className="ds-box ds-dark">
-            Submit
-          </button>
-        </form>
-      </main>
-    );
+    return <PageAccessForm onUnlocked={() => setAuthenticated(true)} />;
   }
 
   return <>{children}</>;

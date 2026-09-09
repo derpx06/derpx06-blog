@@ -30,7 +30,18 @@ export async function connectToDatabase() {
     return cache.promise;
   }
 
-  const client = new MongoClient(uri);
+  // Serverless defaults: a small pool per instance, and a fast, clear failure
+  // instead of a function that hangs until the platform kills it.
+  const client = new MongoClient(uri, {
+    maxPoolSize: 10,
+    minPoolSize: 0,
+    maxIdleTimeMS: 60_000,
+    serverSelectionTimeoutMS: 8_000,
+    connectTimeoutMS: 8_000,
+    socketTimeoutMS: 20_000,
+    retryWrites: true,
+    retryReads: true,
+  });
   cache.promise = client
     .connect()
     .then(() => {

@@ -84,16 +84,19 @@ export function toDocument({ section, slug, data, body, existing, now }) {
     section,
     slug,
     title: data.title,
-    summary: data.summary || "",
+    summary: data.summary ?? existing?.summary ?? "",
     body,
     bodyFormat: data.bodyFormat === "html" ? "html" : "mdx",
     status,
     publishedAt,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
-    image: data.image || "",
+    // Fall back to what is already stored, the way images/topics/team do.
+    // These used to fall back to "", so importing a draft whose frontmatter
+    // omitted a key silently blanked that field in Mongo.
+    image: data.image ?? existing?.image ?? "",
     images: existing?.images ?? [],
-    tag: data.tag || "",
+    tag: data.tag ?? existing?.tag ?? "",
     topics: data.topics ?? existing?.topics ?? [],
     team: existing?.team ?? [],
     source: { type: "mongodb" },

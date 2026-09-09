@@ -14,7 +14,8 @@ function toText(value: unknown): string {
 }
 
 function normalize(codes: unknown): RawCode[] {
-  if (!Array.isArray(codes) || codes.length === 0) return [{ code: "", language: "text", label: "Code" }];
+  if (!Array.isArray(codes) || codes.length === 0)
+    return [{ code: "", language: "text", label: "Code" }];
   return codes as RawCode[];
 }
 

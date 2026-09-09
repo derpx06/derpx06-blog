@@ -108,16 +108,18 @@ function getContentDatabasePlan({ collectionExists, existingIndexNames = [] }) {
     createCollection: !collectionExists,
     updateValidator: true,
     dropIndexes: LEGACY_INDEX_NAMES.filter((name) => existing.has(name)),
-    createIndexes: CONTENT_INDEXES
-      .filter((index) => !existing.has(index.name))
-      .map((index) => index.name),
+    createIndexes: CONTENT_INDEXES.filter((index) => !existing.has(index.name)).map(
+      (index) => index.name,
+    ),
   };
 }
 
 async function ensureContentDatabase(db, options = {}) {
-  const { dryRun = false, logger = console } = options;
+  const { dryRun = false, logger = console, allowDropIndexes = false } = options;
   const collectionName = options.collectionName || CONTENT_COLLECTION_NAME;
-  const collectionExists = await db.listCollections({ name: collectionName }, { nameOnly: true }).hasNext();
+  const collectionExists = await db
+    .listCollections({ name: collectionName }, { nameOnly: true })
+    .hasNext();
   const collection = collectionExists ? db.collection(collectionName) : null;
   const existingIndexes = collection ? await collection.listIndexes().toArray() : [];
   const plan = getContentDatabasePlan({
@@ -145,6 +147,12 @@ async function ensureContentDatabase(db, options = {}) {
   const writableCollection = db.collection(collectionName);
 
   for (const indexName of plan.dropIndexes) {
+    // Dropping an index on a live collection is the one irreversible thing in
+    // here, so --write alone is not enough to authorise it.
+    if (!allowDropIndexes) {
+      logger.log(`Skipping drop of obsolete index ${indexName} — pass --drop-indexes to apply`);
+      continue;
+    }
     logger.log(`Dropping obsolete index ${indexName}`);
     await writableCollection.dropIndex(indexName);
   }

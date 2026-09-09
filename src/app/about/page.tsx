@@ -44,92 +44,92 @@ export default function About() {
 
           <section className="ds-about-section">
             <span className="ds-kickq">{about.technical.title}</span>
-          <div className="ds-two" style={{ gap: "34px 48px" }}>
-            {about.technical.skills.map((skill) => (
-              <div key={skill.title}>
-                <h2 className="ds-t-m" style={{ marginBottom: 6 }}>
-                  {skill.title}
-                </h2>
-                <p className="ds-dek" style={{ fontSize: 14, marginBottom: 10 }}>
-                  {skill.description}
-                </p>
-                <div className="ds-chips">
-                  {(skill.tags ?? []).map((tag) => (
-                    <span key={tag.name} className="ds-chip">
-                      {tag.name}
-                    </span>
-                  ))}
+            <div className="ds-two" style={{ gap: "34px 48px" }}>
+              {about.technical.skills.map((skill) => (
+                <div key={skill.title}>
+                  <h2 className="ds-t-m" style={{ marginBottom: 6 }}>
+                    {skill.title}
+                  </h2>
+                  <p className="ds-dek" style={{ fontSize: 14, marginBottom: 10 }}>
+                    {skill.description}
+                  </p>
+                  <div className="ds-chips">
+                    {(skill.tags ?? []).map((tag) => (
+                      <span key={tag.name} className="ds-chip">
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </section>
 
           <section className="ds-about-section">
             <span className="ds-kickq">{about.work.title}</span>
-          <div className="ds-stack">
-            {about.work.experiences.map((role, index) => (
-              <div
-                key={`${role.company}-${role.role}`}
-                className={index === 0 ? undefined : "ds-item"}
-                style={{ display: "block", padding: index === 0 ? "0 0 20px" : "20px 0" }}
-              >
-                <div className="ds-between" style={{ marginBottom: 8 }}>
-                  <h3 className="ds-t-m">
-                    {role.role} ·{" "}
-                    {role.link ? (
-                      <a href={role.link} target="_blank" rel="noopener noreferrer">
-                        {role.company}
-                      </a>
-                    ) : (
-                      role.company
-                    )}
-                  </h3>
-                  <span className="ds-meta ds-meta-s">{role.timeframe}</span>
+            <div className="ds-stack">
+              {about.work.experiences.map((role, index) => (
+                <div
+                  key={`${role.company}-${role.role}`}
+                  className={index === 0 ? undefined : "ds-item"}
+                  style={{ display: "block", padding: index === 0 ? "0 0 20px" : "20px 0" }}
+                >
+                  <div className="ds-between" style={{ marginBottom: 8 }}>
+                    <h3 className="ds-t-m">
+                      {role.role} ·{" "}
+                      {role.link ? (
+                        <a href={role.link} target="_blank" rel="noopener noreferrer">
+                          {role.company}
+                        </a>
+                      ) : (
+                        role.company
+                      )}
+                    </h3>
+                    <span className="ds-meta ds-meta-s">{role.timeframe}</span>
+                  </div>
+                  <ul className="ds-bullets">
+                    {role.achievements.map((line, lineIndex) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed copy, never reordered
+                      <li key={lineIndex}>{line}</li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="ds-bullets">
-                  {role.achievements.map((line, lineIndex) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed copy, never reordered
-                    <li key={lineIndex}>{line}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </section>
 
           <section className="ds-about-section">
             <span className="ds-kickq">Selected projects</span>
-          <div className="ds-stack">
-            {projects.map((project, index) => (
-              <div
-                key={project.name}
-                className={index === 0 ? undefined : "ds-item"}
-                style={{
-                  display: "block",
-                  padding: index === 0 ? "0 0 18px" : "18px 0",
-                  borderBottom:
-                    index === projects.length - 1 ? "1px solid var(--rule-strong)" : undefined,
-                }}
-              >
-                <h3 className="ds-t-s" style={{ marginBottom: 4 }}>
-                  {project.href ? (
-                    <a href={project.href} target="_blank" rel="noopener noreferrer">
-                      {project.name} <span aria-hidden="true">↗</span>
-                    </a>
-                  ) : (
-                    project.name
-                  )}
-                </h3>
-                <span className="ds-kick" style={{ marginBottom: 6 }}>
-                  {project.stack}
-                </span>
-                <p className="ds-dek" style={{ fontSize: 14 }}>
-                  {project.description}
-                </p>
-              </div>
-            ))}
-          </div>
+            <div className="ds-stack">
+              {projects.map((project, index) => (
+                <div
+                  key={project.name}
+                  className={index === 0 ? undefined : "ds-item"}
+                  style={{
+                    display: "block",
+                    padding: index === 0 ? "0 0 18px" : "18px 0",
+                    borderBottom:
+                      index === projects.length - 1 ? "1px solid var(--rule-strong)" : undefined,
+                  }}
+                >
+                  <h3 className="ds-t-s" style={{ marginBottom: 4 }}>
+                    {project.href ? (
+                      <a href={project.href} target="_blank" rel="noopener noreferrer">
+                        {project.name} <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      project.name
+                    )}
+                  </h3>
+                  <span className="ds-kick" style={{ marginBottom: 6 }}>
+                    {project.stack}
+                  </span>
+                  <p className="ds-dek" style={{ fontSize: 14 }}>
+                    {project.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </section>
 
           <section className="ds-about-section">

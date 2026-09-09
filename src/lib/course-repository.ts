@@ -1,5 +1,7 @@
+import { cache } from "react";
 import { connectToDatabase } from "@/lib/mongodb";
 import { failIfBuilding } from "@/lib/build-guard";
+import { snapshotCourses } from "@/lib/content-snapshot";
 import type { Course } from "@/types/content.types";
 
 type CourseDocument = Course & {
@@ -35,13 +37,17 @@ export async function getCourses(): Promise<Course[]> {
 
     return documents.map(toCourse);
   } catch (error) {
-    failIfBuilding("courses", error);
+    if (failIfBuilding("courses", error)) return snapshotCourses();
     console.error("Failed to fetch courses from MongoDB:", error);
     return [];
   }
 }
 
-export async function getCourseBySlug(slug: string): Promise<Course | null> {
+/**
+ * Wrapped in `cache()` because the lesson layout and the lesson page both ask
+ * for the same course on every render — two identical queries per lesson view.
+ */
+export const getCourseBySlug = cache(async (slug: string): Promise<Course | null> => {
   try {
     const { db } = await connectToDatabase();
     const document = await db
@@ -50,8 +56,10 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
 
     return document ? toCourse(document) : null;
   } catch (error) {
-    failIfBuilding(`course ${slug}`, error);
+    if (failIfBuilding(`course ${slug}`, error)) {
+      return snapshotCourses().find((course) => course.slug === slug) ?? null;
+    }
     console.error(`Failed to fetch course ${slug} from MongoDB:`, error);
     return null;
   }
-}
+});

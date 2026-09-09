@@ -28,14 +28,14 @@ export async function GET() {
         href: piece.href,
         kind: "Writing" as const,
         meta: `${piece.tag} · ${piece.minutes} min`,
-        summary: piece.summary,
+        summary: piece.summary ?? "",
       })),
       ...explainers.map((piece) => ({
         title: piece.title,
         href: piece.href,
         kind: "Explainer" as const,
         meta: `${piece.tag} · ${piece.minutes} min`,
-        summary: piece.summary,
+        summary: piece.summary ?? "",
       })),
       ...courses.flatMap((course) => [
         {
@@ -43,7 +43,7 @@ export async function GET() {
           href: `/learn/${course.slug}`,
           kind: "Course" as const,
           meta: `${courseLessons(course).length} lessons`,
-          summary: course.description,
+          summary: course.description ?? "",
         },
         ...courseLessons(course).map((lesson) => ({
           title: lesson.title,

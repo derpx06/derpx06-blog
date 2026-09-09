@@ -1,12 +1,22 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { resumePoint } from "@/lib/reader-selectors";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CourseEntry, ProgressEntry, SavedEntry } from "@/lib/reader-selectors";
+import { resumePoint } from "@/lib/reader-selectors";
 
 export type ReaderSnapshot = {
   signedIn: boolean;
   user: { id: string; email: string; name: string } | null;
+  /** Drives the admin-only affordances; the rule itself lives on the server. */
+  isAdmin: boolean;
   progress: Record<string, ProgressEntry>;
   saved: SavedEntry[];
   lessons: Record<string, CourseEntry>;
@@ -15,6 +25,7 @@ export type ReaderSnapshot = {
 const EMPTY: ReaderSnapshot = {
   signedIn: false,
   user: null,
+  isAdmin: false,
   progress: {},
   saved: [],
   lessons: {},

@@ -7,38 +7,38 @@
 :root {
 
   /* Dimmer light theme colors */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #fdf9f0;
+  --foreground: #1a1710;
+  --card: #fdf9f0;
+  --card-foreground: #1a1710;
+  --popover: #fdf9f0;
+  --popover-foreground: #1a1710;
+  --primary: #1a1710;
+  --primary-foreground: #fdf9f0;
+  --secondary: #f6efdd;
+  --secondary-foreground: #1a1710;
+  --muted: #f6efdd;
+  --muted-foreground: #756d5c;
+  --accent: #f6efdd;
+  --accent-foreground: #8a5f05;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: rgba(26, 23, 16, 0.16);
+  --input: rgba(26, 23, 16, 0.16);
+  --ring: #8a5f05;
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #f6efdd;
+  --sidebar-foreground: #1a1710;
+  --sidebar-primary: #1a1710;
+  --sidebar-primary-foreground: #fdf9f0;
+  --sidebar-accent: #ece2cc;
+  --sidebar-accent-foreground: #8a5f05;
+  --sidebar-border: rgba(26, 23, 16, 0.16);
+  --sidebar-ring: #8a5f05;
 }
 
 /*
@@ -53,37 +53,37 @@ The editorial design system lives in design-system.css.
 ::-webkit-scrollbar-thumb:hover { background: var(--mut); }
 
 [data-theme="dark"] {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #14110b;
+  --foreground: #f2ead9;
+  --card: #1e1a11;
+  --card-foreground: #f2ead9;
+  --popover: #1e1a11;
+  --popover-foreground: #f2ead9;
+  --primary: #f2ead9;
+  --primary-foreground: #14110b;
+  --secondary: #201b12;
+  --secondary-foreground: #f2ead9;
+  --muted: #201b12;
+  --muted-foreground: #968d7c;
+  --accent: #201b12;
+  --accent-foreground: #e0a82e;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: rgba(242, 234, 217, 0.18);
+  --input: rgba(242, 234, 217, 0.18);
+  --ring: #e0a82e;
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #1e1a11;
+  --sidebar-foreground: #f2ead9;
+  --sidebar-primary: #e0a82e;
+  --sidebar-primary-foreground: #14110b;
+  --sidebar-accent: #201b12;
+  --sidebar-accent-foreground: #e0a82e;
+  --sidebar-border: rgba(242, 234, 217, 0.18);
+  --sidebar-ring: #e0a82e;
 }
 
 @theme inline {

@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { adminGuard } from "@/lib/auth/admin";
 import { isLocalArticleEditorHost } from "@/lib/article-editor-access";
+import { headers } from "next/headers";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const EXTENSIONS: Record<string, string> = {
@@ -38,6 +39,12 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 async function uploadToDisk(file: File, extension: string): Promise<string> {
+  // A serverless filesystem is ephemeral: the file would be written, returned,
+  // and gone by the next request. Better to refuse than to lose it silently.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Set CLOUDINARY_* to upload images from a deployed environment");
+  }
+
   const name = `${Date.now()}-${randomBytes(4).toString("hex")}${extension}`;
   const directory = path.join(process.cwd(), "public", "uploads");
   await mkdir(directory, { recursive: true });
@@ -50,9 +57,15 @@ async function uploadToDisk(file: File, extension: string): Promise<string> {
  * public/uploads directory — the editor is localhost-only either way.
  */
 export async function POST(request: Request) {
-  const requestHeaders = await headers();
-  if (!isLocalArticleEditorHost(requestHeaders.get("host"))) {
-    return NextResponse.json({ message: "Not found" }, { status: 404 });
+  // Either an authenticated admin, or the legacy localhost editor. Identity is
+  // the real gate now; the host check stays so the local TipTap editor keeps
+  // working without an account.
+  const guard = await adminGuard();
+  if (!guard.ok) {
+    const requestHeaders = await headers();
+    if (!isLocalArticleEditorHost(requestHeaders.get("host"))) {
+      return NextResponse.json({ message: "Not found" }, { status: 404 });
+    }
   }
 
   const form = await request.formData().catch(() => null);

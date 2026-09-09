@@ -159,8 +159,6 @@ export function checkDocument(document) {
     fail("field", "published but has no publishedAt — it will group under “Undated”");
   }
 
-  if (document.bodyFormat !== "mdx") return problems; // the rest is MDX-specific
-
   // --- drop cap ----------------------------------------------------------
   const firstNode = body.trimStart().split(/\r?\n\s*\r?\n/)[0] ?? "";
   if (isArticle && /^[<#>]|^```|^!\[/.test(firstNode.trimStart())) {
@@ -281,7 +279,7 @@ async function main() {
     let bad = 0;
     for (const document of documents) {
       const problems = checkDocument(document);
-      if (withLinks && document.bodyFormat === "mdx") {
+      if (withLinks) {
         for (const dead of await checkLinks(document.body || "")) {
           problems.push({ rule: "link", detail: dead });
         }

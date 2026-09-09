@@ -1,11 +1,13 @@
 import { ImageResponse } from "next/og";
 import { baseURL, person } from "@/resources";
+import { OG } from "@/resources/og-palette";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  let url = new URL(request.url);
-  let title = url.searchParams.get("title") || "Portfolio";
+  const url = new URL(request.url);
+  // Unbounded input renders an unbounded image on an unauthenticated endpoint.
+  const title = (url.searchParams.get("title") || "Portfolio").slice(0, 120);
 
   async function loadGoogleFont(font: string) {
     const url = `https://fonts.googleapis.com/css2?family=${font}`;
@@ -14,7 +16,7 @@ export async function GET(request: Request) {
 
     if (resource) {
       const response = await fetch(resource[1]);
-      if (response.status == 200) {
+      if (response.status === 200) {
         return await response.arrayBuffer();
       }
     }
@@ -29,7 +31,8 @@ export async function GET(request: Request) {
         width: "100%",
         height: "100%",
         padding: "6rem",
-        background: "#151515",
+        background: OG.background,
+        backgroundImage: OG.glow,
       }}
     >
       <div
@@ -39,7 +42,7 @@ export async function GET(request: Request) {
           justifyContent: "center",
           gap: "4rem",
           fontStyle: "normal",
-          color: "white",
+          color: OG.ink,
         }}
       >
         <span
@@ -63,6 +66,7 @@ export async function GET(request: Request) {
           }}
         >
           <img
+            alt=""
             src={baseURL + person.avatar}
             style={{
               width: "12rem",
@@ -113,6 +117,11 @@ export async function GET(request: Request) {
           style: "normal",
         },
       ],
+      // The card is a pure function of `title`, so it never needs regenerating.
+      // Without this every crawler hit refetched the font and the avatar.
+      headers: {
+        "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
+      },
     },
   );
 }

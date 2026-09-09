@@ -27,7 +27,7 @@
 - **`api/auth/*`**: reader accounts — signup, login, logout.
 - **`api/reader/*`**: per-reader state — progress, saved, lessons, and a
   `state` endpoint the client provider reads once on mount.
-- **`api/articles` / `api/upload`**: the localhost-only editor's write API.
+- **`api/upload`**: image upload for the admin editor, localhost-gated.
 - **`api/og/generate`**: dynamic OpenGraph images.
 
 ### `src/components/site` (the design system in React)
@@ -93,8 +93,8 @@ and `getContentBySlug` if you want the stagger to act as a real schedule.
   `npm run content:diagrams` (redraw every article diagram)
 - **Lint**: `npm run lint` (Biome) · **Format**: `npm run biome-write`
 - **Build**: `npm run build`
-- **Images**: store in `public/images`; editor uploads land in `public/uploads`
-  (or Cloudinary when `CLOUDINARY_*` is configured).
+- **Images**: store in `public/images`; admin-editor uploads land in
+  `public/uploads` (or Cloudinary when `CLOUDINARY_*` is configured).
 
 ## 5. Do's and Don'ts
 - ✅ **DO** put new copy in `src/resources/site.config.ts` or `content.tsx`.

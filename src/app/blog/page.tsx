@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-
+import { AdminEdit } from "@/components/site/AdminEdit";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Masthead } from "@/components/site/Masthead";
 import { RailBand } from "@/components/site/RailBand";
 import { WritingArchive } from "@/components/site/WritingArchive";
+import { getCourses } from "@/lib/course-repository";
 import { generateMeta } from "@/lib/metadata";
 import { getPieces, tagCounts, toRailCourses } from "@/lib/site-data";
-import { getCourses } from "@/lib/course-repository";
 import { baseURL, blog, person } from "@/resources";
 
 export const revalidate = 300;
@@ -36,7 +36,7 @@ export default async function Blog() {
         author={{ name: person.name, url: `${baseURL}/blog`, image: person.avatar }}
       />
 
-      <Masthead current="writing" />
+      <Masthead current="writing" trailing={<AdminEdit href="/admin/content?section=blog" />} />
 
       <div style={{ padding: "38px var(--gut) 0" }}>
         <h1 className="ds-t-page" style={{ marginBottom: 14 }}>

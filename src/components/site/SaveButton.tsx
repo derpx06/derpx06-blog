@@ -50,7 +50,13 @@ export function SaveButton({
   }
 
   return (
-    <button type="button" onClick={onClick} aria-pressed={isSaved} disabled={!ready} className="ds-box">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isSaved}
+      disabled={!ready}
+      className="ds-box"
+    >
       {label}
     </button>
   );

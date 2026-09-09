@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
+import { AdminEdit } from "@/components/site/AdminEdit";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Masthead } from "@/components/site/Masthead";
 import { RailBand } from "@/components/site/RailBand";
@@ -40,7 +40,10 @@ export default async function Explainers() {
         author={{ name: person.name, url: `${baseURL}/explainers`, image: person.avatar }}
       />
 
-      <Masthead current="explainers" />
+      <Masthead
+        current="explainers"
+        trailing={<AdminEdit href="/admin/content?section=explainers" />}
+      />
 
       <div className="ds-explainer-head">
         <div>

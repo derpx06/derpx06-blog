@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
 import * as cookie from "cookie";
+import { NextResponse } from "next/server";
+import { PAGE_ACCESS_COOKIE, verifyPageAccessToken } from "@/lib/auth/page-access";
 
-export async function GET(request: NextRequest) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const cookies = cookie.parse(cookieHeader);
+// Reads a cookie, so it must never be cached.
+export const dynamic = "force-dynamic";
 
-  if (cookies.authToken === "authenticated") {
+export async function GET(request: Request) {
+  const cookies = cookie.parse(request.headers.get("cookie") || "");
+
+  if (verifyPageAccessToken(cookies[PAGE_ACCESS_COOKIE])) {
     return NextResponse.json({ authenticated: true }, { status: 200 });
-  } else {
-    return NextResponse.json({ authenticated: false }, { status: 401 });
   }
+
+  return NextResponse.json({ authenticated: false }, { status: 401 });
 }

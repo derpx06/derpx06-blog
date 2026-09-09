@@ -3,19 +3,19 @@
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
-export type CodeTab = { label: string; language: string; code: string; html: string; output?: string };
+export type CodeTab = {
+  label: string;
+  language: string;
+  code: string;
+  html: string;
+  output?: string;
+};
 
 /**
  * Tabs, copy and the collapsed state. Highlighting already happened on the
  * server — this only ships the interaction.
  */
-export function CodeBlock({
-  tabs,
-  minimized = false,
-}: {
-  tabs: CodeTab[];
-  minimized?: boolean;
-}) {
+export function CodeBlock({ tabs, minimized = false }: { tabs: CodeTab[]; minimized?: boolean }) {
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(!minimized);

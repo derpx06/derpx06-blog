@@ -1,3 +1,6 @@
+# INERT: one-off scaffolding from before content moved to MongoDB. The absolute
+# path below points at a directory that no longer exists, and the placeholder
+# text it writes is exactly what `npm run content:check` now fails on.
 import os
 import datetime
 

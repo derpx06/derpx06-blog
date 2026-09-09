@@ -1,16 +1,15 @@
-import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
-import React, { ReactNode } from "react";
-import { HeadingLink } from "@/components/HeadingLink";
-import { SafeCodeBlock } from "@/components/SafeCodeBlock";
-import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
-import { Timeline } from "@/components/Timeline";
-import remarkMath from "remark-math";
-import remarkGfm from "remark-gfm";
-import rehypeKatex from "rehype-katex";
-
+import fs from "node:fs";
+import path from "node:path";
 import Image from "next/image";
 import Link from "next/link";
-import { slugifyHeading } from "@/lib/slug";
+import { MDXRemote, type MDXRemoteProps } from "next-mdx-remote/rsc";
+import React, { type ReactNode } from "react";
+import rehypeKatex from "rehype-katex";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import { HeadingLink } from "@/components/HeadingLink";
+import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
+import { SafeCodeBlock } from "@/components/SafeCodeBlock";
 import {
   Accordion,
   AccordionGroup,
@@ -27,6 +26,10 @@ import {
   Row,
   Text,
 } from "@/components/site/mdx-kit";
+import { Timeline } from "@/components/Timeline";
+import type { MdxBlockName } from "@/lib/mdx-registry";
+import { remarkCodeMeta } from "@/lib/remark-code-meta";
+import { slugifyHeading } from "@/lib/slug";
 
 type CustomLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
@@ -91,7 +94,8 @@ function extractText(node: any): string {
   if (typeof node === "string") return node;
   if (typeof node === "number" || typeof node === "boolean") return String(node);
   if (Array.isArray(node)) return node.map(extractText).join("");
-  if (React.isValidElement(node)) return extractText((node as React.ReactElement<any>).props?.children);
+  if (React.isValidElement(node))
+    return extractText((node as React.ReactElement<any>).props?.children);
   if (node && typeof node === "object") {
     if (typeof node.value === "string") return node.value;
     if (typeof node.raw === "string") return node.raw;
@@ -113,9 +117,7 @@ function asArrayLikeObject(input: any): any[] | null {
   if (keys.length === 0) return null;
   if (!keys.every(isNumericKey)) return null;
 
-  return keys
-    .sort((a, b) => Number(a) - Number(b))
-    .map((key) => input[key]);
+  return keys.sort((a, b) => Number(a) - Number(b)).map((key) => input[key]);
 }
 
 function slugify(input: any): string {
@@ -123,10 +125,7 @@ function slugify(input: any): string {
 }
 
 function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
-  const CustomHeading = ({
-    children,
-    ...props
-  }: { children?: ReactNode }) => {
+  const CustomHeading = ({ children, ...props }: { children?: ReactNode }) => {
     const slug = slugify(children as string);
     const level = parseInt(as.replace("h", "")) as 1 | 2 | 3 | 4 | 5 | 6;
     return (
@@ -149,19 +148,38 @@ function createInlineCode({ children }: { children?: ReactNode }) {
   return <InlineCode>{children}</InlineCode>;
 }
 
-import fs from "fs";
-import path from "path";
+/**
+ * Reads a file referenced from an article body. The path is content-supplied,
+ * so it is resolved and confined to the project directory — a plain
+ * `path.join(process.cwd(), file)` lets `"../../.env.local"` escape.
+ */
+function readProjectFile(file: string): string | null {
+  const root = process.cwd();
+  const resolved = path.resolve(root, file);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+    console.error(`Refusing to read outside the project: ${file}`);
+    return null;
+  }
+  try {
+    return fs.readFileSync(resolved, "utf-8");
+  } catch (error) {
+    console.error(`Error reading file: ${file}`, error);
+    return null;
+  }
+}
 
 function normalizeCodeItem(codeItem: any) {
   const codeCandidate = codeItem?.code ?? codeItem?.value ?? codeItem?.raw ?? codeItem?.children;
   const normalizedCode = codeCandidate !== undefined ? extractText(codeCandidate) : "";
-  const language = typeof codeItem?.language === "string" && codeItem.language.trim().length > 0
-    ? codeItem.language
-    : "text";
+  const language =
+    typeof codeItem?.language === "string" && codeItem.language.trim().length > 0
+      ? codeItem.language
+      : "text";
   const fallbackLabel = language ? language.charAt(0).toUpperCase() + language.slice(1) : "Code";
-  const label = typeof codeItem?.label === "string" && codeItem.label.trim().length > 0
-    ? codeItem.label
-    : fallbackLabel;
+  const label =
+    typeof codeItem?.label === "string" && codeItem.label.trim().length > 0
+      ? codeItem.label
+      : fallbackLabel;
 
   return {
     ...codeItem,
@@ -220,8 +238,8 @@ function ServerCodeBlock(props: any) {
     const jupyterCells = processedCodes.map((codeItem: any) => {
       if (codeItem.file && codeItem.file.endsWith(".ipynb")) {
         try {
-          const filePath = path.join(process.cwd(), codeItem.file);
-          const fileContent = fs.readFileSync(filePath, "utf-8");
+          const fileContent = readProjectFile(codeItem.file);
+          if (fileContent === null) throw new Error("unreadable");
           const notebook = JSON.parse(fileContent);
           const cells = notebook.cells;
 
@@ -284,8 +302,8 @@ function ServerCodeBlock(props: any) {
     processedCodes = processedCodes.map((codeItem: any) => {
       if (codeItem.file) {
         try {
-          const filePath = path.join(process.cwd(), codeItem.file);
-          const fileContent = fs.readFileSync(filePath, "utf-8");
+          const fileContent = readProjectFile(codeItem.file);
+          if (fileContent === null) throw new Error("unreadable");
 
           if (codeItem.file.endsWith(".ipynb")) {
             const notebook = JSON.parse(fileContent);
@@ -293,7 +311,9 @@ function ServerCodeBlock(props: any) {
             let content = "";
 
             if (codeItem.displayOutput) {
-              const cellIndex = codeItem.cellIndices ? codeItem.cellIndices[codeItem.cellIndices.length - 1] : 0;
+              const cellIndex = codeItem.cellIndices
+                ? codeItem.cellIndices[codeItem.cellIndices.length - 1]
+                : 0;
               const cell = cells[cellIndex];
               if (cell && cell.outputs) {
                 cell.outputs.forEach((output: any) => {
@@ -346,12 +366,16 @@ function ServerCodeBlock(props: any) {
     let language = "text";
     let codeString = "";
 
+    let label: string | undefined;
+
     if (React.isValidElement(rest.children)) {
       codeString = extractText(rest.children);
       const childProps = (rest.children as React.ReactElement).props as any;
       if (childProps && childProps.className) {
         language = childProps.className.replace("language-", "");
       }
+      // Put there by remarkCodeMeta from the fence's `title="…"`.
+      if (childProps?.["data-label"]) label = String(childProps["data-label"]);
     } else {
       codeString = extractText(rest.children);
     }
@@ -364,6 +388,7 @@ function ServerCodeBlock(props: any) {
       normalizeCodeItem({
         code: codeString,
         language,
+        ...(label ? { label } : {}),
       }),
     ];
   }
@@ -414,9 +439,11 @@ function ResponsiveTable(props: any) {
           </thead>
           <tbody>
             {resolvedRows.map((row: ReactNode[], rowIndex: number) => (
-              <tr key={rowIndex}>
+              // biome-ignore lint/suspicious/noArrayIndexKey: table rows have no id and never reorder
+              <tr key={`row-${rowIndex}`}>
                 {row.map((cell, cellIndex) => (
-                  <td key={cellIndex}>{cell}</td>
+                  // biome-ignore lint/suspicious/noArrayIndexKey: same — position is the identity
+                  <td key={`cell-${cellIndex}`}>{cell}</td>
                 ))}
               </tr>
             ))}
@@ -432,7 +459,8 @@ function ResponsiveTable(props: any) {
   return null;
 }
 
-const components = {
+/** Renderer plumbing: markdown's own tags. Not part of the registry. */
+const htmlComponents = {
   p: createParagraph as any,
   h1: createHeading("h1") as any,
   h2: createHeading("h2") as any,
@@ -441,7 +469,6 @@ const components = {
   h5: createHeading("h5") as any,
   h6: createHeading("h6") as any,
   img: createImage as any,
-  Image: createImage as any,
   a: CustomLink as any,
   code: createInlineCode as any,
   pre: ServerCodeBlock as any,
@@ -450,6 +477,15 @@ const components = {
   li: createListItem as any,
   hr: createHR as any,
   table: MarkdownTable as any,
+};
+
+/**
+ * The custom components an article body may name. The `Record<MdxBlockName, …>`
+ * is load-bearing: a registry entry with no implementation is a missing-key
+ * error, and an implementation with no registry entry is an excess-property one.
+ */
+const customComponents: Record<MdxBlockName, React.ComponentType<any>> = {
+  Image: createImage,
   Heading,
   Text,
   CodeBlock: ServerCodeBlock,
@@ -470,6 +506,8 @@ const components = {
   Line,
 };
 
+const components = { ...htmlComponents, ...customComponents };
+
 type CustomMDXProps = MDXRemoteProps & {
   components?: typeof components;
 };
@@ -480,10 +518,12 @@ export function CustomMDX(props: CustomMDXProps) {
       {...props}
       components={{ ...components, ...(props.components || {}) }}
       options={{
-        blockJS: false,
+        // Bodies come from MongoDB. `blockJS: false` used to re-enable
+        // evaluation of {expression} in them; nothing needs it (every brace in
+        // the corpus is LaTeX inside a math block), so take the safe default.
         blockDangerousJS: true,
         mdxOptions: {
-          remarkPlugins: [remarkGfm, remarkMath],
+          remarkPlugins: [remarkGfm, remarkMath, remarkCodeMeta],
           rehypePlugins: [rehypeKatex],
         },
       }}

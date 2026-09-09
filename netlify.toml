@@ -1,3 +1,6 @@
+# NOTE: the live deploy target is Vercel. This file is kept for the Netlify
+# path but is not what ships; @netlify/plugin-nextjs is a devDependency.
+
 [build]
 command = "npx next build"
 publish = ".next"

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { CustomMDX } from "@/components";
+import { AdminEdit } from "@/components/site/AdminEdit";
+import { ArticleBody } from "@/components/site/ArticleBody";
 import { ArticleContents } from "@/components/site/ArticleContents";
 import { JsonLd } from "@/components/site/JsonLd";
 import { MarkLessonRead } from "@/components/site/MarkLessonRead";
@@ -20,7 +21,10 @@ import { formatDate } from "@/utils/formatDate";
 
 const getContentBySlugsCached = cache(getContentBySlugs);
 
-export const dynamicParams = false;
+// Deliberately NOT `dynamicParams = false`: Mongo is the source of truth, and
+// pinning the param set meant a lesson added after the build 404'd at the
+// router until the next deploy. Unknown slugs render on demand; the three
+// notFound() calls below still handle a genuinely missing lesson.
 export const revalidate = 300;
 
 export async function generateStaticParams() {
@@ -139,7 +143,14 @@ export default async function CourseLesson({
 
           <div className="ds-prose">
             {posts.map((post) => (
-              <CustomMDX key={post.slug} source={post.content} />
+              <div key={post.slug}>
+                <AdminEdit
+                  href={`/admin/content/learn/${post.slug}`}
+                  label={`Edit ${post.slug}`}
+                  variant="mini"
+                />
+                <ArticleBody body={post.content} bodyFormat={post.bodyFormat} />
+              </div>
             ))}
           </div>
 

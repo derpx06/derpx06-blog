@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const FireIcon = ({ size = 24, color = "#ff7800", className = "" }) => {
   return (

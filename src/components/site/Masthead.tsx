@@ -14,11 +14,19 @@ const NAV: Array<{ key: Exclude<Section, null>; label: string; href: string; rou
   { key: "about", label: "About", href: "/about", route: "/about" },
 ];
 
+/** Which nav item a section root like "/blog" lights up. `/work` has none. */
+export function sectionForRoute(route: string): Section {
+  return NAV.find((item) => item.route === route)?.key ?? null;
+}
+
 /**
  * One masthead for every page: compact, sticky, and carrying its own rule so
- * the divider travels with it instead of scrolling away.
+ * the divider travels with it instead of scrolling away. `trailing` is where a
+ * page hangs its own controls — the reader's progress and Save button — so an
+ * article keeps the same header as everywhere else instead of swapping in one
+ * of its own.
  */
-export function Masthead({ current }: { current: Section }) {
+export function Masthead({ current, trailing }: { current: Section; trailing?: React.ReactNode }) {
   const items = NAV.filter((item) => routes[item.route as keyof typeof routes] !== false);
 
   return (
@@ -44,6 +52,7 @@ export function Masthead({ current }: { current: Section }) {
             {item.label}
           </Link>
         ))}
+        {trailing}
         <SearchTrigger />
         <SavedCount />
         <ThemeSwitch />

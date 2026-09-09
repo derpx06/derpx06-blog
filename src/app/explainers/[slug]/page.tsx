@@ -1,12 +1,12 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { ScrollToHash } from "@/components";
 import { ArticleView } from "@/components/site/ArticleView";
 import { JsonLd } from "@/components/site/JsonLd";
+import { getContentBySlug, getContentList } from "@/lib/content-repository";
 import { extractHeadings } from "@/lib/headings";
 import { generateMeta } from "@/lib/metadata";
-import { getContentBySlug, getContentList } from "@/lib/content-repository";
 import { getPieces, relatedTo, toPiece } from "@/lib/site-data";
 import { about, baseURL, explainers, person } from "@/resources";
 
@@ -74,10 +74,10 @@ export default async function Explainer({
       <ArticleView
         piece={piece}
         body={post.content}
+        bodyFormat={post.bodyFormat}
         headings={extractHeadings(post.content)}
         related={related}
         next={next}
-        sectionLabel="Explainers"
         sectionHref="/explainers"
         startHere={startHere}
       />

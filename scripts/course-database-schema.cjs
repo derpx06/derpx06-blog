@@ -1,3 +1,5 @@
+// INERT: nothing requires this. setup-content-database.cjs applies only the
+// content schema. Wire ensureCourseDatabase() in there if courses need it too.
 const COURSE_COLLECTION_NAME = "courses";
 
 const COURSE_INDEXES = [
@@ -79,14 +81,20 @@ const COURSE_VALIDATOR = {
 async function ensureCourseDatabase(db, options = {}) {
   const { dryRun = false, logger = console } = options;
   const collectionName = options.collectionName || COURSE_COLLECTION_NAME;
-  const collectionExists = await db.listCollections({ name: collectionName }, { nameOnly: true }).hasNext();
+  const collectionExists = await db
+    .listCollections({ name: collectionName }, { nameOnly: true })
+    .hasNext();
   const existingCollection = collectionExists ? db.collection(collectionName) : null;
-  const existingIndexes = existingCollection ? await existingCollection.listIndexes().toArray() : [];
+  const existingIndexes = existingCollection
+    ? await existingCollection.listIndexes().toArray()
+    : [];
   const existingNames = new Set(existingIndexes.map((index) => index.name));
   const plan = {
     createCollection: !collectionExists,
     updateValidator: true,
-    createIndexes: COURSE_INDEXES.filter((index) => !existingNames.has(index.name)).map((index) => index.name),
+    createIndexes: COURSE_INDEXES.filter((index) => !existingNames.has(index.name)).map(
+      (index) => index.name,
+    ),
   };
 
   if (dryRun) return plan;

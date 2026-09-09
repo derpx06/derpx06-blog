@@ -17,8 +17,11 @@ import path from "node:path";
 
 const W = 480;
 const H = 260;
-const ACC = "#c8502f";
-const INK = "#8f8878";
+// Both must read on the .ds-ph plate in either theme (>=3:1 as graphics):
+// light #ece2cc and dark #201b12. ACC is the amber that matches --acc without
+// being the same value, since it sits on the plate rather than the paper.
+const ACC = "#9e7418";
+const INK = "#82796a";
 const SANS = "ui-sans-serif, system-ui, sans-serif";
 
 // --- primitives ------------------------------------------------------------

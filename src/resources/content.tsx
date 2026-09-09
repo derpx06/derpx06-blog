@@ -3,7 +3,7 @@ import { About, Blog, Gallery, Home, Newsletter, Person, Social, Work } from "@/
 const person: Person = {
   firstName: "Manas",
   lastName: "Khairnar",
-  name: 'Derpx06',
+  name: "Derpx06",
   role: "Software Developer",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
@@ -76,11 +76,10 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        I build production mobile applications, scalable backend services and agentic AI
-        systems — React Native and Jetpack Compose on the front, Node.js and FastAPI behind
-        them, and retrieval and multi-agent workflows where the two meet. App Development
-        Lead, four-time hackathon winner, and the person who ships the whole thing rather
-        than a slice of it.
+        I build production mobile applications, scalable backend services and agentic AI systems —
+        React Native and Jetpack Compose on the front, Node.js and FastAPI behind them, and
+        retrieval and multi-agent workflows where the two meet. App Development Lead, four-time
+        hackathon winner, and the person who ships the whole thing rather than a slice of it.
       </>
     ),
   },
@@ -99,8 +98,8 @@ const about: About = {
             architecture, API integration, performance and release-ready implementation.
           </>,
           <>
-            Contribute the backend services, API workflows and data handling that keep
-            end-to-end CRM operations reliable.
+            Contribute the backend services, API workflows and data handling that keep end-to-end
+            CRM operations reliable.
           </>,
         ],
         images: [],
@@ -112,12 +111,12 @@ const about: About = {
         role: "App Developer Intern",
         achievements: [
           <>
-            Built RealEdge from the ground up: a production CRM for real-estate
-            professionals, shipped on Google Play.
+            Built RealEdge from the ground up: a production CRM for real-estate professionals,
+            shipped on Google Play.
           </>,
           <>
-            Improved UI responsiveness, cross-device stability and real-time data flow
-            through production-focused development and testing.
+            Improved UI responsiveness, cross-device stability and real-time data flow through
+            production-focused development and testing.
           </>,
         ],
         images: [],
@@ -144,8 +143,11 @@ const about: About = {
           <>Production React Native and Jetpack Compose apps, shipped and maintained on store.</>
         ),
         tags: [
-          { name: "React Native" }, { name: "Jetpack Compose" }, { name: "Kotlin" },
-          { name: "TypeScript" }, { name: "React" },
+          { name: "React Native" },
+          { name: "Jetpack Compose" },
+          { name: "Kotlin" },
+          { name: "TypeScript" },
+          { name: "React" },
         ],
         images: [],
       },
@@ -153,8 +155,13 @@ const about: About = {
         title: "Backend & data",
         description: <>APIs, services and the storage decisions that decide how they age.</>,
         tags: [
-          { name: "Node.js" }, { name: "Express.js" }, { name: "FastAPI" },
-          { name: "Spring Boot" }, { name: "PostgreSQL" }, { name: "MongoDB" }, { name: "Qdrant" },
+          { name: "Node.js" },
+          { name: "Express.js" },
+          { name: "FastAPI" },
+          { name: "Spring Boot" },
+          { name: "PostgreSQL" },
+          { name: "MongoDB" },
+          { name: "Qdrant" },
         ],
         images: [],
       },
@@ -162,8 +169,13 @@ const about: About = {
         title: "Agentic AI",
         description: <>Retrieval, multi-agent workflows, and evaluation you can actually trust.</>,
         tags: [
-          { name: "LangChain" }, { name: "LangGraph" }, { name: "RAG" },
-          { name: "LlamaIndex" }, { name: "Hugging Face" }, { name: "PyTorch" }, { name: "TensorFlow" },
+          { name: "LangChain" },
+          { name: "LangGraph" },
+          { name: "RAG" },
+          { name: "LlamaIndex" },
+          { name: "Hugging Face" },
+          { name: "PyTorch" },
+          { name: "TensorFlow" },
         ],
         images: [],
       },
@@ -171,8 +183,14 @@ const about: About = {
         title: "Cloud & delivery",
         description: <>Containers, pipelines and the boring plumbing that makes releases dull.</>,
         tags: [
-          { name: "Docker" }, { name: "Kubernetes" }, { name: "Terraform" },
-          { name: "GitHub Actions" }, { name: "AWS" }, { name: "GCP" }, { name: "Linux" }, { name: "Git" },
+          { name: "Docker" },
+          { name: "Kubernetes" },
+          { name: "Terraform" },
+          { name: "GitHub Actions" },
+          { name: "AWS" },
+          { name: "GCP" },
+          { name: "Linux" },
+          { name: "Git" },
         ],
         images: [],
       },
@@ -242,7 +260,6 @@ const explainers: Blog = {
   path: "/explainers",
   label: "Explainers",
   title: "Explainers",
-
 
   description: "Simple Explanations to various research papers",
 };

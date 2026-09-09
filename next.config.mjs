@@ -4,15 +4,84 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const withMDX = mdx({
   extension: /\.mdx?$/,
   options: {},
 });
 
+/**
+ * Sent on every response. Next inlines the RSC flight payload as
+ * `<script>self.__next_f.push(...)</script>` on each page, and the pre-paint
+ * theme script in `layout.tsx` is inline too, so `script-src` has to allow
+ * inline. A nonce is the alternative, but generating one requires a dynamic
+ * render and would turn every prerendered content route into an SSR route.
+ *
+ * ponytail: script-src keeps 'unsafe-inline'. To tighten it, move to a
+ * middleware-generated nonce and accept dynamic rendering, or wait for Next to
+ * emit hashable inline scripts.
+ */
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  // 'unsafe-eval' is dev-only: React's development build uses eval() to
+  // reconstruct call stacks for the error overlay, and without it every page
+  // raises a console error and the dev-tools badge shows a permanent issue.
+  // React never uses eval() in production, so the shipped policy stays strict.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
+  // styled-jsx and the inline `style` props across the design system.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://www.google.com",
+  "media-src 'self'",
+  "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  "form-action 'self' https://*.list-manage.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  // Nothing to upgrade over the dev server's plain HTTP, and it actively
+  // breaks reaching that server from another device: the browser rewrites
+  // every asset request to https on a port with no TLS, so the page loads
+  // its HTML and nothing else. Browsers exempt localhost, which is why only
+  // the phone sees it.
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+].join("; ");
+
+/**
+ * The draft preview is the one page the site frames into itself — the admin
+ * editor shows it full screen over the canvas. `frame-ancestors 'none'` plus
+ * `X-Frame-Options: DENY` made that impossible, so the preview iframe rendered
+ * as a blocked page. `'self'` still refuses every other origin, which is the
+ * part that matters: the route is reachable by anyone holding the signed token.
+ */
+const PREVIEW_CONTENT_SECURITY_POLICY = CONTENT_SECURITY_POLICY.replace(
+  "frame-ancestors 'none'",
+  "frame-ancestors 'self'",
+);
+
+const SECURITY_HEADERS = [
+  { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   transpilePackages: ["next-mdx-remote"],
+  // The stack trace of a server error should not be part of the response.
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
   images: {
     // The diagrams are SVG. next/image refuses SVG unless told otherwise,
     // because a hostile SVG can carry script. Every one here is first-party,
@@ -26,7 +95,29 @@ const nextConfig = {
         hostname: "www.google.com",
         pathname: "**",
       },
+      // Editor uploads when CLOUDINARY_* is configured.
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "**",
+      },
     ],
+  },
+  async headers() {
+    const previewHeaders = SECURITY_HEADERS.map((header) => {
+      if (header.key === "Content-Security-Policy") {
+        return { ...header, value: PREVIEW_CONTENT_SECURITY_POLICY };
+      }
+      if (header.key === "X-Frame-Options") return { ...header, value: "SAMEORIGIN" };
+      return header;
+    });
+
+    // Next applies EVERY matching rule and the last one wins for a given key,
+    // so the specific override has to come after the catch-all, not before it.
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      { source: "/preview/:path*", headers: previewHeaders },
+    ];
   },
   sassOptions: {
     compiler: "modern",
@@ -35,6 +126,13 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Reaching `next dev` from a phone on the LAN. Next blocks cross-origin
+  // requests to /_next/* dev resources, which drops the HMR socket and the
+  // error overlay while ordinary assets still load — the failure looks like
+  // "it works but never hot-reloads". A subnet glob rather than one address,
+  // so a new DHCP lease does not silently undo this. Dev-only; ignored in
+  // a production build.
+  allowedDevOrigins: ["192.168.1.*"],
 };
 
 export default withMDX(nextConfig);

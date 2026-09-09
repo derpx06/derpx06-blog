@@ -1,5 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { failIfBuilding } from "@/lib/build-guard";
+import { snapshotContent } from "@/lib/content-snapshot";
 import type {
   ContentMetadata,
   ContentRecord,
@@ -85,6 +86,9 @@ function toRecord(document: ContentDocument, includeBody: boolean): ContentRecor
       link: document.link,
     }),
     content: includeBody ? document.body || "" : "",
+    // Stored since the editor landed but never carried through until now, so
+    // HTML bodies were being compiled as MDX and throwing at render.
+    bodyFormat: document.bodyFormat === "html" ? "html" : "mdx",
     status,
     updatedAt: normalizeDate(document.updatedAt || document.publishedAt || document.createdAt),
     source: { type: "mongodb" },
@@ -92,6 +96,7 @@ function toRecord(document: ContentDocument, includeBody: boolean): ContentRecor
 }
 
 function projection(includeBody: boolean) {
+  // `bodyFormat` is tiny and needed even when the body itself is excluded.
   return includeBody ? { _id: 0 } : { _id: 0, body: 0 };
 }
 
@@ -112,7 +117,7 @@ export async function getContentList(
 
     return documents.map((document) => toRecord(document, includeBody));
   } catch (error) {
-    failIfBuilding(`${section} content`, error);
+    if (failIfBuilding(`${section} content`, error)) return snapshotContent(section);
     console.error(`Failed to fetch ${section} content from MongoDB:`, error);
     return [];
   }
@@ -134,7 +139,9 @@ export async function getContentBySlug(
     const document = await collection.findOne(filter, { projection: projection(includeBody) });
     return document ? toRecord(document, includeBody) : null;
   } catch (error) {
-    failIfBuilding(`${section}/${slug}`, error);
+    if (failIfBuilding(`${section}/${slug}`, error)) {
+      return snapshotContent(section).find((record) => record.slug === slug) ?? null;
+    }
     console.error(`Failed to fetch ${section}/${slug} from MongoDB:`, error);
     return null;
   }
@@ -164,7 +171,13 @@ export async function getContentBySlugs(
       return document ? [toRecord(document, includeBody)] : [];
     });
   } catch (error) {
-    failIfBuilding(`${section} lessons`, error);
+    if (failIfBuilding(`${section} lessons`, error)) {
+      const bySlug = new Map(snapshotContent(section).map((record) => [record.slug, record]));
+      return slugs.flatMap((slug) => {
+        const record = bySlug.get(slug);
+        return record ? [record] : [];
+      });
+    }
     console.error(`Failed to fetch ${section} content from MongoDB:`, error);
     return [];
   }

@@ -4,13 +4,14 @@ import type {
   EditorialConfig,
   FontsConfig,
   MailchimpConfig,
-  ProtectedRoutesConfig,
-  RoutesConfig,
   SameAsConfig,
   SchemaConfig,
   SocialSharingConfig,
 } from "@/types";
 import { home, person } from "./content";
+// Route policy lives in its own module so the proxy can read it without
+// pulling in next/font. Re-exported below so `@/resources` is unchanged.
+import { protectedRoutes, routes } from "./route-policy";
 
 /**
  * Canonical origin for meta tags, JSON-LD, sitemap and RSS. Set SITE_URL in
@@ -23,27 +24,12 @@ const baseURL: string =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "https://derpx06.online");
 
-const routes: RoutesConfig = {
-  "/": true,
-  "/about": true,
-  "/work": false,
-  "/blog": true,
-  "/gallery": false,
-  "/explainers": true,
-  "/learn": true,
-};
-
 const display: DisplayConfig = {
   location: false,
   time: false,
   themeSwitcher: true,
   chatbot: false,
   search: true,
-};
-
-// Password protection for selected routes. Set PAGE_ACCESS_PASSWORD in .env.
-const protectedRoutes: ProtectedRoutesConfig = {
-  "/work/automate-design-handovers-with-a-figma-to-code-pipeline": true,
 };
 
 /* --------------------------------------------------------------- typography */
@@ -75,8 +61,7 @@ const fonts: FontsConfig = { serif, sans, mono };
 
 const editorial: EditorialConfig = {
   tagline: "Notes on systems, models & learning",
-  footerBlurb:
-    "Notes in public — systems, models, and the long way round to understanding them.",
+  footerBlurb: "Notes in public — systems, models, and the long way round to understanding them.",
   footerColumns: [
     {
       title: "Read",
@@ -114,8 +99,13 @@ const editorial: EditorialConfig = {
 
 /* ------------------------------------------------------------------- misc */
 
+/**
+ * Newsletter form target. Until this is a real Mailchimp (or other provider)
+ * action URL, `NewsletterBlock` renders nothing rather than posting subscribers
+ * into the void — the placeholder below is not a reachable host.
+ */
 const mailchimp: MailchimpConfig = {
-  action: "https://url/subscribe/post?parameters",
+  action: "",
 };
 
 const schema: SchemaConfig = {

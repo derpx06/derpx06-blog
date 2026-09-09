@@ -269,10 +269,15 @@ export type ContentSource = {
   path?: string;
 };
 
+/** How `content` is written. Drives which renderer the article view uses. */
+export type ContentBodyFormat = "mdx" | "html";
+
 export type ContentRecord = {
   slug: string;
   metadata: ContentMetadata;
   content: string;
+  /** Defaults to "mdx" — the editor writes "html". */
+  bodyFormat: ContentBodyFormat;
   section: ContentSection;
   status: ContentStatus;
   updatedAt?: string;
@@ -294,6 +299,9 @@ export type CourseTopic = {
   title: string;
   links: CourseLink[];
 };
+
+/** Publication state of a course. Mirrors ContentStatus but is its own enum. */
+export type CourseStatus = "draft" | "published" | "archived";
 
 export type Course = {
   id: string;

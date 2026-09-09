@@ -68,7 +68,9 @@ export function WritingArchive({
       else map.set(piece.year, [piece]);
     }
     const entries = [...map.entries()].map(([year, items]) => ({ year, items }));
-    return sort === "oldest" ? entries.sort((a, b) => a.year - b.year) : entries.sort((a, b) => b.year - a.year);
+    return sort === "oldest"
+      ? entries.sort((a, b) => a.year - b.year)
+      : entries.sort((a, b) => b.year - a.year);
   }, [filtered, sort]);
 
   let counter = 0;

@@ -1,13 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
-
+import { AdminEdit } from "@/components/site/AdminEdit";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Masthead } from "@/components/site/Masthead";
 import { RailBand } from "@/components/site/RailBand";
+import { getCourses } from "@/lib/course-repository";
 import { resolveImage } from "@/lib/images";
 import { generateMeta } from "@/lib/metadata";
-import { getCourses } from "@/lib/course-repository";
 import { courseLessonCount, toRailCourses } from "@/lib/site-data";
 import { baseURL, learn, person } from "@/resources";
 
@@ -37,7 +37,7 @@ export default async function Learn() {
         author={{ name: person.name, url: `${baseURL}/learn`, image: person.avatar }}
       />
 
-      <Masthead current="learn" />
+      <Masthead current="learn" trailing={<AdminEdit href="/admin/courses" />} />
 
       <div style={{ padding: "38px var(--gut) 26px" }}>
         <h1 className="ds-t-page" style={{ marginBottom: 14 }}>

@@ -1,98 +1,73 @@
-import { NextResponse } from 'next/server';
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { isLocalArticleEditorHost } from "@/lib/article-editor-access";
+import { safeFetch } from "@/lib/safe-fetch";
 
-export const runtime = 'edge';
+// Node, not edge: safeFetch resolves the hostname with node:dns before letting
+// the request out, which the edge runtime cannot do.
+export const runtime = "nodejs";
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+};
 
 function decodeHTMLEntities(text: string): string {
-  return text.replace(/&(#?[a-zA-Z0-9]+);/g, (match, entity) => {
-    const entities: { [key: string]: string } = {
-      'amp': '&',
-      'lt': '<',
-      'gt': '>',
-      'quot': '"',
-      'apos': "'",
-      '#x27': "'",
-      '#39': "'",
-      '#x26': '&',
-      '#38': '&'
-    };
-    
-    if (entity.startsWith('#')) {
-      const code = entity.startsWith('#x') ? 
-        parseInt(entity.slice(2), 16) : 
-        parseInt(entity.slice(1), 10);
-      return String.fromCharCode(code);
+  return text.replace(/&(#?[a-zA-Z0-9]+);/g, (match, entity: string) => {
+    if (entity.startsWith("#")) {
+      const code = entity.startsWith("#x")
+        ? Number.parseInt(entity.slice(2), 16)
+        : Number.parseInt(entity.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
     }
-    
-    return entities[entity] || match;
+    return NAMED_ENTITIES[entity] ?? match;
   });
 }
 
-async function fetchWithTimeout(url: string, timeout = 5000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, { 
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'bot'
-      }
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
-}
-
-async function extractMetadata(html: string) {
-  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  const descMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"[^>]*>/i) 
-    || html.match(/<meta[^>]*content="([^"]+)"[^>]*name="description"[^>]*>/i)
-    || html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]+)"[^>]*>/i);
-  const imageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"[^>]*>/i)
-    || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image"[^>]*>/i);
-
-  const title = titleMatch?.[1]?.trim() || '';
-  const description = descMatch?.[1]?.trim() || '';
-  const image = imageMatch?.[1]?.trim() || '';
+function extractMetadata(html: string) {
+  const title = /<title[^>]*>([^<]+)<\/title>/i.exec(html)?.[1] ?? "";
+  const description =
+    /<meta[^>]*name="description"[^>]*content="([^"]+)"[^>]*>/i.exec(html)?.[1] ??
+    /<meta[^>]*content="([^"]+)"[^>]*name="description"[^>]*>/i.exec(html)?.[1] ??
+    /<meta[^>]*property="og:description"[^>]*content="([^"]+)"[^>]*>/i.exec(html)?.[1] ??
+    "";
+  const image =
+    /<meta[^>]*property="og:image"[^>]*content="([^"]+)"[^>]*>/i.exec(html)?.[1] ??
+    /<meta[^>]*content="([^"]+)"[^>]*property="og:image"[^>]*>/i.exec(html)?.[1] ??
+    "";
 
   return {
-    title: decodeHTMLEntities(title),
-    description: decodeHTMLEntities(description),
-    image: image,
+    title: decodeHTMLEntities(title.trim()),
+    description: decodeHTMLEntities(description.trim()),
+    image: image.trim(),
   };
 }
 
+/**
+ * Reads the OpenGraph card for a URL, for the editor's link previews. Same
+ * reasoning as ../proxy: localhost-only, and every fetch is vetted.
+ */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const url = searchParams.get('url');
-
-  if (!url) {
-    return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+  const requestHeaders = await headers();
+  if (!isLocalArticleEditorHost(requestHeaders.get("host"))) {
+    return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
-  try {
-    const response = await fetchWithTimeout(url);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.status}`);
-    }
-
-    const html = await response.text();
-    const metadata = await extractMetadata(html);
-
-    return NextResponse.json({
-      ...metadata,
-      url,
-    });
-  } catch (error) {
-    console.error('Error fetching metadata:', error instanceof Error ? error.message : String(error));
-    
-    return NextResponse.json({ 
-      error: 'Failed to fetch metadata',
-      message: error instanceof Error ? error.message : 'Unknown error occurred',
-    }, { status: 500 });
+  const url = new URL(request.url).searchParams.get("url");
+  const result = await safeFetch(url);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.reason }, { status: result.status });
   }
+
+  const contentType = result.response.headers.get("content-type") || "";
+  if (!contentType.includes("text/html")) {
+    return NextResponse.json({ error: "That URL is not an HTML page" }, { status: 415 });
+  }
+
+  const html = new TextDecoder().decode(result.body);
+  return NextResponse.json({ ...extractMetadata(html), url });
 }

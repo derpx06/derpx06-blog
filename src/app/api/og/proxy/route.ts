@@ -1,45 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { isLocalArticleEditorHost } from "@/lib/article-editor-access";
+import { safeFetch } from "@/lib/safe-fetch";
 
-export async function GET(request: NextRequest) {
-  try {
-    // Get the URL parameter
-    const url = new URL(request.url);
-    const imageUrl = url.searchParams.get('url');
-    
-    if (!imageUrl) {
-      return NextResponse.json({ error: 'Missing URL parameter' }, { status: 400 });
-    }
-    
-    // Fetch the image
-    const response = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ImageProxy/1.0)',
-      },
-    });
-    
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: `Failed to fetch image: ${response.status}` },
-        { status: response.status }
-      );
-    }
-    
-    // Get the image data
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const imageData = await response.arrayBuffer();
-    
-    // Return the image with appropriate headers
-    return new NextResponse(imageData, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400',
-      },
-    });
-  } catch (error) {
-    console.error('Error proxying image:', error);
-    return NextResponse.json(
-      { error: 'Failed to proxy image' },
-      { status: 500 }
-    );
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"];
+
+/**
+ * Image proxy for the link-preview cards in the editor. Nothing on the public
+ * site calls it, so it is gated to the same localhost-only surface as the
+ * editor itself, and every fetch goes through `safeFetch` — an unrestricted
+ * server-side fetch of a caller-supplied URL is a request forgery primitive.
+ */
+export async function GET(request: Request) {
+  const requestHeaders = await headers();
+  if (!isLocalArticleEditorHost(requestHeaders.get("host"))) {
+    return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
+
+  const url = new URL(request.url).searchParams.get("url");
+  const result = await safeFetch(url);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.reason }, { status: result.status });
+  }
+
+  const contentType = (result.response.headers.get("content-type") || "").split(";")[0].trim();
+  if (!IMAGE_TYPES.includes(contentType)) {
+    return NextResponse.json({ error: "That URL is not an image" }, { status: 415 });
+  }
+
+  return new NextResponse(result.body, {
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=86400",
+      "Content-Security-Policy": "default-src 'none'; sandbox",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }

@@ -1,12 +1,13 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
   "vcs": {
-    "enabled": false,
+    "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": false
+    "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false
+    "ignoreUnknown": false,
+    "includes": ["**", "!src/resources/custom.css"]
   },
   "formatter": {
     "enabled": true,
@@ -16,11 +17,68 @@
   },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": {
+      "recommended": true
+    }
   },
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/components/tiptap-ui/**",
+        "src/components/tiptap-ui-primitive/**",
+        "src/components/tiptap-node/**",
+        "src/components/tiptap-icons/**",
+        "src/components/tiptap-extension/**",
+        "src/components/tiptap-templates/**",
+        "src/components/ui/**",
+        "src/lib/tiptap-utils.ts",
+        "src/hooks/use-*.ts",
+        "src/components/icons/**"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off",
+            "noStaticElementInteractions": "off",
+            "useSemanticElements": "off",
+            "useButtonType": "off"
+          },
+          "complexity": {
+            "useOptionalChain": "off"
+          },
+          "correctness": {
+            "useExhaustiveDependencies": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useImportType": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noArrayIndexKey": "off",
+            "useIterableCallbackReturn": "off",
+            "noControlCharactersInRegex": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/resources/*.css", "src/**/*.scss"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          },
+          "style": {
+            "noDescendingSpecificity": "off"
+          }
+        }
+      }
+    }
+  ]
 }

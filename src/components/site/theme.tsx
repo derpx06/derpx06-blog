@@ -75,9 +75,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggle = useCallback(() => {
-    setTheme(
-      (preference === "system" ? systemTheme() : preference) === "dark" ? "light" : "dark",
-    );
+    setTheme((preference === "system" ? systemTheme() : preference) === "dark" ? "light" : "dark");
   }, [preference, setTheme]);
 
   return (

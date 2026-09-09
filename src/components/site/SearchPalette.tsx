@@ -33,6 +33,10 @@ export function SearchPalette() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      // Chrome fires autofill and some IME keydowns with no `key` at all, and
+      // this listener is on window — an unguarded read throws on every stray
+      // keypress anywhere on the site.
+      if (!event.key) return;
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         setOpen((value) => !value);

@@ -17,16 +17,23 @@ export const HeadingLink: React.FC<HeadingLinkProps> = ({ id, level, children })
 
   const copyURL = () => {
     if (typeof window === "undefined" || !navigator.clipboard) return;
-    navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${id}`).then(
-      () => addToast({ variant: "success", message: "Link copied to clipboard." }),
-      () => addToast({ variant: "danger", message: "Failed to copy link." }),
-    );
+    navigator.clipboard
+      .writeText(`${window.location.origin}${window.location.pathname}#${id}`)
+      .then(
+        () => addToast({ variant: "success", message: "Link copied to clipboard." }),
+        () => addToast({ variant: "danger", message: "Failed to copy link." }),
+      );
   };
 
   return (
     <Tag id={id} className={styles.control}>
       {children}
-      <button type="button" className={styles.visibility} onClick={copyURL} aria-label="Copy link to this section">
+      <button
+        type="button"
+        className={styles.visibility}
+        onClick={copyURL}
+        aria-label="Copy link to this section"
+      >
         <Link2 size={14} />
       </button>
     </Tag>

@@ -1,12 +1,12 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { ScrollToHash } from "@/components";
 import { ArticleView } from "@/components/site/ArticleView";
 import { JsonLd } from "@/components/site/JsonLd";
+import { getContentBySlug, getContentList } from "@/lib/content-repository";
 import { extractHeadings } from "@/lib/headings";
 import { generateMeta } from "@/lib/metadata";
-import { getContentBySlug, getContentList } from "@/lib/content-repository";
 import { getPieces, relatedTo, toPiece } from "@/lib/site-data";
 import { about, baseURL, person, work } from "@/resources";
 
@@ -68,10 +68,10 @@ export default async function Project({
       <ArticleView
         piece={piece}
         body={project.content}
+        bodyFormat={project.bodyFormat}
         headings={extractHeadings(project.content)}
         related={related}
         next={related[0] ?? null}
-        sectionLabel="Projects"
         sectionHref="/work"
         startHere={all.filter((item) => item.slug !== piece.slug).slice(0, 3)}
       />

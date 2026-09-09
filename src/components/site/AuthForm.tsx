@@ -89,9 +89,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         autoComplete={mode === "signup" ? "new-password" : "current-password"}
         style={{ flex: "none" }}
       />
-      {mode === "signup" && (
-        <span className="ds-meta ds-meta-s">At least 8 characters.</span>
-      )}
+      {mode === "signup" && <span className="ds-meta ds-meta-s">At least 8 characters.</span>}
 
       {error && (
         <span className="ds-meta ds-meta-s" role="alert" style={{ color: "var(--acc)" }}>

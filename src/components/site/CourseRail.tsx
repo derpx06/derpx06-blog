@@ -16,7 +16,13 @@ export type RailCourse = {
  * "Course in progress" once the reader has started one, otherwise an
  * invitation to start — the block never renders empty.
  */
-export function CourseRail({ courses, compact = false }: { courses: RailCourse[]; compact?: boolean }) {
+export function CourseRail({
+  courses,
+  compact = false,
+}: {
+  courses: RailCourse[];
+  compact?: boolean;
+}) {
   const { ready, lessons } = useReader();
   if (courses.length === 0) return null;
 
@@ -48,7 +54,9 @@ export function CourseRail({ courses, compact = false }: { courses: RailCourse[]
           <i style={{ width: `${standing.percent}%` }} />
         </div>
         <Link
-          href={standing.next ? `/learn/${course.slug}/${standing.next.slug}` : `/learn/${course.slug}`}
+          href={
+            standing.next ? `/learn/${course.slug}/${standing.next.slug}` : `/learn/${course.slug}`
+          }
           className="ds-box ds-dark ds-block"
         >
           {standing.started ? `Resume lesson ${standing.number}` : "Start lesson 1"}

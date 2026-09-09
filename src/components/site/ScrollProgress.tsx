@@ -1,7 +1,7 @@
 "use client";
 
 import throttle from "lodash.throttle";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReader } from "./ReaderProvider";
 
 export type ReaderTarget = {
@@ -40,10 +40,18 @@ export function useScrollPercent(): number {
 export function useProgressReport(piece: ReaderTarget): void {
   const { reportProgress, signedIn } = useReader();
 
+  // Callers build `piece` inline, so it is a new object on every render. The
+  // effect below used to depend on it directly, which meant it tore down and
+  // re-subscribed each time — and its cleanup calls flush(), so every render
+  // fired an extra progress write. Keying on the slug and reading the rest
+  // through a ref subscribes once per article instead.
+  const pieceRef = useRef(piece);
+  pieceRef.current = piece;
+
   useEffect(() => {
     if (!signedIn) return;
 
-    const send = () => reportProgress({ ...piece, percent: scrollPercent() });
+    const send = () => reportProgress({ ...pieceRef.current, percent: scrollPercent() });
     const throttled = throttle(send, 5000, { leading: false, trailing: true });
     const onScroll = () => throttled();
     const flush = () => {
@@ -61,7 +69,7 @@ export function useProgressReport(piece: ReaderTarget): void {
       document.removeEventListener("visibilitychange", flush);
       flush();
     };
-  }, [piece, reportProgress, signedIn]);
+  }, [reportProgress, signedIn]);
 }
 
 /** The fixed hairline at the very top of the viewport, filling as you read. */
