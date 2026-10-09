@@ -1,27 +1,24 @@
-import { About, Blog, Gallery, Home, Newsletter, Person, Social, Work } from "@/types";
-import { Line, Logo, Row, Text } from "@once-ui-system/core";
+import { About, Blog, Home, Newsletter, Person, Social } from "@/types";
 
 const person: Person = {
   firstName: "Manas",
   lastName: "Khairnar",
-  name: 'Derpx06',
-  role: "Software Developer",
+  name: "Manas Khairnar",
+  role: "App Development Lead at Aionyix",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
   location: "Pune, India",
   timeZone: "Asia/Kolkata",
-  languages: ["English", "Hindi", "Marathi", "German"], // optional: Leave the array empty if you don't want to display languages
+  languages: ["English", "Hindi", "Marathi", "German"],
 };
 
 const newsletter: Newsletter = {
   display: true,
-  title: <>Subscribe to {person.firstName}'s Newsletter</>,
-  description: <>My weekly newsletter about creativity and engineering</>,
+  title: "The weekly letter",
+  description: "One piece a week on systems, models and learning.",
 };
 
 const social: Social = [
-  // Links are automatically displayed.
-  // Import new icons in /once-ui/icons.ts
   {
     name: "GitHub",
     icon: "github",
@@ -43,23 +40,9 @@ const home: Home = {
   path: "/",
   image: "/images/og/home.jpg",
   label: "Home",
-  title: `${person.name}'s Portfolio`,
-  description: `Portfolio website showcasing my work as a ${person.role}`,
-  headline: <>Turning problems into possibilities</>,
-  featured: {
-    display: true,
-    title: (
-      <Row gap="12" vertical="center">
-        <strong className="ml-4">Once UI</strong>{" "}
-        <Line background="brand-alpha-strong" vert height="20" />
-        <Text marginRight="4" onBackground="brand-medium">
-          Featured work
-        </Text>
-      </Row>
-    ),
-    href: "/work/building-once-ui-a-customizable-design-system",
-  },
-  subline: "I want to share magic",
+  title: "derpx06.dev — systems, models and learning notes",
+  description: "Essays, paper explainers and learning notes on systems and AI by Manas Khairnar.",
+  headline: "Turning problems into possibilities",
 };
 
 const about: About = {
@@ -75,8 +58,8 @@ const about: About = {
     display: true,
   },
   calendar: {
-    display: true,
-    link: "https://cal.com",
+    display: false,
+    link: "",
   },
   intro: {
     display: true,
@@ -94,30 +77,14 @@ const about: About = {
       {
         company: "Scizers",
         timeframe: "2025 - Present",
-        role: "" +
-          "App development Intern",
-        achievements: [
-          <>
-            Build react native apps along with functionlity and api integration
-          </>,
-          <>
-
-          </>,
-        ],
-        images: [
-          // optional: leave the array empty if you don't want to display images
-          // {
-          //   src: "/images/projects/project-01/cover-01.jpg",
-          //   alt: "Once UI Project",
-          //   width: 16,
-          //   height: 9,
-          // },
-        ],
+        role: "App development Intern",
+        achievements: [<>Build react native apps along with functionality and api integration</>],
+        images: [],
       },
     ],
   },
   studies: {
-    display: true, // set to false to hide this section
+    display: true,
     title: "Studies",
     institutions: [
       {
@@ -127,130 +94,50 @@ const about: About = {
     ],
   },
   technical: {
-    display: true, // set to false to hide this section
+    display: true,
     title: "Technical skills",
     skills: [
       {
         title: "App Development",
-        description: (
-          <>Building cross-platform mobile applications with modern frameworks.</>
-        ),
+        description: <>Building cross-platform mobile applications with modern frameworks.</>,
         tags: [
-          {
-            name: "React Native",
-            icon: "react",
-          },
-          {
-            name: "Kotlin Compose",
-            icon: "kotlin",
-          },
+          { name: "React Native", icon: "react" },
+          { name: "Kotlin Compose", icon: "kotlin" },
         ],
         images: [
-          {
-            src: "/images/projects/description-images/ChatBlaze.jpg",
-            alt: "Project image",
-            width: 5,
-            height: 12,
-          },
-          {
-            src: "/images/projects/description-images/NewsPulse.png",
-            alt: "Project image",
-            width: 5,
-            height: 12,
-          },
-          {
-            src: "/images/projects/description-images/Techrush.png",
-            alt: "Project image",
-            width: 5,
-            height: 12,
-          },
-          {
-            src: "/images/projects/description-images/NoteSphere.png",
-            alt: "Project image",
-            width: 5,
-            height: 12,
-          }
+          { src: "/images/projects/description-images/ChatBlaze.jpg", alt: "Project image", width: 5, height: 12 },
+          { src: "/images/projects/description-images/NewsPulse.png", alt: "Project image", width: 5, height: 12 },
+          { src: "/images/projects/description-images/Techrush.png", alt: "Project image", width: 5, height: 12 },
+          { src: "/images/projects/description-images/NoteSphere.png", alt: "Project image", width: 5, height: 12 },
         ],
       },
       {
         title: "AI & Machine Learning",
-        description: (
-          <>Developing intelligent systems using state-of-the-art models and frameworks.</>
-        ),
+        description: <>Developing intelligent systems using state-of-the-art models and frameworks.</>,
         tags: [
-          {
-            name: "TensorFlow",
-            icon: "tensorflow",
-          },
-          {
-            name: "PyTorch",
-            icon: "pytorch",
-          },
-          {
-            name: "LangChain",
-            icon: "python",
-          },
-          {
-            name: "LangGraph",
-            icon: "python",
-          },
-          {
-            name: "LangSmith",
-            icon: "python",
-          },
-          {
-            name: "LlamaIndex",
-            icon: "python",
-          },
-          {
-            name: "SmolAgents",
-            icon: "python",
-          },
-          {
-            name: "CrewAI",
-            icon: "python",
-          },
+          { name: "TensorFlow", icon: "tensorflow" },
+          { name: "PyTorch", icon: "pytorch" },
+          { name: "LangChain", icon: "python" },
+          { name: "LangGraph", icon: "python" },
+          { name: "LangSmith", icon: "python" },
+          { name: "LlamaIndex", icon: "python" },
+          { name: "SmolAgents", icon: "python" },
+          { name: "CrewAI", icon: "python" },
         ],
         images: [],
       },
       {
         title: "Backend & Systems",
-        description: (
-          <>Robust backend architectures and system-level engineering.</>
-        ),
+        description: <>Robust backend architectures and system-level engineering.</>,
         tags: [
-          {
-            name: "Node.js",
-            icon: "node",
-          },
-          {
-            name: "Express.js",
-            icon: "express",
-          },
-          {
-            name: "Java Spring Boot",
-            icon: "springboot",
-          },
-          {
-            name: "FastAPI",
-            icon: "fastapi",
-          },
-          {
-            name: "MongoDB",
-            icon: "mongodb",
-          },
-          {
-            name: "Qdrant",
-            icon: "python",
-          },
-          {
-            name: "Linux",
-            icon: "linux",
-          },
-          {
-            name: "Git",
-            icon: "git",
-          },
+          { name: "Node.js", icon: "node" },
+          { name: "Express.js", icon: "express" },
+          { name: "Java Spring Boot", icon: "springboot" },
+          { name: "FastAPI", icon: "fastapi" },
+          { name: "MongoDB", icon: "mongodb" },
+          { name: "Qdrant", icon: "python" },
+          { name: "Linux", icon: "linux" },
+          { name: "Git", icon: "git" },
         ],
         images: [],
       },
@@ -261,104 +148,22 @@ const about: About = {
 const blog: Blog = {
   path: "/blog",
   label: "Blog",
-  title: "Writing about AI and agents..",
-  description: `Read what ${person.name} has been up to recently`,
-  // Create new blog posts by adding a new .mdx file to app/blog/posts
-  // All posts will be listed on the /blog route
+  title: "Writing",
+  description: "Long-form essays on distributed systems, retrieval and AI plumbing.",
 };
+
 const explainers: Blog = {
   path: "/explainers",
   label: "Explainers",
-  title: "Explainers",
-
-
-  description: "Simple Explanations to various research papers",
+  title: "Paper explainers",
+  description: "Landmark AI papers, one idea at a time.",
 };
 
 const learn: Blog = {
   path: "/learn",
   label: "Learn",
-  title: `Learn with ${person.name}`,
-  description: `Courses and tutorials by ${person.name}`,
+  title: "Notes",
+  description: "Structured learning notes: LangChain, fine-tuning and Python.",
 };
 
-const work: Work = {
-  path: "/work",
-  label: "Work",
-  title: `Projects – ${person.name}`,
-  description: `Design and dev projects by ${person.name}`,
-  // Create new project pages by adding a new .mdx file to app/blog/posts
-  // All projects will be listed on the /home and /work routes
-};
-
-const gallery: Gallery = {
-  path: "/gallery",
-  label: "Gallery",
-  title: `Photo gallery – ${person.name}`,
-  description: `Photos by ${person.name}`,
-  // Images by https://lorant.one
-  // These are placeholder images, replace with your own
-  images: [
-    {
-      src: "/images/gallery/horizontal-1.jpg",
-      alt: "image",
-      orientation: "horizontal",
-    },
-    {
-      src: "/images/gallery/vertical-4.jpg",
-      alt: "image",
-      orientation: "vertical",
-    },
-    {
-      src: "/images/gallery/horizontal-3.jpg",
-      alt: "image",
-      orientation: "horizontal",
-    },
-    {
-      src: "/images/gallery/vertical-1.jpg",
-      alt: "image",
-      orientation: "vertical",
-    },
-    {
-      src: "/images/gallery/vertical-2.jpg",
-      alt: "image",
-      orientation: "vertical",
-    },
-    {
-      src: "/images/gallery/horizontal-2.jpg",
-      alt: "image",
-      orientation: "horizontal",
-    },
-    {
-      src: "/images/gallery/horizontal-4.jpg",
-      alt: "image",
-      orientation: "horizontal",
-    },
-    {
-      src: "/images/gallery/vertical-3.jpg",
-      alt: "image",
-      orientation: "vertical",
-    },
-  ],
-};
-
-const heroWords = [
-  { w: "Share Magic", tag: "software that matters" },
-  { w: "Build", tag: "software that matters" },
-  { w: "Ship", tag: "fast, iteratively, boldly" },
-  { w: "Architect", tag: "systems that last" },
-  { w: "Innovate", tag: "at the edge of what's possible" },
-  { w: "Engineer", tag: "with intention" },
-  { w: "Create", tag: "things I'm proud of" },
-  { w: "Deploy", tag: "ideas into reality" },
-  { w: "Design", tag: "for the humans behind the screen" },
-  { w: "Automate", tag: "the boring stuff" },
-  { w: "Scale", tag: "without losing the soul" },
-  { w: "Dream", tag: "beyond the obvious" },
-  { w: "Listen", tag: "before I write a line of code" },
-  { w: "Wonder", tag: "about everything" },
-  { w: "Empathize", tag: "with every user" },
-  { w: "Grow", tag: "every single day" },
-];
-
-export { person, social, newsletter, home, about, blog, work, gallery, learn, explainers, heroWords };
+export { person, social, newsletter, home, about, blog, learn, explainers };

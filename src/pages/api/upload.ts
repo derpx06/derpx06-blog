@@ -4,6 +4,7 @@ import formidable from "formidable";
 import type { Fields, Files } from "formidable";
 import Cloudinary from "cloudinary";
 import { authOptions } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
 
 export const config = {
   api: {
@@ -22,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const session = await getServerSession(req, res, authOptions);
   if (!session) return res.status(401).json({ message: "Unauthorized" });
+  if (!isAdminEmail(session.user?.email)) return res.status(403).json({ message: "Forbidden" });
 
   const form = new formidable.IncomingForm();
   form.parse(req, async (err: Error | null, _fields: Fields, files: Files) => {

@@ -1,6 +1,6 @@
 import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
 import React, { ReactNode } from "react";
-import { slugify as transliterate } from "transliteration";
+import { slugify as slugifyText } from "@/lib/slug";
 import { HeadingLink } from "@/components/HeadingLink";
 import { SafeCodeBlock } from "@/components/SafeCodeBlock";
 import { JupyterCodeBlock } from "@/components/JupyterCodeBlock";
@@ -13,7 +13,6 @@ import {
   Heading,
   Text,
   InlineCode,
-  TextProps,
   MediaProps,
   Accordion,
   AccordionGroup,
@@ -27,8 +26,6 @@ import {
   Icon,
   Media,
   SmartLink,
-  List,
-  ListItem,
   Line,
 } from "@once-ui-system/core";
 
@@ -119,23 +116,15 @@ function asArrayLikeObject(input: any): any[] | null {
 }
 
 function slugify(input: any): string {
-  const str = extractText(input);
-  const strWithAnd = str.replace(/&/g, " and ");
-  return transliterate(strWithAnd, {
-    lowercase: true,
-    separator: "-",
-  }).replace(/\-\-+/g, "-");
+  return slugifyText(extractText(input));
 }
 
 function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
-  const CustomHeading = ({
-    children,
-    ...props
-  }: Omit<React.ComponentProps<typeof HeadingLink>, "as" | "id" | "level">) => {
-    const slug = slugify(children as string);
+  const CustomHeading = ({ children }: { children?: ReactNode }) => {
+    const slug = slugify(children);
     const level = parseInt(as.replace("h", "")) as 1 | 2 | 3 | 4 | 5 | 6;
     return (
-      <HeadingLink marginTop="24" marginBottom="12" level={level} id={slug} {...props}>
+      <HeadingLink level={level} id={slug}>
         {children}
       </HeadingLink>
     );
@@ -146,18 +135,8 @@ function createHeading(as: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   return CustomHeading;
 }
 
-function createParagraph({ children }: TextProps) {
-  return (
-    <Text
-      style={{ lineHeight: "175%" }}
-      variant="body-default-m"
-      onBackground="neutral-medium"
-      marginTop="8"
-      marginBottom="12"
-    >
-      {children}
-    </Text>
-  );
+function createParagraph({ children }: { children?: ReactNode }) {
+  return <p>{children}</p>;
 }
 
 function createInlineCode({ children }: { children: ReactNode }) {
@@ -386,29 +365,8 @@ function ServerCodeBlock(props: any) {
   return <SafeCodeBlock codes={processedCodes} {...rest} />;
 }
 
-function createList({ children }: { children: ReactNode }) {
-  return <List>{children}</List>;
-}
-
-function createListItem({ children }: { children: ReactNode }) {
-  return (
-    <ListItem
-      marginTop="4"
-      marginBottom="8"
-      onBackground="neutral-medium"
-      style={{ lineHeight: "175%" }}
-    >
-      {children}
-    </ListItem>
-  );
-}
-
 function createHR() {
-  return (
-    <Row fillWidth horizontal="center">
-      <Line maxWidth="40" />
-    </Row>
-  );
+  return <hr />;
 }
 
 function normalizeTableData(data: any, props: any): TableData | null {
@@ -428,11 +386,9 @@ function normalizeTableData(data: any, props: any): TableData | null {
 
 function MarkdownTable({ children }: { children?: ReactNode }) {
   return (
-    <Column fillWidth overflowX="auto" marginBottom="16">
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        {children}
-      </table>
-    </Column>
+    <div className="tableWrap">
+      <table>{children}</table>
+    </div>
   );
 }
 
@@ -458,20 +414,29 @@ function ResponsiveTable(props: any) {
 
 function CustomFeedback({ children, ...props }: any) {
   return (
-    <Feedback
-      {...props}
-      style={{
-        backdropFilter: "blur(24px)",
-        background: "rgba(125, 125, 125, 0.08)",
-        border: "1px solid var(--neutral-alpha-medium)",
-        ...props.style,
-      }}
-    >
-      <Column fillWidth style={{ marginTop: "-6px" }}>
-        {children}
-      </Column>
+    <Feedback {...props} marginBottom="16">
+      <Column>{children}</Column>
     </Feedback>
   );
+}
+
+// Once UI only accepts spacing tokens; posts sometimes write padding="22" which becomes 22rem. Snap to the nearest token.
+const SPACING = [0, 1, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 104, 128, 160];
+function snapSpacing(v: unknown) {
+  if (typeof v === "number") v = String(v);
+  if (typeof v !== "string" || !/^\d+$/.test(v)) return v;
+  const n = Number(v);
+  return String(SPACING.reduce((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a)));
+}
+const SPACING_PROPS = ["padding", "paddingX", "paddingY", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight", "margin", "marginX", "marginY", "marginTop", "marginBottom", "gap"];
+function withSnappedSpacing<P extends object>(Comp: React.ComponentType<P>) {
+  const Snapped = (props: P) => {
+    const next: any = { ...props };
+    for (const k of SPACING_PROPS) if (k in next) next[k] = snapSpacing(next[k]);
+    return <Comp {...next} />;
+  };
+  Snapped.displayName = `Snapped(${(Comp as any).displayName || (Comp as any).name || "Component"})`;
+  return Snapped;
 }
 
 const components = {
@@ -487,9 +452,6 @@ const components = {
   a: CustomLink as any,
   code: createInlineCode as any,
   pre: ServerCodeBlock as any,
-  ol: createList as any,
-  ul: createList as any,
-  li: createListItem as any,
   hr: createHR as any,
   table: MarkdownTable as any,
   Heading,
@@ -501,10 +463,10 @@ const components = {
   Table: ResponsiveTable,
   Feedback: CustomFeedback,
   Button,
-  Card,
-  Grid,
-  Row,
-  Column,
+  Card: withSnappedSpacing(Card),
+  Grid: withSnappedSpacing(Grid),
+  Row: withSnappedSpacing(Row),
+  Column: withSnappedSpacing(Column),
   Icon,
   Media,
   SmartLink,

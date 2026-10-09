@@ -1,27 +1,23 @@
 import {
   DataStyleConfig,
   DisplayConfig,
-  EffectsConfig,
   FontsConfig,
-  MailchimpConfig,
   ProtectedRoutesConfig,
   RoutesConfig,
   SameAsConfig,
   SchemaConfig,
   SocialSharingConfig,
-  StyleConfig,
 } from "@/types";
-import { gallery, home } from "./content";
+import { home, person } from "./content";
+import { Archivo, DM_Serif_Display, JetBrains_Mono, VT323 } from "next/font/google";
 
-// IMPORTANT: Replace with your own domain address - it's used for SEO in meta tags and schema
-const baseURL: string = "https://demo.magic-portfolio.com";
+// Used for SEO in meta tags, schema, sitemap and canonical URLs.
+const baseURL: string = "https://derpx06.dev";
 
 const routes: RoutesConfig = {
   "/": true,
   "/about": true,
-  "/work": false,
   "/blog": true,
-  "/gallery": false,
   "/explainers": true,
   "/learn": true,
 };
@@ -34,214 +30,59 @@ const display: DisplayConfig = {
   search: false,
 };
 
-// Enable password protection on selected routes
-// Set password in the .env file, refer to .env.example
-const protectedRoutes: ProtectedRoutesConfig = {
-  "/work/automate-design-handovers-with-a-figma-to-code-pipeline": true,
-};
+// Password protection on selected routes (PAGE_ACCESS_PASSWORD in .env)
+const protectedRoutes: ProtectedRoutesConfig = {};
 
-import { Geist } from "next/font/google";
-import { Geist_Mono } from "next/font/google";
+const heading = Archivo({ variable: "--font-heading", subsets: ["latin"], display: "swap" });
+const body = Archivo({ variable: "--font-body", subsets: ["latin"], display: "swap" });
+const label = Archivo({ variable: "--font-label", subsets: ["latin"], display: "swap" });
+const code = JetBrains_Mono({ variable: "--font-code", subsets: ["latin"], display: "swap", weight: ["400", "500"] });
 
-const heading = Geist({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  display: "swap",
-});
+const fonts: FontsConfig = { heading, body, label, code };
 
-const body = Geist({
-  variable: "--font-body",
-  subsets: ["latin"],
-  display: "swap",
-});
+// Display faces for the Explainers / Notes headlines only.
+const serif = DM_Serif_Display({ variable: "--font-serif", subsets: ["latin"], display: "swap", weight: "400" });
+const pixel = VT323({ variable: "--font-pixel", subsets: ["latin"], display: "swap", weight: "400" });
+const displayFonts = { serif, pixel };
 
-const label = Geist({
-  variable: "--font-label",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const code = Geist_Mono({
-  variable: "--font-code",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fonts: FontsConfig = {
-  heading: heading,
-  body: body,
-  label: label,
-  code: code,
-};
-// // default customization applied to the HTML in the main layout.tsx
-// const style: StyleConfig = {
-//   theme: "system", // dark | light | system
-//   neutral: "gray", // sand | gray | slate | custom
-//   brand: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
-//   accent: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
-//   solid: "color", // color | contrast
-//   solidStyle: "flat", // flat | plastic
-//   border: "playful", // rounded | playful | conservative
-//   surface: "translucent", // filled | translucent
-//   transition: "all", // all | micro | macro
-//   scaling: "100", // 90 | 95 | 100 | 105 | 110
-// };
-
+// Once UI tokens: only MDX internals (code blocks, media, tables) still read these.
 const style = {
-  theme: "dark",
-  brand: "yellow",
-  accent: "indigo",
+  theme: "system",
+  brand: "violet",
+  accent: "violet",
   neutral: "sand",
   border: "rounded",
   solid: "contrast",
   solidStyle: "flat",
-  surface: "translucent",
-  transition: "all",
+  surface: "filled",
+  transition: "micro",
   scaling: "100",
-}
+};
 
 const dataStyle: DataStyleConfig = {
-  variant: "gradient", // flat | gradient | outline
-  mode: "categorical", // categorical | divergent | sequential
-  height: 24, // default chart height
-  axis: {
-    stroke: "var(--neutral-alpha-weak)",
-  },
-  tick: {
-    fill: "var(--neutral-on-background-weak)",
-    fontSize: 11,
-    line: false,
-  },
+  variant: "flat",
+  mode: "categorical",
+  height: 24,
+  axis: { stroke: "var(--neutral-alpha-weak)" },
+  tick: { fill: "var(--neutral-on-background-weak)", fontSize: 11, line: false },
 };
 
-const effects: EffectsConfig = {
-  mask: {
-    cursor: false,
-    x: 50,
-    y: 0,
-    radius: 50,
-  },
-  gradient: {
-    display: true,
-    opacity: 20,
-    x: 50,
-    y: 0,
-    width: 100,
-    height: 50,
-    tilt: 0,
-    colorStart: "accent-background-strong",
-    colorEnd: "page-background",
-  },
-  dots: {
-    display: false,
-    opacity: 40,
-    size: "2",
-    color: "brand-background-strong",
-  },
-  grid: {
-    display: true,
-    opacity: 100,
-    color: "neutral-alpha-medium",
-    width: "0.25rem",
-    height: "0.25rem",
-  },
-  lines: {
-    display: false,
-    opacity: 100,
-    color: "neutral-alpha-weak",
-    size: "16",
-    thickness: 1,
-    angle: 45,
-  },
-};
-
-const mailchimp: MailchimpConfig = {
-  action: "https://url/subscribe/post?parameters",
-  effects: {
-    mask: {
-      cursor: false,
-      x: 50,
-      y: 0,
-      radius: 100,
-    },
-    gradient: {
-      display: false,
-      opacity: 90,
-      x: 50,
-      y: 0,
-      width: 50,
-      height: 50,
-      tilt: 0,
-      colorStart: "accent-background-strong",
-      colorEnd: "static-transparent",
-    },
-    dots: {
-      display: false,
-      opacity: 10,
-      size: "1",
-      color: "brand-on-background-weak",
-    },
-    grid: {
-      display: true,
-      opacity: 50,
-      color: "neutral-alpha-medium",
-      width: "0.25rem",
-      height: "0.25rem",
-    },
-    lines: {
-      display: true,
-      opacity: 20,
-      color: "neutral-alpha-medium",
-      size: "16",
-      thickness: 1,
-      angle: 90,
-    },
-  },
-};
-
-// default schema data
 const schema: SchemaConfig = {
   logo: "",
-  type: "Organization",
-  name: "Once UI",
+  type: "Person",
+  name: `${person.firstName} ${person.lastName}`,
   description: home.description,
-  email: "lorant@once-ui.com",
+  email: person.email,
 };
 
-// social links
 const sameAs: SameAsConfig = {
-  threads: "https://www.threads.com/@once_ui",
-  linkedin: "https://www.linkedin.com/company/once-ui/",
-  discord: "https://discord.com/invite/5EyAQ4eNdS",
+  github: "https://github.com/derpx06",
+  linkedin: "https://www.linkedin.com/in/manas-khairnar-98329132b/",
 };
 
-// social sharing configuration for blog posts
 const socialSharing: SocialSharingConfig = {
   display: true,
-  platforms: {
-    x: true,
-    linkedin: true,
-    facebook: false,
-    pinterest: false,
-    whatsapp: false,
-    reddit: false,
-    telegram: false,
-    email: true,
-    copyLink: true,
-  },
+  platforms: { x: true, linkedin: true, facebook: false, pinterest: false, whatsapp: false, reddit: false, telegram: false, email: true, copyLink: true },
 };
 
-export {
-  display,
-  mailchimp,
-  routes,
-  protectedRoutes,
-  baseURL,
-  fonts,
-  style,
-  schema,
-  sameAs,
-  socialSharing,
-  effects,
-  dataStyle,
-};
+export { display, routes, protectedRoutes, baseURL, fonts, displayFonts, style, schema, sameAs, socialSharing, dataStyle };

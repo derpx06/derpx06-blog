@@ -64,16 +64,11 @@ import { useIsBreakpoint } from "@/hooks/use-is-breakpoint"
 import { useWindowSize } from "@/hooks/use-window-size"
 import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
-// --- Components ---
-import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
-
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import { uploadImage, MAX_IMAGE_BYTES } from "@/components/editor/upload"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
-
-import content from "@/components/tiptap-templates/simple/data/content.json"
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -144,12 +139,6 @@ const MainToolbarContent = ({
       </ToolbarGroup>
 
       <Spacer />
-
-      {isMobile && <ToolbarSeparator />}
-
-      <ToolbarGroup>
-        <ThemeToggle />
-      </ToolbarGroup>
     </>
   )
 }
@@ -183,7 +172,16 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor() {
+export function SimpleEditor({
+  content = "",
+  onChange,
+  onUploadError,
+}: {
+  /** Initial HTML. Re-mount (key) to load different content. */
+  content?: string
+  onChange?: (html: string) => void
+  onUploadError?: (error: Error) => void
+}) {
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
@@ -222,13 +220,14 @@ export function SimpleEditor() {
       Selection,
       ImageUploadNode.configure({
         accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
+        maxSize: MAX_IMAGE_BYTES,
         limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error("Upload failed:", error),
+        upload: uploadImage,
+        onError: (error) => onUploadError?.(error),
       }),
     ],
     content,
+    onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
   })
 
   const rect = useCursorVisibility({

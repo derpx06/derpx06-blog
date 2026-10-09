@@ -1,51 +1,51 @@
-import { Column, Heading, Meta, Schema, Row, Button } from "@once-ui-system/core";
-import { Mailchimp } from "@/components";
-import { Posts } from "@/components/blog/Posts";
-import { baseURL, blog, person, newsletter } from "@/resources";
+import fs from "fs";
+import path from "path";
+import { Meta, Schema } from "@once-ui-system/core";
+import { baseURL, blog, person } from "@/resources";
+import { getPosts } from "@/utils/utils";
+import { formatShortDate, readingTime, tagOf } from "@/lib/article";
+import { WritingList } from "@/components/listing/WritingList";
+import type { ListItem } from "@/components/listing/WritingList";
 
 export async function generateMetadata() {
   return Meta.generate({
     title: blog.title,
     description: blog.description,
-    baseURL: baseURL,
+    baseURL,
     image: `/api/og/generate?title=${encodeURIComponent(blog.title)}`,
     path: blog.path,
   });
 }
 
 export default function Blog() {
+  const items: ListItem[] = getPosts(["src", "app", "blog", "posts"])
+    .sort((a, b) => new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime())
+    .map((p) => ({
+      slug: p.slug,
+      href: `${blog.path}/${p.slug}`,
+      title: p.metadata.title,
+      summary: p.metadata.summary,
+      date: new Date(p.metadata.publishedAt).toISOString(),
+      dateLabel: formatShortDate(p.metadata.publishedAt),
+      tag: tagOf(p.metadata),
+      topics: p.metadata.topics ?? [],
+      minutes: readingTime(p.content),
+      image: p.metadata.image && fs.existsSync(path.join(process.cwd(), "public", p.metadata.image)) ? p.metadata.image : null,
+      kind: "article" as const,
+    }));
+
   return (
-    <Column maxWidth="m" paddingTop="24">
+    <>
       <Schema
-        as="blogPosting"
+        as="webPage"
         baseURL={baseURL}
         title={blog.title}
         description={blog.description}
         path={blog.path}
         image={`/api/og/generate?title=${encodeURIComponent(blog.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}/blog`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        author={{ name: person.name, url: `${baseURL}${blog.path}`, image: `${baseURL}${person.avatar}` }}
       />
-      <Heading as="h1" marginBottom="l" variant="heading-strong-xl" marginLeft="24">
-        {blog.title}
-      </Heading>
-      <Row marginLeft="24" marginBottom="16">
-        <Button href="/blog/editor" variant="secondary" size="s">
-          Write Article
-        </Button>
-      </Row>
-      <Column fillWidth flex={1} gap="40">
-        <Posts range={[1, 1]} thumbnail />
-        <Posts range={[2, 3]} columns="2" thumbnail direction="column" />
-        <Mailchimp marginBottom="l" />
-        <Heading as="h2" variant="heading-strong-xl" marginLeft="l">
-          Earlier posts
-        </Heading>
-        <Posts range={[4]} columns="2" />
-      </Column>
-    </Column>
+      <WritingList items={items} />
+    </>
   );
 }

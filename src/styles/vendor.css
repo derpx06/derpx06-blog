@@ -1,0 +1,4 @@
+/* Once UI (used only by MDX internals) sits in a cascade layer so site styles always win regardless of specificity. */
+@import "@once-ui-system/core/css/styles.css" layer(onceui);
+@import "@once-ui-system/core/css/tokens.css" layer(onceui);
+@import "katex/dist/katex.min.css" layer(vendor);

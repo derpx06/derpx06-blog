@@ -1,5 +1,6 @@
-import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <SimpleEditor />
+// Legacy template route; the real writing surface is the admin editor.
+export default function SimplePage() {
+  redirect("/blog/editor");
 }

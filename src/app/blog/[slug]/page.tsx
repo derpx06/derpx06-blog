@@ -1,199 +1,61 @@
 import { notFound } from "next/navigation";
-import { CustomMDX, ScrollToHash } from "@/components";
-import {
-  Meta,
-  Schema,
-  Column,
-  Heading,
-  HeadingNav,
-  Icon,
-  Row,
-  Text,
-  SmartLink,
-  Avatar,
-  Media,
-  Line,
-} from "@once-ui-system/core";
-import { baseURL, about, blog, person } from "@/resources";
-import { formatDate } from "@/utils/formatDate";
+import { Meta } from "@once-ui-system/core";
+import type { Metadata } from "next";
+import { CustomMDX } from "@/components/mdx";
+import { ArticleLayout } from "@/components/article/ArticleLayout";
+import { baseURL, blog } from "@/resources";
 import { getPosts, getPostsHybrid } from "@/utils/utils";
-import { Metadata } from "next";
-import React from "react";
-import { Posts } from "@/components/blog/Posts";
-import { ShareSection } from "@/components/blog/ShareSection";
+import { extractToc, formatShortDate, readingTime, relatedPosts, tagOf } from "@/lib/article";
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
-  const posts = useMongo === "1" || useMongo === "true" ? await getPostsHybrid(["src", "app", "blog", "posts"]) : getPosts(["src", "app", "blog", "posts"]);
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+const DIR = ["src", "app", "blog", "posts"];
+const useMongo = () => ["1", "true"].includes((process.env.USE_MONGODB || "false").toLowerCase());
+const loadPosts = async () => (useMongo() ? getPostsHybrid(DIR) : getPosts(DIR));
+
+export async function generateStaticParams() {
+  return (await loadPosts()).map((post) => ({ slug: post.slug }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string | string[] }>;
-}): Promise<Metadata> {
-  const routeParams = await params;
-  const slugPath = Array.isArray(routeParams.slug)
-    ? routeParams.slug.join("/")
-    : routeParams.slug || "";
-
-  const posts = getPosts(["src", "app", "blog", "posts"]);
-  let post = posts.find((post) => post.slug === slugPath);
-
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = (await loadPosts()).find((p) => p.slug === slug);
   if (!post) return {};
-
   const image = post.metadata.image || `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`;
   const path = `${blog.path}/${post.slug}`;
-  const canonicalUrl = `${baseURL}${path}`;
-
-  const baseMeta = Meta.generate({
-    title: post.metadata.title,
-    description: post.metadata.summary,
-    baseURL: baseURL,
-    image,
-    path,
-  });
-
   return {
-    ...baseMeta,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    openGraph: {
-      type: "article",
-      title: post.metadata.title,
-      description: post.metadata.summary,
-      url: canonicalUrl,
-      images: [image],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.metadata.title,
-      description: post.metadata.summary,
-      images: [image],
-    },
+    ...Meta.generate({ title: post.metadata.title, description: post.metadata.summary, baseURL, image, path }),
+    alternates: { canonical: `${baseURL}${path}` },
+    openGraph: { type: "article", title: post.metadata.title, description: post.metadata.summary, url: `${baseURL}${path}`, images: [image] },
+    twitter: { card: "summary_large_image", title: post.metadata.title, description: post.metadata.summary, images: [image] },
   };
 }
 
-export default async function Blog({ params }: { params: Promise<{ slug: string | string[] }> }) {
-  const routeParams = await params;
-  const slugPath = Array.isArray(routeParams.slug)
-    ? routeParams.slug.join("/")
-    : routeParams.slug || "";
+export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const posts = await loadPosts();
+  const post = posts.find((p) => p.slug === slug);
+  if (!post) notFound();
 
-  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
-  let post;
-  if (useMongo === "1" || useMongo === "true") {
-    const postsList = await getPostsHybrid(["src", "app", "blog", "posts"]);
-    post = postsList.find((p) => p.slug === slugPath);
-  } else {
-    post = getPosts(["src", "app", "blog", "posts"]).find((post) => post.slug === slugPath);
-  }
-
-  if (!post) {
-    notFound();
-  }
-
-  const avatars =
-    post.metadata.team?.map((person) => ({
-      src: person.avatar,
-    })) || [];
+  const related = relatedPosts(posts, post).map((r) => ({
+    href: `${blog.path}/${r.slug}`,
+    title: r.metadata.title,
+    meta: [tagOf(r.metadata), formatShortDate(r.metadata.publishedAt)].filter(Boolean).join(" · "),
+  }));
 
   return (
-    <Row fillWidth>
-      <Row maxWidth={12} m={{ hide: true }} />
-      <Row fillWidth horizontal="center">
-        <Column as="section" maxWidth="m" horizontal="center" gap="l" paddingTop="24">
-          <Schema
-            as="blogPosting"
-            baseURL={baseURL}
-            path={`${blog.path}/${post.slug}`}
-            title={post.metadata.title}
-            description={post.metadata.summary}
-            datePublished={post.metadata.publishedAt}
-            dateModified={post.metadata.publishedAt}
-            image={
-              post.metadata.image ||
-              `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`
-            }
-            author={{
-              name: person.name,
-              url: `${baseURL}${about.path}`,
-              image: `${baseURL}${person.avatar}`,
-            }}
-          />
-          <Column maxWidth="s" gap="16" horizontal="center" align="center">
-            <SmartLink href="/blog">
-              <Text variant="label-strong-m">Blog</Text>
-            </SmartLink>
-            <Text variant="body-default-xs" onBackground="neutral-weak" marginBottom="12">
-              {post.metadata.publishedAt && formatDate(post.metadata.publishedAt)}
-            </Text>
-            <Heading as="h1" variant="display-strong-m">{post.metadata.title}</Heading>
-          </Column>
-          <Row marginBottom="32" horizontal="center">
-            <Row gap="16" vertical="center">
-              <Avatar size="s" src={person.avatar} />
-              <Text variant="label-default-m" onBackground="brand-weak">
-                {person.name}
-              </Text>
-            </Row>
-          </Row>
-          {post.metadata.image && require("fs").existsSync(require("path").join(process.cwd(), "public", post.metadata.image)) && (
-            <Media
-              src={post.metadata.image}
-              alt={post.metadata.title}
-              aspectRatio="16/9"
-              priority
-              sizes="(min-width: 768px) 100vw, 768px"
-              border="neutral-alpha-weak"
-              radius="l"
-              marginTop="12"
-              marginBottom="8"
-            />
-          )}
-          <Column as="article" maxWidth="s">
-            <CustomMDX source={post.content} />
-          </Column>
-
-          <ShareSection
-            title={post.metadata.title}
-            url={`${baseURL}${blog.path}/${post.slug}`}
-          />
-
-          <Column fillWidth gap="40" horizontal="center" marginTop="40">
-            <Line maxWidth="40" />
-            <Heading as="h2" variant="heading-strong-xl" marginBottom="24">
-              Recent posts
-            </Heading>
-            <Posts exclude={[post.slug]} range={[1, 4]} columns="2" thumbnail direction="column" />
-          </Column>
-          <ScrollToHash />
-        </Column>
-      </Row>
-      <Column
-        maxWidth={16}
-        paddingLeft="40"
-        fitHeight
-        position="sticky"
-        top="80"
-        gap="16"
-        m={{ hide: true }}
-        className="sticky-sidebar"
-      >
-        <Row
-          gap="12"
-          paddingLeft="2"
-          vertical="center"
-          onBackground="neutral-medium"
-          textVariant="label-default-s"
-        >
-        </Row>
-        <HeadingNav fitHeight />
-      </Column>
-    </Row>
+    <ArticleLayout
+      kind="article"
+      path={`${blog.path}/${post.slug}`}
+      title={post.metadata.title}
+      summary={post.metadata.summary}
+      publishedAt={post.metadata.publishedAt}
+      tag={tagOf(post.metadata) || undefined}
+      image={post.metadata.image}
+      minutes={readingTime(post.content)}
+      toc={extractToc(post.content)}
+      back={{ href: blog.path, label: "All writing" }}
+      related={related}
+    >
+      <CustomMDX source={post.content} />
+    </ArticleLayout>
   );
 }

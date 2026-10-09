@@ -6,3 +6,8 @@
 /.agent
 /.agents
 /.codex
+
+# local secrets and scratch
+.env.local
+.env.vercel
+content-backup/

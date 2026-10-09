@@ -1,67 +1,54 @@
-import {
-  Heading,
-  Text,
-  Button,
-  Avatar,
-  RevealFx,
-  Column,
-  Row,
-  Schema,
-  Meta,
-  Grid,
-} from "@once-ui-system/core";
-import { home, about, person, baseURL, routes } from "@/resources";
-import { Mailchimp, SeeAllButton } from "@/components";
-import { Posts } from "@/components/blog/Posts";
-import Post from "@/components/blog/Post";
+import Link from "next/link";
+import { Meta, Schema } from "@once-ui-system/core";
+import { baseURL, home, about, person } from "@/resources";
 import { courses } from "@/resources/courses";
-import { CanvasTextDemo } from "@/components/ui/canvas-text-demo";
-import { HeroTyping } from "@/components/ui/hero-typing";
-import { TypingAnimation } from "@/components/ui/typing-animation";
+import { getPosts } from "@/utils/utils";
+import { formatShortDate, readingTime, tagOf } from "@/lib/article";
+import { partName } from "@/lib/courses";
+import { HeroFx } from "@/components/site/HeroFx";
+import { Icon } from "@/components/site/icons";
+import { SaveButton } from "@/components/article/ArticleReader";
+import { CopyEmail, HeroHeadline } from "./HomeHero";
+import s from "./home.module.scss";
 
 export async function generateMetadata() {
-  return Meta.generate({
-    title: home.title,
-    description: home.description,
-    baseURL: baseURL,
-    path: home.path,
-    image: home.image,
-  });
+  return Meta.generate({ title: home.title, description: home.description, baseURL, path: home.path, image: home.image });
 }
 
-type SectionProps = {
-  title: string;
-  href: string;
-  children: React.ReactNode;
-};
+const GITHUB = "https://github.com/derpx06";
+const MAX_PARTS = 5;
 
-function HomeSection({ title, href, children }: SectionProps) {
-  return (
-    <RevealFx translateY="8" fillWidth>
-      <Column
-        fillWidth
-        background="surface"
-        border="neutral-alpha-weak"
-        radius="l"
-        paddingX="20"
-        paddingY="20"
-        gap="20"
-      >
-        <Row fillWidth horizontal="between" vertical="center" paddingX="4">
-          <Heading as="h2" variant="display-strong-xs" wrap="balance">
-            {title}
-          </Heading>
-          <SeeAllButton href={href} />
-        </Row>
-        <Column fillWidth>{children}</Column>
-      </Column>
-    </RevealFx>
-  );
+type Kind = "article" | "explainer";
+const SOURCES: { kind: Kind; label: string; base: string; dir: string[] }[] = [
+  { kind: "article", label: "Essay", base: "/blog", dir: ["src", "app", "blog", "posts"] },
+  { kind: "explainer", label: "Explainer", base: "/explainers", dir: ["src", "app", "explainers", "posts"] },
+];
+
+function latest(n: number) {
+  return SOURCES.flatMap(({ kind, label, base, dir }) =>
+    getPosts(dir).map((p) => ({
+      kind,
+      label,
+      slug: p.slug,
+      href: `${base}/${p.slug}`,
+      title: p.metadata.title,
+      summary: p.metadata.summary,
+      tag: tagOf(p.metadata),
+      date: p.metadata.publishedAt,
+      time: new Date(p.metadata.publishedAt).getTime() || 0,
+      mins: readingTime(p.content),
+    })),
+  )
+    .sort((a, b) => b.time - a.time)
+    .slice(0, n);
 }
 
 export default function Home() {
+  const posts = latest(4);
+  const newest = posts[0];
+
   return (
-    <Column maxWidth="m" gap="xl" paddingY="16" horizontal="center">
+    <>
       <Schema
         as="webPage"
         baseURL={baseURL}
@@ -69,116 +56,116 @@ export default function Home() {
         title={home.title}
         description={home.description}
         image={`/api/og/generate?title=${encodeURIComponent(home.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}${about.path}`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        author={{ name: person.name, url: `${baseURL}${about.path}`, image: `${baseURL}${person.avatar}` }}
       />
 
-      <RevealFx translateY="8" fillWidth>
-        <Column
-          fillWidth
-          horizontal="center"
-          align="center"
-          gap="12"
-          paddingY="20"
-          paddingX="8"
-        >
-          <Text variant="label-default-m" onBackground="brand-weak">
-            Software Development • AI Engineering • Mobile Apps
-          </Text>
-          <h1 className="sr-only">{home.title}</h1>
-          <CanvasTextDemo />
-          {/* <Text variant="body-default-l" align="center" onBackground="neutral-weak" style={{ maxWidth: "56ch" }}>
-            <TypingAnimation delay={800} startOnView={true}>
-              {home.subline as string}
-            </TypingAnimation>
-          </Text> */}
-          <HeroTyping className="text-4xl font-bold" />
-          <Row gap="12" s={{ direction: "column" }}>
-            <Button
-              id="about"
-              data-border="rounded"
-              href={about.path}
-              variant="secondary"
-              size="m"
-              weight="default"
-              arrowIcon
-            >
-              <Row gap="8" vertical="center" paddingRight="4">
-                {about.avatar.display && (
-                  <Avatar
-                    marginRight="8"
-                    style={{ marginLeft: "-0.75rem" }}
-                    src={person.avatar}
-                    size="m"
-                  />
-                )}
-                {about.title}
-              </Row>
-            </Button>
-            {routes["/learn"] && (
-              <Button href="/learn" variant="primary" size="m" arrowIcon>
-                Explore
-              </Button>
-            )}
-          </Row>
-        </Column>
-      </RevealFx>
+      <HeroFx className={`hero ${s.hero}`}>
+        <div className={s.heroBg} aria-hidden="true">
+          <div className={s.glow} />
+          <div className={s.spot} />
+          <div className={s.dots} />
+          <div className={s.dotsHot} />
+        </div>
+        <div className="heroFade" aria-hidden="true" />
+        <div className={`wrap ${s.heroInner}`}>
+          <span className={s.status}><span className={s.statusDot} />Learning systems &amp; AI in public</span>
+          <HeroHeadline />
+          <p className={s.heroLede}>Notes from learning system design, distributed systems and AI — what I got wrong, and what finally made it click.</p>
+          <div className={s.actions}>
+            <Link className="btnPrimary" href="/explainers">Start with an explainer <span className={s.arrow}>→</span></Link>
+            <Link className="btnGhost" href="/learn">Browse notes</Link>
+          </div>
+          {newest && (
+            <Link className={s.latestLink} href={newest.href}>
+              <span className="eyebrow">Latest</span>
+              <span className={s.latestTitle}>{newest.title} →</span>
+            </Link>
+          )}
+        </div>
+      </HeroFx>
 
-      {routes["/learn"] && (
-        <HomeSection title="Latest Courses" href="/learn">
-          <Row flex={3} paddingX="8">
-            <Grid columns="2" s={{ columns: 1 }} fillWidth marginBottom="40" gap="16">
-              {courses.slice(0, 4).map((course) => (
-                <Post
-                  key={course.id}
-                  post={{
-                    slug: course.slug,
-                    metadata: {
-                      title: course.title,
-                      summary: course.description,
-                      image: course.image,
-                      publishedAt: "2024-01-01",
-                    },
-                    content: "",
-                  }}
-                  thumbnail
-                  pathPrefix="learn"
-                  direction="column"
-                />
-              ))}
-            </Grid>
-          </Row>
-        </HomeSection>
-      )}
-      {routes["/explainers"] && (
-        <HomeSection title="Latest Explainers" href="/explainers">
-          <Row flex={3} paddingX="8">
-            <Posts
-              range={[1, 4]}
-              columns="2"
-              thumbnail
-              direction="column"
-              glowing
-              source={["src", "app", "explainers", "posts"]}
-              pathPrefix="explainers"
-            />
-          </Row>
-        </HomeSection>
-      )}
-      {routes["/blog"] && (
-        <HomeSection title="Latest From The Blog" href="/blog">
-          <Row flex={3} paddingX="8">
-            <Posts range={[1, 6]} columns="3" thumbnail direction="column" />
-          </Row>
-        </HomeSection>
-      )}
+      <div className="wrap">
+        <section className={s.section} aria-labelledby="latest">
+          <div className={s.head}>
+            <div className={s.headCopy}>
+              <span className="eyebrow">01 · Latest</span>
+              <h2 id="latest" className="h2">Latest writing</h2>
+              <p className="lede">Essays argue one point. Explainers walk through one paper. Both are written after I got it wrong at least once.</p>
+            </div>
+            <div className={s.headLinks}>
+              <Link href="/blog">All writing →</Link>
+              <Link href="/explainers">All explainers →</Link>
+            </div>
+          </div>
+          <div className={s.rows}>
+            {posts.map((p) => (
+              <div key={p.href} className={s.row}>
+                <Link href={p.href} className={s.rowLink}>
+                  <span className="eyebrow">{p.label}{p.tag && ` · ${p.tag}`} · {formatShortDate(p.date)}</span>
+                  <span className={s.rowTitle}>{p.title}</span>
+                  <span className={s.rowSummary}>{p.summary}</span>
+                  <span className={`mono ${s.rowMeta}`}>{p.mins} min read</span>
+                </Link>
+                <div className={s.rowSave}>
+                  <SaveButton compact item={{ kind: p.kind, slug: p.slug, title: p.title, href: p.href, meta: `${p.mins} min` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      <Mailchimp />
+        <section className={s.section} aria-labelledby="notes">
+          <div className={s.head}>
+            <div className={s.headCopy}>
+              <span className="eyebrow">02 · Notes</span>
+              <h2 id="notes" className="h2">Notebooks I&apos;m working through</h2>
+              <p className="lede">Study notes in order, one topic per notebook. Each part builds on the last.</p>
+            </div>
+            <div className={s.headLinks}><Link href="/learn">All notebooks →</Link></div>
+          </div>
+          <div className={s.cards}>
+            {courses.map((c) => {
+              const notes = c.topics.reduce((n, t) => n + t.links.length, 0);
+              const parts = c.topics.map((t) => partName(t.title));
+              return (
+                <Link key={c.id} href={`/learn/${c.slug}`} className={`card ${s.course}`}>
+                  <span className="eyebrow">{c.topics.length} parts · {notes} notes</span>
+                  <span className={s.courseTitle}>{c.title}</span>
+                  <span className={s.courseDesc}>{c.description}</span>
+                  <span className={s.rail}>
+                    {parts.slice(0, MAX_PARTS).map((p) => (
+                      <span key={p} className={s.railItem}><span className={s.railDot} />{p}</span>
+                    ))}
+                    {parts.length > MAX_PARTS && <span className={`${s.railItem} ${s.railMore}`}>+{parts.length - MAX_PARTS} more</span>}
+                  </span>
+                  <span className={s.courseCta}>Open syllabus →</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
 
-    </Column>
-
+        <section className={`darkCard ${s.contact}`} aria-labelledby="contact">
+          <div className="glow" aria-hidden="true" />
+          <div className={s.contactInner}>
+            <div className={s.contactCopy}>
+              <span className="eyebrow">Open to conversations</span>
+              <h2 id="contact" className={s.contactH}>Building something and want a second pair of eyes?</h2>
+              <p className={s.contactP}>Problems, collaborations or corrections — I read every email.</p>
+            </div>
+            <div className={s.contactActions}>
+              <div className={s.contactBtns}>
+                <a className={`btn ${s.mail}`} href={`mailto:${person.email}`}><Icon name="mail" size={15} />Email me</a>
+                <a className={`btn ${s.gh}`} href={GITHUB} target="_blank" rel="noopener" aria-label="GitHub"><Icon name="github" size={17} /></a>
+              </div>
+              <div className={s.emailRow}>
+                <span className={`mono ${s.email}`}>{person.email}</span>
+                <CopyEmail email={person.email} />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }

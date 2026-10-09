@@ -3,112 +3,46 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { routes, protectedRoutes } from "@/resources";
-import { Flex, Spinner, Button, Heading, Column, PasswordInput } from "@once-ui-system/core";
 import NotFound from "@/app/not-found";
 
-interface RouteGuardProps {
-  children: React.ReactNode;
+const PREFIXES = ["/blog", "/learn", "/explainers"] as const;
+
+function routeEnabled(pathname: string) {
+  if (pathname in routes) return routes[pathname as keyof typeof routes];
+  if (PREFIXES.some((p) => pathname.startsWith(p) && routes[p])) return true;
+  // routes not listed in config (saved, signin, api pages) are always on
+  return !Object.keys(routes).some((r) => r !== "/" && pathname.startsWith(r));
 }
 
-const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
-  const pathname = usePathname();
-  const [isRouteEnabled, setIsRouteEnabled] = useState(false);
-  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+/** Renders children immediately. Only paths listed in protectedRoutes get the password gate. */
+export function RouteGuard({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() || "/";
+  const needsPassword = !!protectedRoutes[pathname as keyof typeof protectedRoutes];
+  const [authed, setAuthed] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const performChecks = async () => {
-      setLoading(true);
-      setIsRouteEnabled(false);
-      setIsPasswordRequired(false);
-      setIsAuthenticated(false);
+    if (!needsPassword) return;
+    fetch("/api/check-auth").then((r) => setAuthed(r.ok)).catch(() => setAuthed(false));
+  }, [needsPassword, pathname]);
 
-      const checkRouteEnabled = () => {
-        if (!pathname) return false;
+  if (!routeEnabled(pathname)) return <NotFound />;
+  if (!needsPassword || authed) return <>{children}</>;
+  if (authed === null) return null;
 
-        if (pathname in routes) {
-          return routes[pathname as keyof typeof routes];
-        }
-
-        const dynamicRoutes = ["/blog", "/work", "/learn", "/explainers"] as const;
-        for (const route of dynamicRoutes) {
-          if (pathname?.startsWith(route) && routes[route]) {
-            return true;
-          }
-        }
-
-        return false;
-      };
-
-      const routeEnabled = checkRouteEnabled();
-      setIsRouteEnabled(routeEnabled);
-
-      if (protectedRoutes[pathname as keyof typeof protectedRoutes]) {
-        setIsPasswordRequired(true);
-
-        const response = await fetch("/api/check-auth");
-        if (response.ok) {
-          setIsAuthenticated(true);
-        }
-      }
-
-      setLoading(false);
-    };
-
-    performChecks();
-  }, [pathname]);
-
-  const handlePasswordSubmit = async () => {
-    const response = await fetch("/api/authenticate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
-
-    if (response.ok) {
-      setIsAuthenticated(true);
-      setError(undefined);
-    } else {
-      setError("Incorrect password");
-    }
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const r = await fetch("/api/authenticate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+    if (r.ok) setAuthed(true); else setError("Incorrect password");
   };
 
-  if (loading) {
-    return (
-      <Flex fillWidth paddingY="128" horizontal="center">
-        <Spinner />
-      </Flex>
-    );
-  }
-
-  if (!isRouteEnabled) {
-    return <NotFound />;
-  }
-
-  if (isPasswordRequired && !isAuthenticated) {
-    return (
-      <Column paddingY="128" maxWidth={24} gap="24" center>
-        <Heading align="center" wrap="balance">
-          This page is password protected
-        </Heading>
-        <Column fillWidth gap="8" horizontal="center">
-          <PasswordInput
-            id="password"
-            label="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            errorMessage={error}
-          />
-          <Button onClick={handlePasswordSubmit}>Submit</Button>
-        </Column>
-      </Column>
-    );
-  }
-
-  return <>{children}</>;
-};
-
-export { RouteGuard };
+  return (
+    <form onSubmit={submit} style={{ maxWidth: 360, margin: "120px auto", display: "flex", flexDirection: "column", gap: 12 }}>
+      <h1 className="h2">This page is password protected</h1>
+      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="Password" placeholder="Password" style={{ height: 44, borderRadius: 10, border: "1px solid var(--line-strong)", padding: "0 14px", background: "var(--card)", color: "inherit", font: "inherit" }} />
+      {error && <span style={{ color: "#dc2626", fontSize: 13 }}>{error}</span>}
+      <button type="submit" className="btnPrimary">Unlock</button>
+    </form>
+  );
+}

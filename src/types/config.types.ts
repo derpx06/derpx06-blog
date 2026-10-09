@@ -126,7 +126,6 @@ export type EffectsConfig = {
  */
 export type MailchimpConfig = {
   action: string;
-  effects: EffectsConfig;
 };
 
 /**
@@ -143,11 +142,7 @@ export type SchemaConfig = {
 /**
  * Social links for organization.
  */
-export type SameAsConfig = {
-  threads: string;
-  linkedin: string;
-  discord: string;
-};
+export type SameAsConfig = Record<string, string>;
 
 /**
  * Social sharing configuration for blog posts.
@@ -172,7 +167,6 @@ export type SocialSharingConfig = {
  */
 export type OnceUIConfig = {
   display: DisplayConfig;
-  mailchimp: MailchimpConfig;
   routes: RoutesConfig;
   protectedRoutes: ProtectedRoutesConfig;
   baseURL: string;
@@ -181,6 +175,5 @@ export type OnceUIConfig = {
   schema: SchemaConfig;
   sameAs: SameAsConfig;
   socialSharing: SocialSharingConfig;
-  effects: EffectsConfig;
   dataStyle: DataStyleConfig;
 };

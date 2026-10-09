@@ -1,0 +1,51 @@
+.footer {
+  margin-top: 96px; margin-inline: calc(50% - 50vw); background: var(--dark); color: var(--dark-ink);
+  border-top: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
+}
+.letter {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 24px 48px; align-items: end;
+  padding: 56px 0 48px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.kicker { display: flex; align-items: center; gap: 8px; font: 500 11px/1 var(--font-jbmono); letter-spacing: 0.14em; text-transform: uppercase; color: #8d8a87; }
+.kicker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); }
+.letterH { font: 800 clamp(26px, 3vw, 34px)/1.08 var(--font-archivo); letter-spacing: -0.035em; max-width: 20ch; text-wrap: balance; margin: 12px 0; }
+.letterP { font: 400 14.5px/1.55 var(--font-archivo); color: #a19d9a; max-width: 46ch; margin: 0; }
+.form {
+  display: flex; align-items: center; gap: 6px; height: 52px; padding: 0 6px 0 16px; box-sizing: border-box; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.14); color: #8d8a87;
+}
+.form input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--dark-ink); padding: 0 6px; font: 400 15px/1 var(--font-archivo); }
+.form input::placeholder { color: #8d8a87; }
+.form input:disabled { opacity: 0.6; }
+.submit {
+  height: 40px; border: 0; border-radius: 9px; background: var(--dark-ink); color: #0e0d0d; padding: 0 16px; font: 700 13px/1 var(--font-archivo);
+  cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; transition: opacity 0.15s;
+}
+.submit:hover { opacity: 0.86; }
+.submit:disabled { opacity: 0.4; cursor: default; }
+.submit em { font-style: normal; color: var(--acc); }
+.note { margin: 8px 0 0; font: 500 11.5px/1.5 var(--font-jbmono); color: #8d8a87; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 36px 32px; padding: 48px 0; }
+.about { display: flex; flex-direction: column; gap: 16px; grid-column: span 2; min-width: 0; max-width: 340px; }
+@media (max-width: 420px) { .about { grid-column: span 1; } }
+.brand { display: flex; align-items: center; gap: 9px; font: 800 16px/1 var(--font-archivo); letter-spacing: -0.035em; }
+.brand i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--dark-ink); }
+.brand i::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+.brand em { font-style: normal; color: var(--acc); }
+.blurb { font: 400 14px/1.6 var(--font-archivo); color: #a19d9a; text-wrap: pretty; }
+.social { display: flex; gap: 6px; }
+.social a { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.12); color: #bab6b6; transition: background 0.15s, color 0.15s; }
+.social a:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.col { display: flex; flex-direction: column; gap: 4px; }
+.colH { font: 500 11px/1 var(--font-jbmono); letter-spacing: 0.14em; text-transform: uppercase; color: #6f6b69; margin-bottom: 10px; }
+.col a { padding: 6px 0; color: #d6d3d1; font: 500 14px/1.3 var(--font-archivo); transition: color 0.15s; }
+.col a:hover { color: #fff; }
+
+.wm { display: block; width: 100%; height: auto; user-select: none; }
+.wm text { font: 900 186px var(--font-archivo); letter-spacing: -4px; }
+
+.bar { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.barIn { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px var(--gutter); font: 500 12px/1 var(--font-jbmono); color: #8d8a87; }
+.top { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; border-radius: 8px; border: 0; background: transparent; color: #8d8a87; font: inherit; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.top:hover { background: rgba(255, 255, 255, 0.07); color: var(--dark-ink); }
