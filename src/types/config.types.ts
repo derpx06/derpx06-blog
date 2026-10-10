@@ -29,6 +29,7 @@ export type FontsConfig = {
   serif: NextFontWithVariable;
   sans: NextFontWithVariable;
   mono: NextFontWithVariable;
+  pixel: NextFontWithVariable;
 };
 
 /**

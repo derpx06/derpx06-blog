@@ -1,5 +1,6 @@
 import "@/resources/custom.css";
 import "@/resources/design-system.css";
+import "@/styles/theme.css";
 import "katex/dist/katex.min.css";
 
 import { Analytics } from "@vercel/analytics/next";
@@ -9,6 +10,7 @@ import type { Metadata } from "next";
 
 import { Providers, RouteGuard } from "@/components";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { SiteNav } from "@/components/site/SiteNav";
 import { THEME_INIT_SCRIPT } from "@/components/site/theme";
 import { generateMeta } from "@/lib/metadata";
 import { baseURL, fonts, home } from "@/resources";
@@ -28,7 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={classNames(fonts.serif.variable, fonts.sans.variable, fonts.mono.variable)}
+      className={classNames(fonts.serif.variable, fonts.sans.variable, fonts.mono.variable, fonts.pixel.variable)}
     >
       <head>
         <script
@@ -39,15 +41,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body suppressHydrationWarning>
         <Providers>
-          <a className="ds-skip" href="#main">
+          <a className="skipLink" href="#main">
             Skip to content
           </a>
-          <div className="ds-app">
-            <div className="ds-sheet">
-              <RouteGuard>{children}</RouteGuard>
-              <SiteFooter />
-            </div>
+          <SiteNav />
+          <div className="main">
+            <RouteGuard>{children}</RouteGuard>
           </div>
+          <SiteFooter />
         </Providers>
         <Analytics />
         <SpeedInsights />

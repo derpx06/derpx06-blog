@@ -1,4 +1,4 @@
-import { Figtree, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Archivo, DM_Serif_Display, JetBrains_Mono, VT323 } from "next/font/google";
 import type {
   DisplayConfig,
   EditorialConfig,
@@ -34,28 +34,12 @@ const display: DisplayConfig = {
 
 /* --------------------------------------------------------------- typography */
 
-const serif = Instrument_Serif({
-  variable: "--font-serif",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  display: "swap",
-});
+const serif = DM_Serif_Display({ variable: "--font-serif", subsets: ["latin"], weight: "400", display: "swap" });
+const sans = Archivo({ variable: "--font-sans-ds", subsets: ["latin"], display: "swap" });
+const mono = JetBrains_Mono({ variable: "--font-mono-ds", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
+const pixel = VT323({ variable: "--font-pixel", subsets: ["latin"], weight: "400", display: "swap" });
 
-const sans = Figtree({
-  variable: "--font-sans-ds",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  variable: "--font-mono-ds",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fonts: FontsConfig = { serif, sans, mono };
+const fonts: FontsConfig = { serif, sans, mono, pixel };
 
 /* ---------------------------------------------------------------- editorial */
 
