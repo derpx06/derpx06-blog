@@ -62,7 +62,8 @@ export function SiteNav() {
       <div className={`wrap ${s.inner}`}>
         <nav className={s.nav} aria-label="Primary" ref={ref}>
           <Link href="/" className={s.brand} aria-label="derpx06.dev home">
-            <span className={s.mark}><span /></span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className={s.mark} src="/images/derpx06-avatar.png" alt="" width={38} height={38} />
             <span>derpx06<em>.</em>dev</span>
           </Link>
 

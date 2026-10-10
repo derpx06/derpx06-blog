@@ -34,8 +34,7 @@
 @media (max-width: 420px) { .about { grid-column: span 1; } }
 .brand { display: flex; align-items: center; gap: 9px; font: 800 16px/1 var(--font-archivo); letter-spacing: -0.035em; width: fit-content; transition: opacity 0.15s; }
 .brand:hover { opacity: 0.85; }
-.brand i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--dark-ink); }
-.brand i::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+.brand img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12); }
 .brand em { font-style: normal; color: var(--acc); }
 .blurb { font: 400 14px/1.6 var(--font-archivo); color: #a19d9a; text-wrap: pretty; }
 .social { display: flex; gap: 6px; }
@@ -49,8 +48,19 @@
 .col a:hover, .col a:focus-visible { color: #fff; transform: translateX(2px); }
 .col a:hover::after, .col a:focus-visible::after { opacity: 1; transform: none; }
 
-.wm { display: block; width: 100%; height: auto; user-select: none; cursor: default; overflow: visible; }
-.wm text { font: 900 186px var(--font-archivo); letter-spacing: -4px; }
+.wm {
+  display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin: 8px 0 -0.08em; padding: 0; border: 0; background: none; cursor: pointer; user-select: none;
+  font: 900 15.4cqw/0.95 var(--font-archivo); letter-spacing: -0.04em; white-space: nowrap;
+  /* cursor-lit gradient clipped to the letters */
+  background: radial-gradient(260px circle at var(--wx, -999px) var(--wy, -999px), #e9e1ff 0%, #a78bfa 35%, color-mix(in oklch, var(--acc) 55%, transparent) 55%, rgba(255, 255, 255, 0.07) 72%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+.wmWrap { container-type: inline-size; width: 100%; padding-top: 24px; overflow: visible; }
+.wmLetter { display: inline-block; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; }
+.wm:hover .wmLetter { transform: translateY(-2px); }
+.wmLetter:hover { transform: translateY(-14px) rotate(-3deg) !important; }
+.wm:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { .wmLetter, .wm:hover .wmLetter, .wmLetter:hover { transform: none !important; } }
 
 .bar { border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .barIn { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px var(--gutter); font: 500 12px/1 var(--font-jbmono); color: #8d8a87; }

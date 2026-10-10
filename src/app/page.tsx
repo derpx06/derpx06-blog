@@ -1,4 +1,6 @@
 import Link from "next/link";
+import fs from "fs";
+import path from "path";
 import { Meta, Schema } from "@once-ui-system/core";
 import { baseURL, home, about, person } from "@/resources";
 import { courses } from "@/resources/courses";
@@ -37,6 +39,7 @@ function latest(n: number) {
       date: p.metadata.publishedAt,
       time: new Date(p.metadata.publishedAt).getTime() || 0,
       mins: readingTime(p.content),
+      image: p.metadata.image && fs.existsSync(path.join(process.cwd(), "public", p.metadata.image)) ? p.metadata.image : null,
     })),
   )
     .sort((a, b) => b.time - a.time)
@@ -46,6 +49,7 @@ function latest(n: number) {
 export default function Home() {
   const posts = latest(4);
   const newest = posts[0];
+  const [cover, ...rest] = posts;
 
   return (
     <>
@@ -83,18 +87,39 @@ export default function Home() {
               <Link href="/explainers">All explainers →</Link>
             </div>
           </div>
-          <div className={s.rows}>
-            {posts.map((p) => (
-              <div key={p.href} className={s.row}>
-                <Link href={p.href} className={s.rowLink}>
-                  <span className="eyebrow">{p.label}{p.tag && ` · ${p.tag}`} · {formatShortDate(p.date)}</span>
-                  <span className={s.rowTitle}>{p.title}</span>
-                  <span className={s.rowSummary}>{p.summary}</span>
-                  <span className={`mono ${s.rowMeta}`}>{p.mins} min read</span>
+          {cover && (
+            <Link href={cover.href} className={`darkCard ${s.cover}`}>
+              <span className="glow" aria-hidden="true" />
+              <span className={s.coverBody}>
+                <span className={s.coverKicker}><span className={s.coverDot} />Cover story · {cover.label}{cover.tag && ` · ${cover.tag}`}</span>
+                <span className={s.coverTitle}>{cover.title}</span>
+                <span className={s.coverSummary}>{cover.summary}</span>
+                <span className={s.coverMeta}>
+                  <span className={s.coverRead}>Read · {cover.mins} min <span className={s.arrow}>→</span></span>
+                  <span className="mono">{formatShortDate(cover.date)}</span>
+                </span>
+              </span>
+              <span className={s.coverFigure}>
+                {cover.image ? <span className={s.coverImg} style={{ backgroundImage: `url(${cover.image})` }} /> : <span className={s.coverMark}>{cover.title.charAt(0)}</span>}
+              </span>
+            </Link>
+          )}
+          <div className={s.grid3}>
+            {rest.map((p, i) => (
+              <div key={p.href} className={`card ${s.pcard}`}>
+                <Link href={p.href} className={s.pcardLink}>
+                  <span className={s.pcardMedia}>
+                    {p.image ? <span className={s.pcardImg} style={{ backgroundImage: `url(${p.image})` }} /> : <span className={s.pcardMark}>{p.title.replace(/^(The|A|An)\s/, "").charAt(0)}</span>}
+                    <span className={s.pcardNum}>{String(i + 2).padStart(2, "0")}</span>
+                  </span>
+                  <span className={s.pcardBody}>
+                    <span className="eyebrow">{p.label}{p.tag && ` · ${p.tag}`} · {formatShortDate(p.date)}</span>
+                    <span className={s.pcardTitle}>{p.title}</span>
+                    <span className={s.pcardSummary}>{p.summary}</span>
+                    <span className={s.pcardFoot}><span className="mono">{p.mins} min read</span><span className={s.pcardRead}>Read →</span></span>
+                  </span>
                 </Link>
-                <div className={s.rowSave}>
-                  <SaveButton compact item={{ kind: p.kind, slug: p.slug, title: p.title, href: p.href, meta: `${p.mins} min` }} />
-                </div>
+                <span className={s.pcardSave}><SaveButton compact item={{ kind: p.kind, slug: p.slug, title: p.title, href: p.href, meta: `${p.mins} min` }} /></span>
               </div>
             ))}
           </div>

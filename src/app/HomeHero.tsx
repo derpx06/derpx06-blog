@@ -11,7 +11,9 @@ const ROT: Rot[] = [
   { text: "how attention works.", label: "Attention", href: "/explainers/attention-is-all-you-need", img: "/images/explainers/attention-is-all-you-need-1.png" },
   { text: "what R1 changed.", label: "Reasoning", href: "/explainers/deepseek-r1", img: "/images/explainers/deepseek-r1/coverImage.png" },
   { text: "how JEPA sees.", label: "Vision", href: "/explainers/jepa-architecture", img: "/images/explainers/jepa/vl-jepa-architecture.png" },
-  { text: "what agents need.", label: "Agents", href: "/learn/langchain-mastery" },
+  { text: "why retries need idempotency.", label: "Reliability", href: "/learn/langchain-mastery/handling-llm-errors" },
+  { text: "how retrieval really works.", label: "Retrieval", href: "/learn/langchain-mastery/retriever-interface" },
+  { text: "what agents need.", label: "Agents", href: "/learn/langchain-mastery/react-agents" },
   { text: "how to fine-tune.", label: "Fine-tuning", href: "/learn/finetuning-an-llm" },
 ];
 // Floating tiles around the headline (desktop). `rot` ties a tile to a phrase; `d` is parallax depth.
@@ -22,32 +24,43 @@ const TILES = [
   { rot: 3, label: "Vision · JEPA", pos: { right: "9%", bottom: "40px" }, r: -5, d: 26 },
 ];
 
-const CYCLE_MS = 3200;
+const ROT_MS = 3200;
 
+/** "Figuring out <concept>." — the concept rotates on a progress-bar timer; each one links to the piece about it.
+    Tiles around the headline highlight the matching piece and are always clickable. */
 export function HomeHero({ newest }: { newest: { href: string; title: string } | null }) {
   const [rot, setRot] = useState(0);
+  const [prev, setPrev] = useState<number | null>(null);
+  const [tick, setTick] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
+  const go = (i: number) => { setPrev(rot); setRot(((i % ROT.length) + ROT.length) % ROT.length); setTick((t) => t + 1); };
+  const goRef = useRef(go); goRef.current = go;
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setReduced(mq.matches);
     sync(); mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
+    const onKey = (e: KeyboardEvent) => {
+      if (/input|textarea|select/i.test((document.activeElement as HTMLElement)?.tagName || "")) return;
+      if (e.key === "ArrowRight") goRef.current(rot + 1); else if (e.key === "ArrowLeft") goRef.current(rot - 1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => { mq.removeEventListener("change", sync); window.removeEventListener("keydown", onKey); };
+  }, [rot]);
 
-  // the highlighted tile walks around the headline; hovering a tile pauses it
+  // reduced motion: no bar animation, so advance on a plain timer instead
   useEffect(() => {
-    if (reduced || paused) return;
-    const id = setInterval(() => setRot((r) => (r + 1) % TILES.length), CYCLE_MS);
+    if (!reduced || paused) return;
+    const id = setInterval(() => goRef.current(rot + 1), ROT_MS);
     return () => clearInterval(id);
-  }, [reduced, paused]);
+  }, [reduced, paused, rot]);
 
-  const cur = ROT[TILES[rot].rot];
+  const cur = ROT[rot];
   return (
     <>
-      {TILES.map((t, i) => {
-        const r = ROT[t.rot]; const on = i === rot;
+      {TILES.map((t) => {
+        const r = ROT[t.rot]; const on = t.rot === rot;
         return (
           <Link
             key={t.label}
@@ -55,10 +68,8 @@ export function HomeHero({ newest }: { newest: { href: string; title: string } |
             aria-label={`${t.label}: ${r.text}`}
             className={classNames(styles.tile, on && styles.tileOn)}
             style={{ ...t.pos, transform: `translate(calc(var(--px, 0) * ${t.d}px), calc(var(--py, 0) * ${t.d}px)) rotate(${t.r}deg) scale(${on ? 1.06 : 1})` }}
-            onMouseEnter={() => { setPaused(true); setRot(i); }}
+            onMouseEnter={() => { setPaused(true); if (!on) go(t.rot); }}
             onMouseLeave={() => setPaused(false)}
-            onFocus={() => { setPaused(true); setRot(i); }}
-            onBlur={() => setPaused(false)}
           >
             <span className={styles.tileImg} style={{ backgroundImage: r.img ? `url(${r.img})` : undefined }} />
             <span className={styles.tileLabel}>{t.label}</span>
@@ -68,19 +79,36 @@ export function HomeHero({ newest }: { newest: { href: string; title: string } |
 
       <div className={`wrap ${styles.heroInner}`}>
         <span className={styles.status}><span className={styles.statusDot} />Learning systems &amp; AI in public</span>
-        <h1 className={styles.h1}>
-          <span>Why does the clever part</span>
-          <span className={styles.h1Accent}>always break first?</span>
+        <h1 className={styles.h1} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+          <span>Figuring out</span>
+          <span className={styles.rotator}>
+            {prev !== null && tick > 0 && !reduced && <span key={`o${tick}`} aria-hidden="true" className={styles.wordOut}>{ROT[prev].text}</span>}
+            <Link key={`r${tick}`} href={cur.href} className={classNames(styles.wordLink, tick > 0 && !reduced && styles.wordIn)}>{cur.text}</Link>
+          </span>
         </h1>
+        <div className={styles.tabs} role="tablist" aria-label="Topics">
+          {ROT.map((r, i) => (
+            <button key={r.label} type="button" role="tab" aria-selected={i === rot} aria-label={r.label} className={classNames(styles.tab, i === rot && styles.tabOn)} onClick={() => go(i)}>
+              <span className={styles.track}>
+                <span
+                  key={`f${tick}-${i}`}
+                  className={classNames(styles.fill, i < rot && styles.fillDone, i === rot && !reduced && styles.fillRun)}
+                  style={{ animationDuration: `${ROT_MS}ms`, animationPlayState: paused ? "paused" : "running" }}
+                  onAnimationEnd={i === rot ? () => go(rot + 1) : undefined}
+                />
+              </span>
+            </button>
+          ))}
+        </div>
         <p className={styles.heroLede}>Notes from learning system design, distributed systems and AI — what I got wrong, and what finally made it click.</p>
         <div className={styles.actions}>
           <Link className="btnPrimary" href="/explainers">Start with an explainer <span className={styles.arrow}>→</span></Link>
           <Link className="btnGhost" href="/learn">Notes</Link>
         </div>
         {cur.img && (
-          <Link href={cur.href} className={styles.mCard} aria-label={`${TILES[rot].label}: ${cur.text}`}>
+          <Link href={cur.href} className={styles.mCard} aria-label={`${cur.label}: ${cur.text}`}>
             <span key={rot} className={classNames(styles.tileImg, !reduced && styles.wordIn)} style={{ backgroundImage: `url(${cur.img})`, height: 120 }} />
-            <span className={styles.tileLabel}>{TILES[rot].label} · {cur.text}</span>
+            <span className={styles.tileLabel}>{cur.label} · {cur.text}</span>
           </Link>
         )}
         {newest && (
