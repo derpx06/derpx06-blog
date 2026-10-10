@@ -111,7 +111,7 @@ export default function About() {
           </div>
           <div className={styles.portrait}>
             <div className={styles.photo}>
-              <Image src="/images/manas.jpg" alt="Manas Khairnar" fill sizes="420px" priority />
+              <Image src={person.avatar} alt="derpx06" fill sizes="420px" priority />
               <span className={styles.clock}>Pune · <LocalTime /> IST</span>
             </div>
             <div className={styles.portraitMeta}>

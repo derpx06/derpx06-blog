@@ -46,7 +46,7 @@
   border: 1px solid var(--line); box-shadow: var(--hero-shadow); padding: 10px; box-sizing: border-box;
 }
 .photo { position: relative; aspect-ratio: 5 / 4; border-radius: 12px; overflow: hidden; background: #2d2a29; }
-.photo img { object-fit: cover; filter: grayscale(1) contrast(1.05); }
+.photo img { object-fit: contain; padding: 28px; background: color-mix(in oklch, var(--acc) 14%, var(--bg)); image-rendering: auto; }
 .clock {
   gap: 0.35em;
   position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; height: 28px; padding: 0 10px;
