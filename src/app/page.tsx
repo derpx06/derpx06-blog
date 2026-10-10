@@ -11,6 +11,14 @@ import { HeroFx } from "@/components/site/HeroFx";
 import { Icon } from "@/components/site/icons";
 import { SaveButton } from "@/components/article/ArticleReader";
 import { CopyEmail, HomeHero } from "./HomeHero";
+import { LocalTime } from "@/components/about/AboutClient";
+
+const SOCIALS = [
+  { name: "GitHub", handle: "derpx06", href: "https://github.com/derpx06" },
+  { name: "LinkedIn", handle: "manas-khairnar", href: "https://www.linkedin.com/in/manas-khairnar-98329132b/" },
+  { name: "Hugging Face", handle: "Manas200", href: "https://huggingface.co/Manas200" },
+  { name: "LeetCode", handle: "manas1511", href: "https://leetcode.com/u/manas1511/" },
+];
 import s from "./home.module.scss";
 
 export async function generateMetadata() {
@@ -173,7 +181,13 @@ export default function Home() {
                 <span className={`mono ${s.email}`}>{person.email}</span>
                 <CopyEmail email={person.email} />
               </div>
+              <span className={`mono ${s.reply}`}>Pune · <LocalTime /> IST · usually replies within a day</span>
             </div>
+          </div>
+          <div className={s.contactFoot}>
+            {SOCIALS.map((x) => (
+              <a key={x.name} href={x.href} target="_blank" rel="noopener" className={s.socialPill}>{x.name}<span className="mono">{x.handle}</span></a>
+            ))}
           </div>
         </section>
       </div>

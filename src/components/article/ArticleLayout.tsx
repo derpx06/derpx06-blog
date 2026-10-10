@@ -65,8 +65,8 @@ export function ArticleLayout({ kind, path: sitePath, title, summary, publishedA
             {summary && <p className={s.summary}>{summary}</p>}
             <div className={s.byline}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className={s.avatar} src="/images/manas.jpg" alt="" width={34} height={34} />
-              <div className={s.bylineText}><b>{person.firstName} {person.lastName}</b><span>{metaLine}</span></div>
+              <img className={s.avatar} src={person.avatar} alt="" width={34} height={34} />
+              <div className={s.bylineText}><b>{person.name}</b><span>{metaLine}</span></div>
             </div>
           </div>
           {hasImage && !lesson && (
@@ -91,9 +91,9 @@ export function ArticleLayout({ kind, path: sitePath, title, summary, publishedA
               <ShareRow title={title} url={url} />
               <div className={s.author}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/manas.jpg" alt="" width={56} height={56} />
+                <img src={person.avatar} alt="" width={56} height={56} />
                 <div className={s.authorText}>
-                  <b>Written by {person.firstName} {person.lastName}</b>
+                  <b>Written by {person.name}</b>
                   <span>{person.role}. Spotted a mistake? <a href={`mailto:${person.email}`}>Tell me</a> — corrections get credited.</span>
                 </div>
                 <Link href="/about" className="btnPrimary btnSm">About me <Icon name="arrowRight" size={13} /></Link>

@@ -118,7 +118,7 @@
 @media (min-width: 760px) { .contact { margin-top: 96px; margin-bottom: 96px; } }
 .contactInner {
   position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-  gap: 24px 40px; padding: 32px 24px;
+  gap: 24px 40px; padding: 36px 28px 32px;
 }
 @media (min-width: 640px) { .contactInner { padding: 40px; } }
 .contactCopy { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -130,9 +130,14 @@
 .mail:hover { transform: translateY(-1px); }
 .gh { width: 44px; padding: 0; border-color: rgba(255, 255, 255, 0.22); color: var(--dark-ink); }
 .gh:hover { border-color: #fff; }
-.emailRow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
-.email { font-size: 12.5px; color: #bab6b6; overflow-wrap: anywhere; }
-.copy {
+.emailRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; padding: 6px 6px 6px 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+.email { font-size: 12.5px; color: #e7e3df; overflow-wrap: anywhere; }
+.reply { font-size: 11px; color: #8d8a87; letter-spacing: 0.04em; }
+.contactFoot { position: relative; display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 24px; border-top: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.025); }
+.socialPill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12); color: var(--dark-ink); font: 600 13px/1 var(--font-archivo); white-space: nowrap; transition: border-color 0.15s, background 0.15s, transform 0.2s; }
+.socialPill span { font-size: 11px; color: #8d8a87; }
+.socialPill:hover { border-color: var(--acc); background: rgba(255, 255, 255, 0.05); transform: translateY(-2px); }
+.copyBtn {
   height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.22); background: none; cursor: pointer;
   color: var(--dark-ink); font: 600 12px/1 var(--font-archivo); white-space: nowrap; transition: border-color 0.18s;
   &:hover { border-color: #fff; }

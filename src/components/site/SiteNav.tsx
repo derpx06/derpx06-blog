@@ -48,6 +48,12 @@ export function SiteNav() {
   const { count } = useSaved();
   const { dark, toggle } = useResolvedTheme();
   const [menu, setMenu] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 16);
+    on(); window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
   const [user, setUser] = useState(false);
   const closeAll = () => { setMenu(false); setUser(false); };
   const ref = useOutsideClose(menu || user, closeAll);
@@ -59,7 +65,7 @@ export function SiteNav() {
 
   return (
     <div className={s.fixed}>
-      <div className={`wrap ${s.inner}`}>
+      <div className={`wrap ${s.inner} ${scrolled ? s.capsule : s.bar}`}>
         <nav className={s.nav} aria-label="Primary" ref={ref}>
           <Link href="/" className={s.brand} aria-label="derpx06.dev home">
             {/* eslint-disable-next-line @next/next/no-img-element */}

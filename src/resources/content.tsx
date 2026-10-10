@@ -3,7 +3,7 @@ import { About, Blog, Home, Newsletter, Person, Social } from "@/types";
 const person: Person = {
   firstName: "Manas",
   lastName: "Khairnar",
-  name: "Manas Khairnar",
+  name: "derpx06",
   role: "App Development Lead at Aionyix",
   avatar: "/images/derpx06-avatar.png",
   email: "manaskhairnar1511@gmail.com",
