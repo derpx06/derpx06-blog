@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useProgress } from "@/lib/user-data";
 import { Icon } from "@/components/site/icons";
+import { HeroFx } from "@/components/site/HeroFx";
+import { HeroBackdrop } from "@/components/site/HeroBackdrop";
 import s from "./learn.module.scss";
 
 export type CourseData = {
@@ -65,7 +67,8 @@ export function LearnClient({ courses }: { courses: CourseData[] }) {
 
   return (
     <>
-      <section className={`hero ${s.hero}`}>
+      <HeroFx className={`hero ${s.hero}`}>
+        <HeroBackdrop />
         <div className={`wrap ${s.heroInner}`}>
           <span className={s.status}><i className={s.dot} />Notes · {courses.length} notebooks · {totalNotes} notes</span>
           <h1 className={s.h1}>Pick a line, and ride it<span>all the way to production</span></h1>
@@ -78,8 +81,7 @@ export function LearnClient({ courses }: { courses: CourseData[] }) {
           </div>
           {goal !== null && <p className={s.hint}>{GOALS[goal].hint}</p>}
         </div>
-        <div className="heroFade" />
-      </section>
+      </HeroFx>
 
       <section className={`wrap ${s.body}`}>
         {resume && (

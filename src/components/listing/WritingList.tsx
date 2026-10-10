@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SaveButton } from "@/components/article/ArticleReader";
 import { Icon } from "@/components/site/icons";
+import { HeroFx } from "@/components/site/HeroFx";
+import { HeroBackdrop } from "@/components/site/HeroBackdrop";
 import s from "./listing.module.scss";
 
 export type ListItem = {
@@ -91,7 +93,8 @@ export function WritingList({ items }: { items: ListItem[] }) {
 
   return (
     <>
-      <section className={`hero ${s.hero}`}>
+      <HeroFx className={`hero ${s.hero}`}>
+        <HeroBackdrop />
         <div className={`wrap ${s.heroInner}`}>
           <h1 className={s.h1}>The things I got wrong, written down.</h1>
           <p className={`lede ${s.lede}`}>Long-form essays on distributed systems, retrieval and AI plumbing. Each one starts from a bug I shipped or a belief I had to drop.</p>
@@ -113,7 +116,7 @@ export function WritingList({ items }: { items: ListItem[] }) {
             </div>
           </div>
         </div>
-      </section>
+      </HeroFx>
 
       <div className={`wrap ${s.main}`}>
         {shown.length === 0 ? (

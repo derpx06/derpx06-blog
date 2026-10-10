@@ -8,7 +8,7 @@ import { partName } from "@/lib/courses";
 import { HeroFx } from "@/components/site/HeroFx";
 import { Icon } from "@/components/site/icons";
 import { SaveButton } from "@/components/article/ArticleReader";
-import { CopyEmail, HeroHeadline } from "./HomeHero";
+import { CopyEmail, HomeHero } from "./HomeHero";
 import s from "./home.module.scss";
 
 export async function generateMetadata() {
@@ -67,21 +67,7 @@ export default function Home() {
           <div className={s.dotsHot} />
         </div>
         <div className="heroFade" aria-hidden="true" />
-        <div className={`wrap ${s.heroInner}`}>
-          <span className={s.status}><span className={s.statusDot} />Learning systems &amp; AI in public</span>
-          <HeroHeadline />
-          <p className={s.heroLede}>Notes from learning system design, distributed systems and AI — what I got wrong, and what finally made it click.</p>
-          <div className={s.actions}>
-            <Link className="btnPrimary" href="/explainers">Start with an explainer <span className={s.arrow}>→</span></Link>
-            <Link className="btnGhost" href="/learn">Browse notes</Link>
-          </div>
-          {newest && (
-            <Link className={s.latestLink} href={newest.href}>
-              <span className="eyebrow">Latest</span>
-              <span className={s.latestTitle}>{newest.title} →</span>
-            </Link>
-          )}
-        </div>
+        <HomeHero newest={newest} />
       </HeroFx>
 
       <div className="wrap">

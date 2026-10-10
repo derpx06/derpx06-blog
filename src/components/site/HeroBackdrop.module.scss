@@ -1,0 +1,22 @@
+.backdrop { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.glow {
+  position: absolute; top: -240px; right: -120px; width: 660px; height: 560px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklch, var(--acc) 18%, transparent), transparent 65%);
+  filter: blur(30px);
+}
+.spot {
+  position: absolute; inset: 0;
+  background: radial-gradient(520px circle at var(--mx, -999px) var(--my, -999px), color-mix(in oklch, var(--acc) 12%, transparent), transparent 62%);
+}
+.dots, .hot { position: absolute; inset: 0; background-size: 24px 24px; }
+.dots {
+  background-image: radial-gradient(color-mix(in oklch, var(--ink) 11%, transparent) 1px, transparent 1px);
+  -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 45%, #000, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 90% at 50% 45%, #000, transparent 78%);
+}
+.hot {
+  background-image: radial-gradient(color-mix(in oklch, var(--ink) 28%, transparent) 1px, transparent 1px);
+  -webkit-mask-image: radial-gradient(200px circle at var(--mx, -999px) var(--my, -999px), #000, transparent);
+  mask-image: radial-gradient(200px circle at var(--mx, -999px) var(--my, -999px), #000, transparent);
+}
+.fade { height: 200px; z-index: 2; }

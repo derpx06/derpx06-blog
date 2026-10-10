@@ -18,7 +18,7 @@
   --shadow: 0 18px 40px -26px rgba(32, 30, 29, 0.22);
   --shadow-sm: 0 6px 18px rgba(32, 30, 29, 0.05);
 
-  --nav-bg: rgba(250, 249, 248, 0.78);
+  --nav-bg: rgba(250, 249, 248, 0.84);
   --nav-ink: var(--ink);
   --nav-mute: #6b6765;
   --nav-hover: rgba(32, 30, 29, 0.06);
@@ -62,7 +62,7 @@
   --line-strong: rgba(255, 255, 255, 0.22);
   --shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.3);
-  --nav-bg: rgba(22, 21, 20, 0.72);
+  --nav-bg: rgba(20, 19, 18, 0.86);
   --nav-mute: #a19d9a;
   --nav-hover: rgba(255, 255, 255, 0.07);
   --nav-cta-bg: var(--dark-ink);

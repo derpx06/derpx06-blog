@@ -5,6 +5,8 @@ import { baseURL, about, person } from "@/resources";
 import { getPosts } from "@/utils/utils";
 import { CopyEmail, LocalTime } from "@/components/about/AboutClient";
 import styles from "@/components/about/about.module.scss";
+import { HeroFx } from "@/components/site/HeroFx";
+import { HeroBackdrop } from "@/components/site/HeroBackdrop";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -92,11 +94,8 @@ export default function About() {
         author={{ name: person.name, url: `${baseURL}${about.path}`, image: `${baseURL}${person.avatar}` }}
       />
 
-      <section className={`hero ${styles.hero}`}>
-        <div className={styles.heroBg} aria-hidden="true">
-          <div className={styles.glow} />
-        </div>
-        <div className={styles.fade} aria-hidden="true" />
+      <HeroFx className={`hero ${styles.hero}`}>
+        <HeroBackdrop />
         <div className={classNames(styles.wrap, styles.heroGrid)}>
           <div className={styles.heroCopy}>
             <span className={styles.status}><span className={styles.statusDot} />Open to interesting problems</span>
@@ -136,7 +135,7 @@ export default function About() {
             ))}
           </div>
         </div>
-      </section>
+      </HeroFx>
 
       <div className={classNames(styles.wrap, styles.main)}>
         <Section id="now" n="01 · Now" title="The short version">

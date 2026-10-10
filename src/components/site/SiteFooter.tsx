@@ -11,6 +11,7 @@ const BUTTONDOWN = process.env.NEXT_PUBLIC_BUTTONDOWN_USER;
 
 export function SiteFooter() {
   const [done, setDone] = useState(false);
+  const [spot, setSpot] = useState({ x: -999, y: -999, r: 0 });
   const year = new Date().getFullYear();
 
   return (
@@ -72,14 +73,25 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <svg aria-hidden="true" viewBox="0 0 1124 142" className={s.wm}>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 1124 142"
+          className={s.wm}
+          onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); const k = 1124 / r.width; setSpot({ x: Math.round((e.clientX - r.left) * k), y: Math.round((e.clientY - r.top) * k), r: 260 }); }}
+          onMouseLeave={() => setSpot((v) => ({ ...v, r: 0 }))}
+        >
           <defs>
             <linearGradient id="ftWm" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#fff" stopOpacity=".13" />
               <stop offset="1" stopColor="#fff" stopOpacity=".02" />
             </linearGradient>
+            <radialGradient id="ftWmSpot" gradientUnits="userSpaceOnUse" cx={spot.x} cy={spot.y} r={spot.r}>
+              <stop offset="0" stopColor="#c4b5fd" stopOpacity="1" />
+              <stop offset="1" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
           </defs>
           <text x="0" y="140" textLength="1124" lengthAdjust="spacingAndGlyphs" fill="url(#ftWm)">derpx06.dev</text>
+          <text x="0" y="140" textLength="1124" lengthAdjust="spacingAndGlyphs" fill="url(#ftWmSpot)" style={{ transition: "opacity .3s" }}>derpx06.dev</text>
         </svg>
       </div>
       <div className={s.bar}>

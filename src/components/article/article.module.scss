@@ -56,14 +56,22 @@
 
 /* ---------- grid ---------- */
 .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 32px; align-items: start; }
-@media (min-width: 1000px) {
-  /* aside + body centred as a group, so the reading column sits in the middle of the page */
-  .grid { grid-template-columns: 240px minmax(0, 740px); justify-content: center; gap: 56px; margin-top: 40px; }
+@media (min-width: 1200px) {
+  /* symmetric grid: aside | reading column | empty, so the reading column is exactly centred on the page.
+     The grid borrows 32px of gutter each side so the aside keeps ~200px. */
+  .grid { --measure: 680px; grid-template-columns: minmax(0, 1fr) minmax(0, var(--measure)) minmax(0, 1fr); gap: 28px; margin-top: 40px; margin-inline: -32px; }
+  .aside { width: min(100%, 240px); }
+  .asideL { justify-self: end; }
+  .asideR { justify-self: start; }
+  .content { justify-self: center; }
   .aside { position: sticky; top: 92px; max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-width: thin; }
+}
+@media (min-width: 1300px) {
+  .grid { --measure: 740px; gap: 28px; }
   .mobileToc { display: none; }
 }
 .aside { display: flex; flex-direction: column; gap: 22px; min-width: 0; padding-bottom: 10px; }
-@media (max-width: 999px) { .aside { display: none; } }
+@media (max-width: 1199px) { .aside { display: none; } }
 .asideH { font: 500 10px/1 var(--font-jbmono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); margin-bottom: 12px; }
 .toc { display: flex; flex-direction: column; gap: 1px; border-left: 2px solid var(--line-strong); }
 .toc a {
@@ -117,8 +125,8 @@
 .mobileTools { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
 
 /* ---------- body ---------- */
-.content { min-width: 0; max-width: 740px; width: 100%; overflow-x: clip; }
-@media (max-width: 999px) { .content { margin: 0 auto; } }
+.content { min-width: 0; max-width: var(--measure, 740px); width: 100%; overflow-x: clip; }
+@media (max-width: 1199px) { .content { margin: 0 auto; } }
 /* MDX posts embed Once UI Row/Card/Grid blocks with fixed widths; make them fluid on narrow screens */
 .body > * { max-width: 100%; }
 .body :global([class*="display-flex"]:not([class*="eedback"])) { flex-wrap: wrap; max-width: 100%; }

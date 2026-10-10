@@ -2,12 +2,12 @@
 
 import { useRef, type ReactNode } from "react";
 
-/** Cursor spotlight: sets --mx/--my on the section. Used on Home only. */
+/** Cursor-reactive hero: sets --mx/--my (px, for the spotlight) and --px/--py (-0.5..0.5, for parallax) on the section. */
 export function HeroFx({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLElement>(null);
-  const set = (x: string, y: string) => {
-    ref.current?.style.setProperty("--mx", x);
-    ref.current?.style.setProperty("--my", y);
+  const set = (vars: Record<string, string>) => {
+    const el = ref.current;
+    if (el) for (const k in vars) el.style.setProperty(k, vars[k]);
   };
   return (
     <section
@@ -15,9 +15,10 @@ export function HeroFx({ children, className }: { children: ReactNode; className
       className={className}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
-        set(`${e.clientX - r.left}px`, `${e.clientY - r.top}px`);
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        set({ "--mx": `${x}px`, "--my": `${y}px`, "--px": (x / r.width - 0.5).toFixed(3), "--py": (y / r.height - 0.5).toFixed(3) });
       }}
-      onMouseLeave={() => set("-999px", "-999px")}
+      onMouseLeave={() => set({ "--mx": "-999px", "--my": "-999px", "--px": "0", "--py": "0" })}
     >
       {children}
     </section>

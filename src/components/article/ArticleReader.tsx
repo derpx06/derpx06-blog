@@ -91,13 +91,8 @@ export function ArticleReader({ toc, minutes, save, lesson, children }: Props) {
     <>
       <div className={s.progress} aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
       <div className={s.grid}>
-        <aside className={s.aside}>
+        <aside className={`${s.aside} ${s.asideL}`} aria-label="Course outline">
           {lesson && <Outline lesson={lesson} />}
-          {tocList}
-          <div className={s.tools}>
-            {tools}
-            <span className={s.left} aria-live="polite">{minsLeft}</span>
-          </div>
         </aside>
 
         <div className={s.content}>
@@ -111,6 +106,14 @@ export function ArticleReader({ toc, minutes, save, lesson, children }: Props) {
           )}
           <div ref={bodyRef} className={s.body} data-size={size}>{children}</div>
         </div>
+
+        <aside className={`${s.aside} ${s.asideR}`} aria-label="On this page">
+          {tocList}
+          <div className={s.tools}>
+            {tools}
+            <span className={s.left} aria-live="polite">{minsLeft}</span>
+          </div>
+        </aside>
       </div>
     </>
   );

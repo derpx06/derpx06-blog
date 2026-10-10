@@ -15,15 +15,9 @@
 
 /* ---------- hero ---------- */
 .hero { position: relative; overflow: hidden; }
-.heroBg { position: absolute; inset: 0; pointer-events: none; }
-.glow {
-  position: absolute; top: -240px; right: -120px; width: 660px; height: 560px; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in oklch, var(--acc) 18%, transparent), transparent 65%);
-  filter: blur(30px);
-}
-.fade { position: absolute; left: 0; right: 0; bottom: 0; height: 200px; pointer-events: none; background: linear-gradient(180deg, transparent, var(--hero-bg)); }
 .wrap { position: relative; max-width: 1240px; margin: 0 auto; padding: 0 var(--pad); box-sizing: border-box; }
 .heroGrid {
+  z-index: 3;
   padding-top: 24px; padding-bottom: 40px;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 40px 48px; align-items: center;

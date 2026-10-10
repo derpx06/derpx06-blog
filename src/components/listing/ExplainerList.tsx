@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { GridCard, Tabs, matches, monthKey, monthLabel, tabsOf, type ListItem } from "./WritingList";
+import { HeroFx } from "@/components/site/HeroFx";
+import { HeroBackdrop } from "@/components/site/HeroBackdrop";
 import s from "./listing.module.scss";
 
 export function ExplainerList({ items }: { items: ListItem[] }) {
@@ -14,7 +16,8 @@ export function ExplainerList({ items }: { items: ListItem[] }) {
 
   return (
     <>
-      <section className={`hero ${s.hero} ${s.exHero}`}>
+      <HeroFx className={`hero ${s.hero} ${s.exHero}`}>
+        <HeroBackdrop />
         <div className="wrap">
           <span className={`eyebrow ${s.status}`}><span className={s.dot} />Paper explainers · {items.length} published</span>
           <h1 className={s.exH1}>
@@ -30,7 +33,7 @@ export function ExplainerList({ items }: { items: ListItem[] }) {
             ))}
           </div>
         </div>
-      </section>
+      </HeroFx>
 
       <div className={`wrap ${s.main} ${s.exMain}`}>
         <div className={s.domainRow}>
