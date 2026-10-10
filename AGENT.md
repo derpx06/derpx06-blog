@@ -2,15 +2,14 @@
 
 ## 1. Project Context & Architecture ✅
 - **Framework**: Next.js 16 (App Router) + TypeScript.
-- **UI**: no component library. The site is plain semantic HTML styled by the
-  editorial design system in `src/resources/design-system.css`.
-  - ✅ Use the `ds-` primitives (`.ds-t-*`, `.ds-dek`, `.ds-meta`, `.ds-box`,
-    `.ds-item`, `.ds-rule`, `.ds-ph`, `.ds-main-rail`, `.ds-three`, …).
-  - ✅ Use the CSS custom properties for colour (`--ink`, `--acc`, `--tint`, …).
-    They are defined for light on `:root` and for dark on `[data-theme="dark"]`.
-  - ❌ Never hardcode a hex value in a component.
-  - Tailwind is still installed, but only the effect components in
-    `src/components/ui/*` use it.
+- **UI**: no component library. Public pages use the violet design system in
+  `src/styles/theme.css` (tokens + `.wrap .eyebrow .btn* .card .darkCard .pill
+  .tag .h2 .lede .hero` primitives) plus CSS modules per component; the editorial
+  `ds-*` system in `src/resources/design-system.css` remains for the admin CMS,
+  MDX prose and code blocks, with its tokens bridged onto the new palette.
+  - ✅ Use the CSS custom properties for colour (`--acc`, `--ink`, `--bg`,
+    `--line`, …). Light on `:root`, dark on `[data-theme="dark"]`.
+  - ❌ Never hardcode a hex value in a component. No Tailwind.
 - **Data Layer**: MongoDB only, via `src/lib/content-repository.ts` and
   `src/lib/course-repository.ts`. There is no on-disk fallback: if the cluster
   is unreachable during a production build, `src/lib/build-guard.ts` fails the
@@ -31,8 +30,8 @@
 - **`api/og/generate`**: dynamic OpenGraph images.
 
 ### `src/components/site` (the design system in React)
-- **`Masthead` / `SiteFooter`**: the page chrome on every route.
-- **`ArticleView` / `ReaderHeader` / `ArticleContents`**: the reader.
+- **`SiteNav` / `SiteFooter`**: the page chrome, mounted once in `app/layout.tsx`.
+- **`ArticleView`** → `src/components/article/ArticleLayout` + `ArticleReader`: the reader.
 - **`ReaderProvider`**: fetches reader state once and applies optimistic
   updates. Every retention component reads it through `useReader()`.
 - **`mdx-kit.tsx`**: plain replacements for the component-library tags the

@@ -70,12 +70,18 @@
   --nav-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
 }
 
+/* minimal reset (Tailwind's preflight used to provide this) */
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, pre, dl, dd { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+input, textarea, select { font: inherit; color: inherit; }
 html { color-scheme: light; scroll-behavior: smooth; }
 html[data-theme="dark"] { color-scheme: dark; }
 html, body { overflow-x: clip; }
 body {
   margin: 0;
-  background: var(--bg) !important;
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-archivo);
   -webkit-font-smoothing: antialiased;
@@ -89,6 +95,7 @@ img, svg { display: block; max-width: 100%; }
 [data-theme="dark"] ::selection { background: color-mix(in oklch, var(--acc) 45%, black); }
 
 @media (prefers-reduced-motion: reduce) {
+  /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every component animation */
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   html { scroll-behavior: auto; }
 }

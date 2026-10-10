@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import GalleryView from "@/components/gallery/GalleryView";
 import { JsonLd } from "@/components/site/JsonLd";
-import { Masthead } from "@/components/site/Masthead";
 import { generateMeta } from "@/lib/metadata";
 import { baseURL, gallery, person } from "@/resources";
 
@@ -26,7 +25,6 @@ export default function Gallery() {
         description={gallery.description}
         author={{ name: person.name, url: `${baseURL}${gallery.path}`, image: person.avatar }}
       />
-      <Masthead current={null} />
       <div style={{ padding: "38px var(--gut) 20px" }}>
         <h1 className="ds-t-page" style={{ marginBottom: 14 }}>
           Gallery

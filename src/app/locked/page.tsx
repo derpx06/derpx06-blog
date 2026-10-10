@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Masthead } from "@/components/site/Masthead";
+import s from "@/components/site/auth.module.scss";
 import { PageAccessForm } from "@/components/site/PageAccessForm";
 
 export const metadata: Metadata = {
@@ -14,9 +14,14 @@ export const metadata: Metadata = {
  */
 export default function LockedPage() {
   return (
-    <>
-      <Masthead current={null} />
-      <PageAccessForm />
-    </>
+    <div className={`wrap ${s.page}`}>
+      <div className={`darkCard ${s.card} ${s.locked}`}>
+        <span className="glow" aria-hidden="true" />
+        <div className={s.inner}>
+          <span className="eyebrow">Restricted</span>
+          <PageAccessForm />
+        </div>
+      </div>
+    </div>
   );
 }

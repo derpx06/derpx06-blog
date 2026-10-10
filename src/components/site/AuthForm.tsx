@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import s from "./auth.module.scss";
 
 type Mode = "signin" | "signup";
 
-/** Shared sign-in / sign-up form, built from the design's own primitives. */
+/** Shared sign-in / sign-up form; sits inside the dark card on /signin and /signup. */
 export function AuthForm({ mode }: { mode: Mode }) {
   const [next, setNext] = useState("/");
 
@@ -43,72 +44,71 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
   };
 
+  const other = `${mode === "signup" ? "/signin" : "/signup"}${next !== "/" ? `?next=${encodeURIComponent(next)}` : ""}`;
+
   return (
-    <form className="ds-stack" style={{ gap: 12, maxWidth: 380 }} onSubmit={submit}>
+    <form className={s.form} onSubmit={submit}>
       {mode === "signup" && (
         <>
-          <label className="ds-kickq" htmlFor="auth-name">
+          <label className={s.label} htmlFor="auth-name">
             Name
           </label>
           <input
             id="auth-name"
-            className="ds-field"
+            className={s.field}
             value={name}
             onChange={(event) => setName(event.target.value)}
             autoComplete="name"
-            style={{ flex: "none" }}
           />
         </>
       )}
 
-      <label className="ds-kickq" htmlFor="auth-email">
+      <label className={s.label} htmlFor="auth-email">
         Email
       </label>
       <input
         id="auth-email"
-        className="ds-field"
+        className={s.field}
         type="email"
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         autoComplete="email"
-        style={{ flex: "none" }}
       />
 
-      <label className="ds-kickq" htmlFor="auth-password">
+      <label className={s.label} htmlFor="auth-password">
         Password
       </label>
       <input
         id="auth-password"
-        className="ds-field"
+        className={s.field}
         type="password"
         required
         minLength={mode === "signup" ? 8 : undefined}
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         autoComplete={mode === "signup" ? "new-password" : "current-password"}
-        style={{ flex: "none" }}
       />
-      {mode === "signup" && <span className="ds-meta ds-meta-s">At least 8 characters.</span>}
+      {mode === "signup" && <span className={s.hint}>At least 8 characters.</span>}
 
       {error && (
-        <span className="ds-meta ds-meta-s" role="alert" style={{ color: "var(--acc)" }}>
+        <span className={s.error} role="alert">
           {error}
         </span>
       )}
 
-      <button type="submit" className="ds-box ds-dark" disabled={busy}>
+      <button type="submit" className={`btnAccent ${s.submit}`} disabled={busy}>
         {busy ? "One moment…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
 
-      <span className="ds-meta ds-meta-s">
+      <span className={s.alt}>
         {mode === "signup" ? (
           <>
-            Already have an account? <Link href="/signin">Sign in</Link>
+            Already have an account? <Link href={other}>Sign in</Link>
           </>
         ) : (
           <>
-            No account yet? <Link href="/signup">Create one</Link>
+            No account yet? <Link href={other}>Create one</Link>
           </>
         )}
       </span>

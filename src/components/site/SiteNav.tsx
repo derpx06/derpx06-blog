@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -42,6 +43,7 @@ export function SiteNav() {
   const ref = useOutsideClose(menu || account, closeAll);
 
   useEffect(() => { setMounted(true); }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: close both menus on navigation
   useEffect(() => { setMenu(false); setAccount(false); }, [pathname]);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 16);
@@ -60,8 +62,7 @@ export function SiteNav() {
       <div className={`wrap ${s.inner} ${scrolled ? s.capsule : s.bar}`} ref={ref}>
         <nav className={s.nav} aria-label="Primary">
           <Link href="/" className={s.brand} aria-label={`${person.name} home`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className={s.mark} src={person.avatar} alt="" width={38} height={38} />
+            <Image className={s.mark} src={person.avatar} alt="" width={38} height={38} priority />
             <span>derpx06<em>.</em>dev</span>
           </Link>
 

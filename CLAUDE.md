@@ -123,10 +123,19 @@ and nothing writes `"html"` any more. `src/components/site/ArticleBody.tsx` rend
 
 ## Styling
 
-No component library. Semantic HTML plus the `ds-` primitives and CSS custom properties in
-`src/resources/design-system.css` (light on `:root`, dark on `[data-theme="dark"]`). Never
-hardcode a hex in a component. Tailwind is installed but only `src/components/ui/*` uses it.
-All copy belongs in `src/resources/site.config.ts` or `content.tsx`, not in components.
+No component library. The public UI is the violet "derpx06.dev" system: global tokens and
+primitives in `src/styles/theme.css` (`--acc --bg --ink --mute --line …`, `.wrap .eyebrow .btn*
+.card .darkCard .pill .tag .h2 .lede .hero`; light on `:root`, dark on `[data-theme="dark"]`),
+page/component styles in CSS modules next to their component, fonts Archivo + JetBrains Mono
+(DM Serif Display and VT323 only for the Explainers/Notes display headlines). The older
+`ds-*` editorial system in `src/resources/design-system.css` still styles the admin CMS, the
+MDX prose (`.ds-prose`), code blocks and the locked/preview pages; `theme.css` bridges its
+tokens (`--pg --acc --rule …`) onto the new palette, so never hardcode a hex in a component.
+Page chrome: `SiteNav` (fixed; a bar at the top, a frosted capsule once scrolled) and
+`SiteFooter` are mounted once in `src/app/layout.tsx` — pages do not render a masthead.
+Article/lesson template: `src/components/article/ArticleLayout.tsx` (via `ArticleView`).
+Tailwind is no longer used anywhere. All copy belongs in `src/resources/site.config.ts` or
+`content.tsx`, not in components.
 
 ## Content gotchas
 

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { AuthForm } from "@/components/site/AuthForm";
-import { Masthead } from "@/components/site/Masthead";
+import s from "@/components/site/auth.module.scss";
+import { Icon } from "@/components/site/icons";
 import { generateMeta } from "@/lib/metadata";
 import { baseURL } from "@/resources";
 
@@ -16,20 +18,23 @@ export const metadata: Metadata = generateMeta({
 
 export default function SigninPage() {
   return (
-    <main id="main">
-      <Masthead current={null} />
-      <section style={{ padding: "48px var(--gut) 90px" }}>
-        <div className="ds-narrow">
-          <h1 className="ds-t-page" style={{ marginBottom: 14 }}>
-            Sign in
-          </h1>
-          <p className="ds-dek" style={{ maxWidth: "46ch", marginBottom: 28 }}>
-            Sign in to keep your place, save pieces for later, and track course progress across
-            devices.
+    <main id="main" className={`wrap ${s.page}`}>
+      <div className={`darkCard ${s.card}`}>
+        <span className="glow" aria-hidden="true" />
+        <div className={s.inner}>
+          <span className="eyebrow">Account</span>
+          <h1 className={s.h1}>Sign in to keep your place.</h1>
+          <p className={s.p}>
+            Your reading queue and course progress are stored on your account, so they follow you
+            across devices. Nothing else is collected.
           </p>
           <AuthForm mode="signin" />
+          <Link href="/" className={s.back}>
+            <Icon name="chevronLeft" size={14} /> Back
+          </Link>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
+

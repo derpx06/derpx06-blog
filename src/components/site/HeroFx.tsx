@@ -10,6 +10,7 @@ export function HeroFx({ children, className }: { children: ReactNode; className
     if (el) for (const k in vars) el.style.setProperty(k, vars[k]);
   };
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: mouse position only drives a decorative spotlight; nothing is actionable
     <section
       ref={ref}
       className={className}

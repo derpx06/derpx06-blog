@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { CourseRail } from "@/components/site/CourseRail";
+import { SaveIcon } from "@/components/listing/SaveIcon";
+import { HeroFx } from "@/components/site/HeroFx";
+import { Icon } from "@/components/site/icons";
 import { JsonLd } from "@/components/site/JsonLd";
-import { Masthead } from "@/components/site/Masthead";
-import { RailBand } from "@/components/site/RailBand";
-import { ReadingQueue } from "@/components/site/ReadingQueue";
-import { ResumeStrip } from "@/components/site/ResumeStrip";
-import { SaveButton } from "@/components/site/SaveButton";
 import { resolveImage } from "@/lib/images";
 import { generateMeta } from "@/lib/metadata";
-import { formatShortDate, getSiteSummary, tagCounts, toRailCourses } from "@/lib/site-data";
-import { about, baseURL, home, person, routes } from "@/resources";
+import { courseLessonCount, formatShortDate, getSiteSummary, type Piece } from "@/lib/site-data";
+import { about, baseURL, home, person, social } from "@/resources";
+import { CopyEmail, HomeHero, LocalTime, type Rot } from "./HomeHero";
+import s from "./home.module.scss";
 
 export const revalidate = 300;
 
@@ -25,15 +23,46 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+const MAX_PARTS = 5;
+const partName = (title: string) => title.replace(/^\d+\.\s*/, "");
+const kindOf = (piece: Piece) => (piece.href.startsWith("/explainers") ? "Explainer" : "Essay");
+
+/** Hero phrases: a few hand-written ones per slug, then per tag, then the tag itself. */
+const PHRASE_BY_SLUG: Record<string, string> = {
+  "raft-consensus": "how Raft agrees.",
+  "btrees-or-lsm-trees": "B-trees versus LSM trees.",
+  "mamba-selective-state-spaces": "what Mamba changed.",
+  "mobile-apps-are-distributed-systems": "why every app is distributed.",
+  "quantization-what-breaks-at-4-bits": "what breaks at 4 bits.",
+  "hnsw-vector-search": "how HNSW finds neighbours.",
+  "your-retry-made-it-worse": "why retries make it worse.",
+  "speculative-decoding": "how speculative decoding works.",
+};
+const PHRASE_BY_TAG: Record<string, string> = {
+  "Distributed Systems": "how distributed systems fail.",
+  Databases: "how databases store things.",
+  Inference: "how inference gets fast.",
+  "Research Papers": "what the paper actually says.",
+  Retrieval: "how retrieval really works.",
+  Agents: "what agents need.",
+};
+const phraseFor = (piece: Piece) =>
+  PHRASE_BY_SLUG[piece.slug] ?? PHRASE_BY_TAG[piece.tag] ?? `${piece.tag.toLowerCase()}.`;
+
 export default async function Home() {
   const { writing, explainers, courses } = await getSiteSummary();
+  const all = [...writing, ...explainers]
+    .map((piece) => ({ ...piece, resolved: resolveImage(piece.image) }))
+    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 
-  const [lead, ...rest] = writing;
-  const listed = rest.slice(0, 4);
-  const startHere = [...writing].sort((a, b) => b.minutes - a.minutes).slice(0, 4);
-  const archiveTags = tagCounts([...writing, ...explainers]);
-  const [leadExplainer, ...moreExplainers] = explainers;
-  const railCourses = toRailCourses(courses);
+  const rots: Rot[] = all
+    .filter((piece) => piece.resolved)
+    .slice(0, 4)
+    .map((piece) => ({ text: phraseFor(piece), label: `${kindOf(piece)} · ${piece.tag}`, href: piece.href, img: piece.resolved }));
+
+  const [cover, ...rest] = all.slice(0, 4);
+  const socials = social.filter((item) => !item.link.startsWith("mailto:"));
+  const github = social.find((item) => item.name === "GitHub")?.link;
 
   return (
     <main id="main">
@@ -46,192 +75,130 @@ export default async function Home() {
         author={{ name: person.name, url: `${baseURL}${about.path}`, image: person.avatar }}
       />
 
-      <Masthead current={null} />
-
-      <p className="ds-meta ds-home-counts">
-        {writing.length} {writing.length === 1 ? "piece" : "pieces"} · {explainers.length}{" "}
-        {explainers.length === 1 ? "explainer" : "explainers"} · {courses.length}{" "}
-        {courses.length === 1 ? "course" : "courses"} · written by one developer, in public
-      </p>
-
-      <ResumeStrip />
-
-      <div className="ds-main-rail" style={{ padding: "40px var(--gut) 44px" }}>
-        <div>
-          <span className="ds-kickq" style={{ marginBottom: 22 }}>
-            Latest writing
-          </span>
-
-          {lead ? (
-            <article style={{ paddingBottom: 30, borderBottom: "1px solid var(--rule)" }}>
-              <span className="ds-kick" style={{ marginBottom: 10 }}>
-                {lead.tag} · {lead.minutes} min · {formatShortDate(lead.publishedAt)}
-              </span>
-              <h2 className="ds-t-lead" style={{ marginBottom: 12, maxWidth: "24ch" }}>
-                <Link href={lead.href} className="ds-plain-link">
-                  {lead.title}
-                </Link>
-              </h2>
-              <p className="ds-dek" style={{ fontSize: 17, maxWidth: "56ch", marginBottom: 16 }}>
-                {lead.summary}
-              </p>
-              <div className="ds-row">
-                <Link href={lead.href} className="ds-box ds-dark">
-                  Read
-                </Link>
-                <SaveButton
-                  piece={{
-                    slug: lead.slug,
-                    href: lead.href,
-                    title: lead.title,
-                    minutes: lead.minutes,
-                  }}
-                />
-              </div>
-            </article>
-          ) : (
-            <p className="ds-dek">Nothing published yet.</p>
-          )}
-
-          {listed.length > 0 && (
-            <div className="ds-stack">
-              {listed.map((piece, index) => (
-                <div
-                  key={piece.slug}
-                  style={{
-                    display: "flex",
-                    gap: 26,
-                    padding: "22px 0",
-                    borderBottom:
-                      index === listed.length - 1
-                        ? "1px solid var(--rule-strong)"
-                        : "1px solid var(--rule)",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 className="ds-t-m" style={{ marginBottom: 7 }}>
-                      <Link href={piece.href} className="ds-plain-link">
-                        {piece.title}
-                      </Link>
-                    </h3>
-                    <p className="ds-dek" style={{ fontSize: 14, maxWidth: "52ch" }}>
-                      {piece.summary}
-                    </p>
-                  </div>
-                  <div style={{ width: 110, flex: "none", textAlign: "right" }}>
-                    <span className="ds-kick" style={{ marginBottom: 6 }}>
-                      {piece.tag}
-                    </span>
-                    <span className="ds-meta ds-meta-s">{piece.minutes} min</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {writing.length > 0 && (
-            <div style={{ marginTop: 22 }}>
-              <Link href="/blog" className="ds-box">
-                All {writing.length} {writing.length === 1 ? "piece" : "pieces"}
-              </Link>
-            </div>
-          )}
+      <HeroFx className={`hero ${s.hero}`}>
+        <div className={s.heroBg} aria-hidden="true">
+          <div className={s.glow} />
+          <div className={s.spot} />
+          <div className={s.dots} />
+          <div className={s.dotsHot} />
         </div>
+        <div className="heroFade" aria-hidden="true" />
+        <HomeHero rots={rots} newest={cover ? { href: cover.href, title: cover.title } : null} />
+      </HeroFx>
 
-        <aside className="ds-stack" style={{ gap: 36 }}>
-          {startHere.length > 0 && (
-            <div>
-              <span className="ds-kickq" style={{ marginBottom: 18 }}>
-                Start here
-              </span>
-              <div className="ds-stack" style={{ gap: 16 }}>
-                {startHere.map((piece, index) => (
-                  <div key={piece.slug} style={{ display: "flex", gap: 12 }}>
-                    <span className="ds-num" style={{ width: 16, fontSize: 13 }}>
-                      {index + 1}
-                    </span>
-                    <div>
-                      <Link href={piece.href} className="ds-t-xs ds-plain-link">
-                        {piece.title}
-                      </Link>
-                      <span
-                        className="ds-meta ds-meta-s"
-                        style={{ display: "block", marginTop: 5 }}
-                      >
-                        {piece.minutes} min · {piece.tag}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <div className="wrap">
+        <section className={s.section} aria-labelledby="latest">
+          <div className={s.head}>
+            <div className={s.headCopy}>
+              <span className="eyebrow">01 · Latest</span>
+              <h2 id="latest" className="h2">Latest writing</h2>
+              <p className="lede">Essays argue one point. Explainers walk through one paper. Both are written after I got it wrong at least once.</p>
             </div>
-          )}
-
-          {routes["/learn"] && <CourseRail courses={railCourses} compact />}
-        </aside>
-      </div>
-
-      {routes["/explainers"] && leadExplainer && (
-        <section
-          className="ds-tint"
-          style={{
-            borderTop: "1px solid var(--rule)",
-            borderBottom: "1px solid var(--rule)",
-            padding: "36px var(--gut) 40px",
-          }}
-        >
-          <div className="ds-between" style={{ marginBottom: 24 }}>
-            <h2 className="ds-t-l">Explainers — drawn, not written</h2>
-            <Link href="/explainers" className="ds-box">
-              All {explainers.length}
+            <div className={s.headLinks}>
+              <Link href="/blog">All writing →</Link>
+              <Link href="/explainers">All explainers →</Link>
+            </div>
+          </div>
+          {cover ? (
+            <Link href={cover.href} className={`darkCard ${s.cover}`}>
+              <span className="glow" aria-hidden="true" />
+              <span className={s.coverBody}>
+                <span className={s.coverKicker}><span className={s.coverDot} />Cover story · {kindOf(cover)}{cover.tag && ` · ${cover.tag}`}</span>
+                <span className={s.coverTitle}>{cover.title}</span>
+                <span className={s.coverSummary}>{cover.summary}</span>
+                <span className={s.coverMeta}>
+                  <span className={s.coverRead}>Read · {cover.minutes} min <span className={s.arrow}>→</span></span>
+                  <span className="mono">{formatShortDate(cover.publishedAt)}</span>
+                </span>
+              </span>
+              <span className={s.coverFigure}>
+                {cover.resolved ? <span className={s.coverImg} style={{ backgroundImage: `url(${cover.resolved})` }} /> : <span className={s.coverMark}>{cover.title.charAt(0)}</span>}
+              </span>
             </Link>
-          </div>
-          <div className="ds-three">
-            {[leadExplainer, ...moreExplainers].slice(0, 3).map((piece) => {
-              const image = resolveImage(piece.image);
-              return (
-                <article key={piece.slug}>
-                  <Link href={piece.href} className="ds-plain-link">
-                    {image && (
-                      <div className="ds-ph ds-ph-fit" style={{ height: 150, marginBottom: 14 }}>
-                        <Image
-                          src={image}
-                          alt=""
-                          width={360}
-                          height={150}
-                          sizes="(max-width: 760px) 100vw, 33vw"
-                        />
-                      </div>
-                    )}
-                    <span className="ds-kick" style={{ marginBottom: 7 }}>
-                      {piece.tag} · {piece.minutes} min
-                    </span>
-                    <h3 className="ds-t-s">{piece.title}</h3>
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      <div className="ds-main-rail" style={{ padding: "38px var(--gut) 44px" }}>
-        <div>
-          <span className="ds-kickq" style={{ marginBottom: 18 }}>
-            Browse the archive
-          </span>
-          <div className="ds-wrap">
-            {archiveTags.map(({ tag, count }) => (
-              <Link key={tag} href={`/blog?tag=${encodeURIComponent(tag)}`} className="ds-box">
-                {tag} {count}
-              </Link>
+          ) : (
+            <p className="lede">Nothing published yet.</p>
+          )}
+          <div className={s.grid3}>
+            {rest.map((p, i) => (
+              <div key={p.href} className={`card ${s.pcard}`}>
+                <Link href={p.href} className={s.pcardLink}>
+                  <span className={s.pcardMedia}>
+                    {p.resolved ? <span className={s.pcardImg} style={{ backgroundImage: `url(${p.resolved})` }} /> : <span className={s.pcardMark}>{p.title.replace(/^(The|A|An)\s/, "").charAt(0)}</span>}
+                    <span className={s.pcardNum}>{String(i + 2).padStart(2, "0")}</span>
+                  </span>
+                  <span className={s.pcardBody}>
+                    <span className="eyebrow">{kindOf(p)}{p.tag && ` · ${p.tag}`} · {formatShortDate(p.publishedAt)}</span>
+                    <span className={s.pcardTitle}>{p.title}</span>
+                    <span className={s.pcardSummary}>{p.summary}</span>
+                    <span className={s.pcardFoot}><span className="mono">{p.minutes} min read</span><span className={s.pcardRead}>Read →</span></span>
+                  </span>
+                </Link>
+                <span className={s.pcardSave}><SaveIcon piece={{ slug: p.slug, href: p.href, title: p.title, minutes: p.minutes }} /></span>
+              </div>
             ))}
           </div>
-        </div>
-        <ReadingQueue />
-      </div>
+        </section>
 
-      <RailBand courses={railCourses} />
+        {courses.length > 0 && (
+          <section className={s.section} aria-labelledby="notes">
+            <div className={s.head}>
+              <div className={s.headCopy}>
+                <span className="eyebrow">02 · Notes</span>
+                <h2 id="notes" className="h2">Notebooks I&apos;m working through</h2>
+                <p className="lede">Study notes in order, one topic per notebook. Each part builds on the last.</p>
+              </div>
+              <div className={s.headLinks}><Link href="/learn">All notebooks →</Link></div>
+            </div>
+            <div className={s.cards}>
+              {courses.map((c) => {
+                const notes = courseLessonCount(c);
+                const parts = c.topics.map((t) => partName(t.title));
+                return (
+                  <Link key={c.id} href={`/learn/${c.slug}`} className={`card ${s.course}`}>
+                    <span className="eyebrow">{c.topics.length} parts · {notes} notes</span>
+                    <span className={s.courseTitle}>{c.title}</span>
+                    <span className={s.courseDesc}>{c.description}</span>
+                    <span className={s.rail}>
+                      {parts.slice(0, MAX_PARTS).map((p) => (
+                        <span key={p} className={s.railItem}><span className={s.railDot} />{p}</span>
+                      ))}
+                      {parts.length > MAX_PARTS && <span className={`${s.railItem} ${s.railMore}`}>+{parts.length - MAX_PARTS} more</span>}
+                    </span>
+                    <span className={s.courseCta}>Open syllabus →</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className={`darkCard ${s.contact}`} aria-labelledby="contact">
+          <div className="glow" aria-hidden="true" />
+          <div className={s.contactInner}>
+            <div className={s.contactCopy}>
+              <span className="eyebrow">Open to conversations</span>
+              <h2 id="contact" className={s.contactH}>Building something and want a second pair of eyes?</h2>
+              <p className={s.contactP}>Problems, collaborations or corrections — I read every email.</p>
+            </div>
+            <div className={s.contactActions}>
+              <div className={s.contactBtns}>
+                <a className={`btn ${s.mail}`} href={`mailto:${person.email}`}><Icon name="mail" size={15} />Email me</a>
+                {github && <a className={`btn ${s.gh}`} href={github} target="_blank" rel="noopener" aria-label="GitHub"><Icon name="github" size={17} /></a>}
+              </div>
+              <div className={s.emailRow}>
+                <span className={`mono ${s.email}`}>{person.email}</span>
+                <CopyEmail email={person.email} />
+              </div>
+              <span className={`mono ${s.reply}`}>{person.location} · <LocalTime timeZone={person.timeZone} /> · usually replies within a day</span>
+            </div>
+          </div>
+          <div className={s.contactFoot}>
+            {socials.map((x) => (
+              <a key={x.name} href={x.link} target="_blank" rel="noopener" className={s.socialPill}>{x.name}<span className="mono">{new URL(x.link).pathname.replace(/^\/(in|u)?\/?/, "").replace(/\/$/, "")}</span></a>
+            ))}
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

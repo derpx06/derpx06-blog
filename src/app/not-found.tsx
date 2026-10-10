@@ -1,32 +1,32 @@
 import Link from "next/link";
-import { Masthead } from "@/components/site/Masthead";
+import styles from "./not-found.module.scss";
+
+const LINKS = [
+  { n: "01", label: "Home", href: "/", hint: "Start from the top." },
+  { n: "02", label: "Writing", href: "/blog", hint: "Long-form essays on systems and AI." },
+  { n: "03", label: "Explainers", href: "/explainers", hint: "Landmark papers, one idea at a time." },
+  { n: "04", label: "Notes", href: "/learn", hint: "Structured learning notes, in order." },
+];
 
 export default function NotFound() {
   return (
-    <main id="main">
-      <Masthead current={null} />
-      <section style={{ padding: "80px var(--gut) 120px" }}>
-        <div className="ds-narrow">
-          <span className="ds-kick" style={{ marginBottom: 18 }}>
-            404
-          </span>
-          <h1 className="ds-t-page" style={{ marginBottom: 16 }}>
-            That page isn&apos;t here
-          </h1>
-          <p className="ds-dek" style={{ marginBottom: 26 }}>
-            The link may be old, or the piece may have moved. The archive is the best place to pick
-            the thread back up.
-          </p>
-          <div className="ds-wrap">
-            <Link href="/" className="ds-box ds-dark">
-              Home
-            </Link>
-            <Link href="/blog" className="ds-box">
-              All writing
-            </Link>
-          </div>
-        </div>
+    <main id="main" className={`wrap ${styles.root}`}>
+      <section className={`darkCard ${styles.card}`}>
+        <div className="glow" aria-hidden="true" />
+        <span className="eyebrow">HTTP 404 · page not found</span>
+        <div className={styles.big} aria-hidden="true">404</div>
+        <h1 className={styles.h1}>This page failed at its boundary.</h1>
+        <p className={styles.p}>The link might be old, or the piece moved. Head somewhere that exists.</p>
       </section>
+      <div className={styles.grid}>
+        {LINKS.map((l) => (
+          <Link key={l.href} href={l.href} className={`card ${styles.link}`}>
+            <span className="mono">{l.n}</span>
+            <span className={styles.label}>{l.label}<span>→</span></span>
+            <span className={styles.hint}>{l.hint}</span>
+          </Link>
+        ))}
+      </div>
     </main>
   );
 }

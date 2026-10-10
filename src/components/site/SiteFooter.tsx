@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { editorial, mailchimp, person } from "@/resources";
 import { Icon } from "./icons";
@@ -6,7 +7,7 @@ import s from "./SiteFooter.module.scss";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
-  const action = mailchimp.action && mailchimp.action.startsWith("https://") ? mailchimp.action : "";
+  const action = mailchimp.action?.startsWith("https://") ? mailchimp.action : "";
 
   return (
     <footer className={s.footer}>
@@ -22,7 +23,7 @@ export function SiteFooter() {
 
         <div className={s.cols}>
           <div className={s.about}>
-            <Link href="/" className={s.brand}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={person.avatar} alt="" width={28} height={28} /><span>derpx06<em>.</em>dev</span></Link>
+            <Link href="/" className={s.brand}><Image src={person.avatar} alt="" width={28} height={28} /><span>derpx06<em>.</em>dev</span></Link>
             <span className={s.blurb}>{editorial.footerBlurb}</span>
             <div className={s.social}>
               <a href="https://github.com/derpx06" target="_blank" rel="noopener" aria-label="GitHub"><Icon name="github" /></a>

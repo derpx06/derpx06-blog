@@ -15,6 +15,7 @@ export function FooterLetter({ action }: { action: string }) {
   }
   if (!action) return <p className={s.note}>Coming soon. Until then, the writing is all on this site.</p>;
   return (
+    // biome-ignore lint/security/noBlankTarget: a form has no rel attribute; the action is a trusted https URL from config
     <form className={s.form} action={action} method="post" target="_blank" onSubmit={() => setTimeout(() => setDone(true), 300)}>
       <Icon name="mail" size={17} />
       <input type="email" name="EMAIL" required aria-label="Email address" placeholder="you@company.com" autoComplete="email" />
@@ -36,6 +37,7 @@ export function Wordmark() {
         onMouseLeave={(e) => { e.currentTarget.style.setProperty("--wx", "-999px"); e.currentTarget.style.setProperty("--wy", "-999px"); }}
       >
         {"derpx06.dev".split("").map((ch, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: letters repeat and the list is static
           <span key={i} className={s.wmLetter} style={{ transitionDelay: `${i * 12}ms` }}>{ch}</span>
         ))}
       </button>

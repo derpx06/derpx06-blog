@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminEdit } from "@/components/site/AdminEdit";
 import { JsonLd } from "@/components/site/JsonLd";
-import { Masthead } from "@/components/site/Masthead";
 import { generateMeta } from "@/lib/metadata";
 import { formatShortDate, getPieces } from "@/lib/site-data";
 import { baseURL, person, work } from "@/resources";
@@ -32,7 +31,7 @@ export default async function Work() {
         author={{ name: person.name, url: `${baseURL}${work.path}`, image: person.avatar }}
       />
 
-      <Masthead current={null} trailing={<AdminEdit href="/admin/content?section=work" />} />
+      <AdminEdit href="/admin/content?section=work" />
 
       <div style={{ padding: "38px var(--gut) 20px" }}>
         <h1 className="ds-t-page" style={{ marginBottom: 14 }}>
