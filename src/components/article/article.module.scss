@@ -68,10 +68,10 @@
 }
 @media (min-width: 1300px) {
   .grid { --measure: 740px; gap: 28px; }
-  .mobileToc { display: none; }
 }
 .aside { display: flex; flex-direction: column; gap: 22px; min-width: 0; padding-bottom: 10px; }
 @media (max-width: 1199px) { .aside { display: none; } }
+@media (min-width: 1200px) { .mobileToc { display: none; } }
 .asideH { font: 500 10px/1 var(--font-jbmono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); margin-bottom: 12px; }
 .toc { display: flex; flex-direction: column; gap: 1px; border-left: 2px solid var(--line-strong); }
 .toc a {
