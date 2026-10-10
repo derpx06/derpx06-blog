@@ -65,8 +65,8 @@ export function SiteNav() {
 
   return (
     <div className={s.fixed}>
-      <div className={`wrap ${s.inner} ${scrolled ? s.capsule : s.bar}`}>
-        <nav className={s.nav} aria-label="Primary" ref={ref}>
+      <div className={`wrap ${s.inner} ${scrolled ? s.capsule : s.bar}`} ref={ref}>
+        <nav className={s.nav} aria-label="Primary">
           <Link href="/" className={s.brand} aria-label="derpx06.dev home">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className={s.mark} src="/images/derpx06-avatar.png" alt="" width={38} height={38} />
@@ -109,6 +109,7 @@ export function SiteNav() {
             </button>
           </div>
 
+        </nav>
           {menu && (
             <div className={`${s.dropdown} ${s.full}`} role="menu">
               {NAV.map(([label, href]) => (
@@ -125,7 +126,6 @@ export function SiteNav() {
               <button type="button" className={s.item} role="menuitem" onClick={() => signOut({ callbackUrl: "/" })}>Sign out<Icon name="logout" size={14} /></button>
             </div>
           )}
-        </nav>
       </div>
     </div>
   );

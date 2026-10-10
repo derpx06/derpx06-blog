@@ -10,7 +10,8 @@
 /* at the top of the page: a full-width bar flush with the viewport */
 .bar { padding: 0; max-width: 100%; }
 .bar .nav { border-radius: 0; border: 0; box-shadow: none; height: 64px; padding-inline: var(--gutter); }
-.bar .dropdown { left: var(--gutter); right: var(--gutter); }
+.capsule .dropdown { right: 0; }
+.capsule .dropdown.full { left: 0; right: 0; }
 /* once scrolled: the floating capsule */
 .capsule { padding-top: 12px; }
 .nav { transition: border-radius 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s; }
@@ -57,11 +58,11 @@
 .menuBtn { display: none; width: 42px; height: 42px; margin-left: 4px; border-radius: 50%; border: 0; background: var(--nav-hover); color: var(--nav-ink); cursor: pointer; place-items: center; }
 
 .dropdown {
-  position: absolute; right: 0; top: calc(100% + 10px); min-width: 200px; padding: 8px; border-radius: 18px; background: var(--nav-bg);
+  position: absolute; right: var(--gutter); top: calc(100% + 10px); min-width: 200px; pointer-events: auto; z-index: 2; padding: 8px; border-radius: 18px; background: color-mix(in oklch, var(--bg) 94%, transparent);
   backdrop-filter: blur(18px); border: 1px solid var(--line); box-shadow: var(--nav-shadow);
   display: flex; flex-direction: column; gap: 2px;
 }
-.dropdown.full { left: 0; right: 0; min-width: 0; border-radius: 24px; }
+.dropdown.full { left: var(--gutter); right: var(--gutter); min-width: 0; border-radius: 24px; }
 .item {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 46px; padding: 0 16px; border-radius: 999px; border: 0; background: transparent;
   font: 500 15px/1 var(--font-archivo); color: var(--nav-mute); cursor: pointer; text-align: left; width: 100%; box-sizing: border-box;
