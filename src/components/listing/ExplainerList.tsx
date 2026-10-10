@@ -18,7 +18,7 @@ export function ExplainerList({ items }: { items: ListItem[] }) {
     <>
       <HeroFx className={`hero ${s.hero} ${s.exHero}`}>
         <HeroBackdrop />
-        <div className="wrap">
+        <div className={`wrap ${s.exInner}`}>
           <span className={`eyebrow ${s.status}`}><span className={s.dot} />Paper explainers · {items.length} published</span>
           <h1 className={s.exH1}>
             <span className={s.serif}>Landmark AI papers, made</span>
