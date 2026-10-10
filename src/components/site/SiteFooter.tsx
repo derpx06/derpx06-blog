@@ -24,7 +24,7 @@ export function SiteFooter() {
           </div>
           <div>
             {done ? (
-              <div className={s.form} style={{ borderColor: "color-mix(in oklch, var(--acc) 50%, transparent)", color: "var(--dark-ink)", font: "600 14px/1 var(--font-archivo)" }}>
+              <div className={s.form} style={{ borderColor: "color-mix(in oklch, var(--acc) 50%, transparent)", color: "inherit", font: "600 14px/1 var(--font-archivo)" }}>
                 <Icon name="check" size={14} /> You&apos;re in — see you next week.
               </div>
             ) : BUTTONDOWN ? (
