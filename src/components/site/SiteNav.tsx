@@ -121,6 +121,7 @@ export function SiteNav() {
           {user && session?.user && (
             <div className={s.dropdown} role="menu">
               <div className={s.who}>{session.user.email}</div>
+              {session.user.isAdmin && <Link href="/admin" className={s.item} role="menuitem">Admin<Icon name="list" size={14} /></Link>}
               <Link href="/saved" className={s.item} role="menuitem">Saved<Icon name="bookmark" size={14} /></Link>
               <Link href="/learn" className={s.item} role="menuitem">My progress<Icon name="check" size={14} /></Link>
               <button type="button" className={s.item} role="menuitem" onClick={() => signOut({ callbackUrl: "/" })}>Sign out<Icon name="logout" size={14} /></button>
