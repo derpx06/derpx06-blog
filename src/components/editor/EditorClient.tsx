@@ -17,7 +17,10 @@ type Section = "blog" | "explainers";
 type Storage = "mdx" | "mongodb";
 const today = () => new Date().toISOString().slice(0, 10);
 const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-const DEFAULT_STORAGE: Storage = process.env.NEXT_PUBLIC_DEFAULT_ARTICLE_STORAGE === "mongodb" ? "mongodb" : "mdx";
+const DEFAULT_STORAGE: Storage = process.env.NEXT_PUBLIC_DEFAULT_ARTICLE_STORAGE === "mdx" ? "mdx" : "mongodb";
+// `id` is a client-only React key; the API ignores it.
+type Source = { id: string; title: string; url: string; authors: string; year: string };
+const blankSource = (): Source => ({ id: crypto.randomUUID(), title: "", url: "", authors: "", year: "" });
 
 export default function EditorClient() {
   const [title, setTitle] = useState("");
@@ -30,6 +33,8 @@ export default function EditorClient() {
   const [publishedAt, setPublishedAt] = useState(today);
   const [section, setSection] = useState<Section>("blog");
   const [storage, setStorage] = useState<Storage>(DEFAULT_STORAGE);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [published, setPublished] = useState(false);
   const [html, setHtml] = useState("");
   const [ready, setReady] = useState(false); // true once ?slug= (if any) has loaded; editor mounts with its content
   const [busy, setBusy] = useState<"" | "draft" | "publish" | "upload">("");
@@ -56,7 +61,8 @@ export default function EditorClient() {
         setSummary(m.summary ?? ""); setTag(Array.isArray(m.tag) ? m.tag.join(", ") : m.tag ?? "");
         setTopics((m.topics ?? []).join(", ")); setImage(m.image ?? "");
         setPublishedAt(String(m.publishedAt ?? "").slice(0, 10) || today());
-        setSection(sec); if (data.source === "mongodb") setStorage("mongodb");
+        setSection(sec); setStorage(data.source === "mongodb" ? "mongodb" : "mdx"); setPublished(!!m.published);
+        setSources((Array.isArray(m.sources) ? m.sources : []).map((x: Partial<Source>) => ({ ...blankSource(), ...x, id: crypto.randomUUID(), year: x.year ? String(x.year) : "" })));
         setHtml(markdownToHtml(data.content ?? ""));
       } catch (e) {
         setStatus({ error: true, text: e instanceof Error ? e.message : "Could not load article" });
@@ -80,13 +86,13 @@ export default function EditorClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title, slug, summary, content, publish, storage, tag, image, publishedAt, section,
+          title, slug, summary, content, publish, storage, tag, image, publishedAt, section, sources,
           topics: topics.split(",").map((t) => t.trim()).filter(Boolean),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || "Save failed");
-      setSlug(data.slug); setSlugTouched(true);
+      setSlug(data.slug); setSlugTouched(true); setPublished(publish);
       setStatus({ text: `${publish ? "Published" : "Saved"} · ${clock()}` });
       if (publish) window.open(`/${section}/${data.slug}`, "_blank", "noopener");
     } catch (e) {
@@ -94,7 +100,7 @@ export default function EditorClient() {
     } finally {
       setBusy("");
     }
-  }, [title, slug, summary, html, storage, tag, image, publishedAt, section, topics]);
+  }, [title, slug, summary, html, storage, tag, image, publishedAt, section, topics, sources]);
 
   // Cmd/Ctrl+S saves a draft
   useEffect(() => {
@@ -120,7 +126,10 @@ export default function EditorClient() {
           <span className="eyebrow">Editor · {section === "blog" ? "Writing" : "Explainers"}</span>
           <h1>{title || "New article"}</h1>
         </div>
-        <Link href="/blog/editor/drafts" className={styles.headLink}>Drafts →</Link>
+        <div className={styles.row}>
+          {published && slug && <a href={`/${section}/${slug}`} target="_blank" rel="noopener" className={styles.headLink}>View live ↗</a>}
+          <Link href="/admin" className={styles.headLink}>Dashboard →</Link>
+        </div>
       </div>
 
       <div className={styles.grid}>
@@ -170,6 +179,29 @@ export default function EditorClient() {
             </div>
             {image && <img src={image} alt="" className={styles.cover} />}
           </div>
+          <fieldset className={`${styles.field} ${styles.fieldset}`}>
+            <legend>Sources <span>{sources.length ? `${sources.length} listed` : "shown at the end"}</span></legend>
+            {sources.map((src, i) => {
+              const set = (patch: Partial<Source>) => setSources((all) => all.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+              return (
+                <div key={src.id} className={styles.source}>
+                  <div className={styles.row}>
+                    <input className={styles.input} value={src.title} placeholder="Title"
+                      aria-label={`Source ${i + 1} title`}
+                      onChange={(e) => set({ title: e.target.value })}
+                      onPaste={(e) => { const t = e.clipboardData.getData("text").trim(); if (/^https?:\/\/\S+$/.test(t) && !src.url) { e.preventDefault(); set({ url: t }); } }} />
+                    <button type="button" className={styles.remove} aria-label={`Remove source ${i + 1}`} onClick={() => setSources((all) => all.filter((_, j) => j !== i))}>×</button>
+                  </div>
+                  <input className={`${styles.input} ${styles.mono}`} value={src.url} placeholder="https://…" aria-label={`Source ${i + 1} URL`} onChange={(e) => set({ url: e.target.value })} />
+                  <div className={styles.two}>
+                    <input className={styles.input} value={src.authors} placeholder="Authors (optional)" aria-label={`Source ${i + 1} authors`} onChange={(e) => set({ authors: e.target.value })} />
+                    <input className={styles.input} value={src.year} placeholder="Year" inputMode="numeric" aria-label={`Source ${i + 1} year`} onChange={(e) => set({ year: e.target.value })} />
+                  </div>
+                </div>
+              );
+            })}
+            <button type="button" className="btn btnGhost btnSm" onClick={() => setSources((all) => [...all, blankSource()])}>+ Add source</button>
+          </fieldset>
           <div className={styles.two}>
             <div className={styles.field}>
               <label htmlFor="ed-section">Section</label>

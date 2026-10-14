@@ -43,3 +43,8 @@
 .confirm .actions { gap: 6px; }
 
 .loading { padding: 60px 0; text-align: center; color: var(--faint); font: 500 13px var(--font-jbmono); }
+.source { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.remove { flex: none; width: 32px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--card); color: var(--mute); font-size: 16px; cursor: pointer; }
+.remove:hover { color: var(--ink); border-color: var(--ink); }
+.fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.fieldset legend { display: flex; justify-content: space-between; width: 100%; padding: 0; margin-bottom: 8px; font: 500 10.5px/1.2 var(--font-jbmono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
