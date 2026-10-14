@@ -1,8 +1,6 @@
-import fs from "fs";
-import path from "path";
 import { Meta, Schema } from "@once-ui-system/core";
 import { baseURL, explainers, person } from "@/resources";
-import { getPosts } from "@/utils/utils";
+import { getPostsHybrid, showableImage } from "@/utils/utils";
 import { formatShortDate, readingTime, tagOf } from "@/lib/article";
 import { ExplainerList } from "@/components/listing/ExplainerList";
 import type { ListItem } from "@/components/listing/WritingList";
@@ -17,8 +15,8 @@ export async function generateMetadata() {
   });
 }
 
-export default function Explainers() {
-  const items: ListItem[] = getPosts(["src", "app", "explainers", "posts"])
+export default async function Explainers() {
+  const items: ListItem[] = (await getPostsHybrid(["src", "app", "explainers", "posts"], "explainers"))
     .sort((a, b) => new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime())
     .map((p) => ({
       slug: p.slug,
@@ -30,7 +28,7 @@ export default function Explainers() {
       tag: tagOf(p.metadata),
       topics: p.metadata.topics ?? [],
       minutes: readingTime(p.content),
-      image: p.metadata.image && fs.existsSync(path.join(process.cwd(), "public", p.metadata.image)) ? p.metadata.image : null,
+      image: showableImage(p.metadata.image),
       kind: "explainer" as const,
     }));
 

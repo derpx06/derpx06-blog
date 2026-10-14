@@ -4,18 +4,19 @@ import type { Metadata } from "next";
 import { CustomMDX } from "@/components/mdx";
 import { ArticleLayout } from "@/components/article/ArticleLayout";
 import { baseURL, explainers } from "@/resources";
-import { getPosts } from "@/utils/utils";
+import { getPostsHybrid } from "@/utils/utils";
 import { extractToc, formatShortDate, readingTime, relatedPosts, tagOf } from "@/lib/article";
 
 const DIR = ["src", "app", "explainers", "posts"];
+const loadPosts = () => getPostsHybrid(DIR, "explainers");
 
 export async function generateStaticParams() {
-  return getPosts(DIR).map((post) => ({ slug: post.slug }));
+  return (await loadPosts()).map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPosts(DIR).find((p) => p.slug === slug);
+  const post = (await loadPosts()).find((p) => p.slug === slug);
   if (!post) return {};
   const image = post.metadata.image || `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`;
   const path = `${explainers.path}/${post.slug}`;
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function Explainer({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const posts = getPosts(DIR);
+  const posts = await loadPosts();
   const post = posts.find((p) => p.slug === slug);
   if (!post) notFound();
 
@@ -52,6 +53,7 @@ export default async function Explainer({ params }: { params: Promise<{ slug: st
       toc={extractToc(post.content)}
       back={{ href: explainers.path, label: "All explainers" }}
       related={related}
+      sources={post.metadata.sources}
     >
       <CustomMDX source={post.content} />
     </ArticleLayout>

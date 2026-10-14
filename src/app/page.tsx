@@ -1,10 +1,8 @@
 import Link from "next/link";
-import fs from "fs";
-import path from "path";
 import { Meta, Schema } from "@once-ui-system/core";
 import { baseURL, home, about, person } from "@/resources";
 import { courses } from "@/resources/courses";
-import { getPosts } from "@/utils/utils";
+import { getPostsHybrid, showableImage, type Section } from "@/utils/utils";
 import { formatShortDate, readingTime, tagOf } from "@/lib/article";
 import { partName } from "@/lib/courses";
 import { HeroFx } from "@/components/site/HeroFx";
@@ -29,14 +27,15 @@ const GITHUB = "https://github.com/derpx06";
 const MAX_PARTS = 5;
 
 type Kind = "article" | "explainer";
-const SOURCES: { kind: Kind; label: string; base: string; dir: string[] }[] = [
-  { kind: "article", label: "Essay", base: "/blog", dir: ["src", "app", "blog", "posts"] },
-  { kind: "explainer", label: "Explainer", base: "/explainers", dir: ["src", "app", "explainers", "posts"] },
+const SOURCES: { kind: Kind; section: Section; label: string; base: string; dir: string[] }[] = [
+  { kind: "article", section: "blog", label: "Essay", base: "/blog", dir: ["src", "app", "blog", "posts"] },
+  { kind: "explainer", section: "explainers", label: "Explainer", base: "/explainers", dir: ["src", "app", "explainers", "posts"] },
 ];
 
-function latest(n: number) {
-  return SOURCES.flatMap(({ kind, label, base, dir }) =>
-    getPosts(dir).map((p) => ({
+async function latest(n: number) {
+  const lists = await Promise.all(SOURCES.map(async (src) => ({ ...src, posts: await getPostsHybrid(src.dir, src.section) })));
+  return lists.flatMap(({ kind, label, base, posts }) =>
+    posts.map((p) => ({
       kind,
       label,
       slug: p.slug,
@@ -47,15 +46,15 @@ function latest(n: number) {
       date: p.metadata.publishedAt,
       time: new Date(p.metadata.publishedAt).getTime() || 0,
       mins: readingTime(p.content),
-      image: p.metadata.image && fs.existsSync(path.join(process.cwd(), "public", p.metadata.image)) ? p.metadata.image : null,
+      image: showableImage(p.metadata.image),
     })),
   )
     .sort((a, b) => b.time - a.time)
     .slice(0, n);
 }
 
-export default function Home() {
-  const posts = latest(4);
+export default async function Home() {
+  const posts = await latest(4);
   const newest = posts[0];
   const [cover, ...rest] = posts;
 

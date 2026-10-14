@@ -1,22 +1,18 @@
 import { MongoClient, Db } from "mongodb";
 
 const uri = process.env.MONGODB_URI || "";
-let cachedClient: MongoClient | null = null;
-let cachedDb: Db | null = null;
+// Cache the promise, not the result, so concurrent callers share one client instead of racing to open several.
+let cached: Promise<{ client: MongoClient; db: Db }> | null = null;
 
-export async function connectToDatabase() {
-  if (!uri) throw new Error("MONGODB_URI is not set in environment");
-
-  if (cachedClient && cachedDb) {
-    return { client: cachedClient, db: cachedDb };
-  }
-
-  const client = new MongoClient(uri);
-  await client.connect();
-  const dbName = process.env.MONGODB_DB || "derpx06";
-  const db = client.db(dbName);
-
-  cachedClient = client;
-  cachedDb = db;
-  return { client, db };
+export function connectToDatabase() {
+  if (!uri) return Promise.reject(new Error("MONGODB_URI is not set in environment"));
+  cached ??= (async () => {
+    // Fail fast so a Mongo outage degrades pages to MDX-only instead of hanging them for 30s.
+    const client = await new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }).connect();
+    const db = client.db(process.env.MONGODB_DB || "derpx06");
+    await db.collection("articles").createIndex({ section: 1, slug: 1 }, { unique: true })
+      .catch((e) => console.error("Could not ensure articles index:", e));
+    return { client, db };
+  })().catch((e) => { cached = null; throw e; }); // let the next request retry
+  return cached;
 }

@@ -1,11 +1,10 @@
 import Link from "next/link";
-import fs from "fs";
-import path from "path";
 import type { ReactNode } from "react";
 import { Schema } from "@once-ui-system/core";
 import { baseURL, about, person } from "@/resources";
 import { formatShortDate, type TocItem } from "@/lib/article";
 import type { SavedKind } from "@/lib/user-store";
+import { showableImage, type Source } from "@/utils/utils";
 import { ScrollToHash } from "@/components/ScrollToHash";
 import { Icon } from "@/components/site/icons";
 import { ArticleReader, type LessonOutline } from "./ArticleReader";
@@ -26,15 +25,17 @@ type Props = {
   toc: TocItem[];
   back: { href: string; label: string };
   related?: Related[];
+  sources?: Source[];
   lesson?: LessonOutline & { index: number; total: number; prev: { href: string; title: string } | null; next: { href: string; title: string } | null; partTitle: string };
   children: ReactNode;
 };
 
 const KIND_LABEL: Record<SavedKind, string> = { article: "Essay", explainer: "Explainer", lesson: "Note" };
 
-export function ArticleLayout({ kind, path: sitePath, title, summary, publishedAt, tag, image, minutes, toc, back, related, lesson, children }: Props) {
+export function ArticleLayout({ kind, path: sitePath, title, summary, publishedAt, tag, image, minutes, toc, back, related, sources = [], lesson, children }: Props) {
   const url = `${baseURL}${sitePath}`;
-  const hasImage = !!image && fs.existsSync(path.join(process.cwd(), "public", image));
+  const hasImage = !!showableImage(image);
+  if (sources.length) toc = [...toc, { id: "sources", text: "Sources", level: 2 }];
   const metaLine = [publishedAt && formatShortDate(publishedAt), `${minutes} min read`].filter(Boolean).join(" · ");
 
   return (
@@ -84,6 +85,7 @@ export function ArticleLayout({ kind, path: sitePath, title, summary, publishedA
           lesson={lesson}
         >
           {children}
+          {sources.length > 0 && <Sources sources={sources} />}
           {lesson ? (
             <LessonEnd course={lesson.course.slug} slug={lesson.slug} prev={lesson.prev} next={lesson.next} />
           ) : (
@@ -115,6 +117,24 @@ export function ArticleLayout({ kind, path: sitePath, title, summary, publishedA
         <ScrollToHash />
       </div>
     </div>
+  );
+}
+
+function Sources({ sources }: { sources: Source[] }) {
+  const host = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } };
+  return (
+    <section id="sources" className={s.sources} aria-label="Sources">
+      <h2>Sources</h2>
+      <ol>
+        {sources.map((src) => (
+          <li key={src.url}>
+            <a href={src.url} target="_blank" rel="noopener noreferrer">{src.title}</a>
+            {(src.authors || src.year) && <span className={s.srcBy}>{[src.authors, src.year].filter(Boolean).join(" · ")}</span>}
+            <span className={s.srcHost}>{host(src.url)}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

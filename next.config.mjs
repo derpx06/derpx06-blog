@@ -20,6 +20,11 @@ const nextConfig = {
         hostname: "www.google.com",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "**",
+      },
     ],
   },
   sassOptions: {

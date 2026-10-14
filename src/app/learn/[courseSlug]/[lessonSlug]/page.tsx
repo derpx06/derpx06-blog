@@ -64,6 +64,7 @@ export default async function Lesson({ params }: { params: Promise<{ courseSlug:
       minutes={readingTime(source)}
       toc={extractToc(source)}
       back={{ href: `/learn/${course.slug}`, label: "Syllabus" }}
+      sources={lessonPosts.flatMap((p) => p.metadata.sources ?? [])}
       lesson={{
         course: { slug: course.slug, title: course.title },
         parts: outlineOf(course),

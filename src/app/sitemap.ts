@@ -1,10 +1,9 @@
-import { getPosts, getPostsHybrid } from "@/utils/utils";
+import { getPostsHybrid } from "@/utils/utils";
 import { baseURL, routes as routesConfig } from "@/resources";
 import { courses } from "@/resources/courses";
 
 export default async function sitemap() {
-  const useMongo = (process.env.USE_MONGODB || "false").toLowerCase();
-  const blogPosts = useMongo === "1" || useMongo === "true" ? await getPostsHybrid(["src", "app", "blog", "posts"]) : getPosts(["src", "app", "blog", "posts"]);
+  const blogPosts = await getPostsHybrid(["src", "app", "blog", "posts"], "blog");
   const blogs = blogPosts.map((post) => ({
     url: `${baseURL}/blog/${post.slug}`,
     lastModified: post.metadata.publishedAt,
@@ -19,7 +18,7 @@ export default async function sitemap() {
     lastModified: new Date().toISOString().split("T")[0],
   }));
 
-  const explainers = getPosts(["src", "app", "explainers", "posts"]).map((post) => ({
+  const explainers = (await getPostsHybrid(["src", "app", "explainers", "posts"], "explainers")).map((post) => ({
     url: `${baseURL}/explainers/${post.slug}`,
     lastModified: post.metadata.publishedAt || new Date().toISOString().split("T")[0],
   }));

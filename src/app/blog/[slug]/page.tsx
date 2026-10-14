@@ -4,12 +4,11 @@ import type { Metadata } from "next";
 import { CustomMDX } from "@/components/mdx";
 import { ArticleLayout } from "@/components/article/ArticleLayout";
 import { baseURL, blog } from "@/resources";
-import { getPosts, getPostsHybrid } from "@/utils/utils";
+import { getPostsHybrid } from "@/utils/utils";
 import { extractToc, formatShortDate, readingTime, relatedPosts, tagOf } from "@/lib/article";
 
 const DIR = ["src", "app", "blog", "posts"];
-const useMongo = () => ["1", "true"].includes((process.env.USE_MONGODB || "false").toLowerCase());
-const loadPosts = async () => (useMongo() ? getPostsHybrid(DIR) : getPosts(DIR));
+const loadPosts = () => getPostsHybrid(DIR, "blog");
 
 export async function generateStaticParams() {
   return (await loadPosts()).map((post) => ({ slug: post.slug }));
@@ -54,6 +53,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
       toc={extractToc(post.content)}
       back={{ href: blog.path, label: "All writing" }}
       related={related}
+      sources={post.metadata.sources}
     >
       <CustomMDX source={post.content} />
     </ArticleLayout>
